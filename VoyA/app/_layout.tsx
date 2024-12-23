@@ -1,35 +1,46 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { View, ActivityIndicator } from 'react-native';
-import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
-import Config from 'react-native-config';
 import 'react-native-reanimated';
 
-import { useColorScheme } from '@/hooks/useColorScheme';
 import Auth from './auth';
 import { StatusBar } from 'expo-status-bar';
 import { CenterAligned, ErrorText } from '@/components/ThemedComponents';
-import { isLoggedIn } from '../api';
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-// SplashScreen.preventAutoHideAsync();
+import { ApiProvider, AuthResult, useApi } from '../api';
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  return (
+    <ApiProvider>
+      <Inner></Inner>
+    </ApiProvider>
+  )
+}
+
+function Inner() {
   const [loadingAuthStatus, setLoading] = useState(true);
+  const api = useApi();
   const [isAuthenticated, setAuthenticated] = useState(false);
   const [unkownError, setUnkownError] = useState(false);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const [err, auth] = await isLoggedIn();
-      setAuthenticated(auth);
-      setUnkownError(err);
+    const inner = async () => {
+      setLoading(true);
+
+      var ok = await api.getLocations();
+      if (!ok) {
+        setUnkownError(true);
+      }
+
+      var auth = await api.getUserInfo();
+      if (auth == AuthResult.UnkownError) {
+        setUnkownError(true);
+      } else {
+        setAuthenticated(auth == AuthResult.Authenticated);
+      }
+
       setLoading(false);
-    }
-    checkAuth();
+    };
+    inner();
   }, []);
 
   if (unkownError) {
@@ -39,8 +50,6 @@ export default function RootLayout() {
       </CenterAligned>
     )
   }
-
-  console.log(isAuthenticated);
 
   return (
     <CenterAligned>

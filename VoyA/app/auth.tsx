@@ -1,12 +1,11 @@
 // LoginPage.tsx
 import { useState } from 'react';
-import { StyleSheet, TextInput, Modal, ActivityIndicator, View, Text, Button } from 'react-native';
+import { Modal, ActivityIndicator, View } from 'react-native';
 import { BtnSecondary, BtnPrimary, StyledTextInput, StyledEmailInput, StyledPasswordInput, ErrorText } from '../components/ThemedComponents';
-import Config from 'react-native-config';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { createAccount, login } from '../api';
 import * as yup from 'yup';
-import { Controller, ControllerFieldState, ControllerRenderProps, FieldValues, useForm, UseFormStateReturn } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
+import { useApi } from '@/api';
 
 // Define the type for the props that LoginPage will accept
 type AuthPageProps = {
@@ -38,6 +37,7 @@ const Auth: React.FC<AuthPageProps> = ({ onLogin }) => {
 const Login: React.FC<AuthPageProps> = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  const api = useApi();
 
   const schema = yup.object().shape({
     email: yup.string().required('El correo es obligatorio').email('Dirreccion invalida'),
@@ -58,7 +58,7 @@ const Login: React.FC<AuthPageProps> = ({ onLogin }) => {
 
   const onPressSend = async (formData: any) => {
     setLoading(true);
-    var ok = await login(formData.email, formData.password);
+    var ok = await api.login(formData.email, formData.password);
     setError(!ok);
     if (ok) {
       onLogin();
@@ -123,6 +123,7 @@ const Login: React.FC<AuthPageProps> = ({ onLogin }) => {
 const Register: React.FC<AuthPageProps> = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const api = useApi();
 
   const schema = yup.object().shape({
     username: yup.string().required('El nombre de usuario es obligatorio'),
@@ -145,7 +146,7 @@ const Register: React.FC<AuthPageProps> = ({ onLogin }) => {
 
   const onPressSend = async (formData: any) => {
     setLoading(true);
-    var [ok, error] = await createAccount(formData.username, formData.email, formData.password);
+    var [ok, error] = await api.createAccount(formData.username, formData.email, formData.password);
     setError(error);
     if (ok) {
       onLogin();
@@ -245,4 +246,3 @@ function BiggerMarginItem({ children }) {
 }
 
 export default Auth;
-

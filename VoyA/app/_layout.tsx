@@ -5,7 +5,7 @@ import 'react-native-reanimated';
 
 import Auth from './auth';
 import { StatusBar } from 'expo-status-bar';
-import { CenterAligned, ErrorText } from '@/components/ThemedComponents';
+import { CenterAligned, ErrorText, FullScreenLoading } from '@/components/ThemedComponents';
 import { ApiProvider, AuthResult, useApi } from '../api';
 
 export default function RootLayout() {
@@ -54,7 +54,7 @@ function Inner() {
   return (
     <CenterAligned>
       {(loadingAuthStatus) && (
-        <ActivityIndicator size="large" color="#0000ff" />
+        <FullScreenLoading></FullScreenLoading>
       )}
       {(!loadingAuthStatus && !isAuthenticated) && (
         <View>

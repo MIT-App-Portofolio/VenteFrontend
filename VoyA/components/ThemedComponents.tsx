@@ -1,10 +1,17 @@
-import { ReactNode } from 'react';
-import { StyleSheet, Text, Button, View, SafeAreaView, TouchableOpacity, TextInput, TextInputProps, NativeSyntheticEvent, TextInputChangeEventData, TextProps } from 'react-native';
+import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity, TextInput, TextInputProps, NativeSyntheticEvent, TextInputChangeEventData, TextProps, ActivityIndicator } from 'react-native';
 
 type ButtonProps = {
   title: string;
   onClick: () => void;
 };
+
+export function FullScreenLoading() {
+  return (
+    <CenterAligned>
+      <ActivityIndicator size="large" color="#0000ff" />
+    </CenterAligned>
+  )
+}
 
 export function CenterAligned({ children }) {
   const styles = StyleSheet.create({

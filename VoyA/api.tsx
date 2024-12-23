@@ -1,5 +1,8 @@
-import React, { createContext, useContext, useState } from 'react';
-import axios from 'axios';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { Text } from 'react-native';
+import axios, { AxiosInstance } from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { CenterAligned, FullScreenLoading } from './components/ThemedComponents';
 
 export enum AuthResult {
   UnkownError,
@@ -37,12 +40,25 @@ export const useApi = () => {
   return context;
 };
 
-export const ApiProvider = ({ children }: { children: React.ReactNode }) => {
-  // const [apiInstance] = useState(new Api('http://192.168.1.53:5192'));
-  const [apiInstance] = useState(new Api('http://localhost:5192'));
+export const ApiProvider = ({ children }) => {
+  const [apiInstance, setApiInstance] = useState<Api | null>(null);
+
+  useEffect(() => {
+    const initializeApi = async () => {
+      const instance = new Api();
+      await instance.init('http://localhost:5192');
+      setApiInstance(instance);
+    };
+
+    initializeApi();
+  }, []);
+
+  if (!apiInstance) {
+    return FullScreenLoading;
+  }
 
   return (
-    <ApiContext.Provider value={apiInstance} >
+    <ApiContext.Provider value={apiInstance}>
       {children}
     </ApiContext.Provider>
   );
@@ -51,18 +67,22 @@ export const ApiProvider = ({ children }: { children: React.ReactNode }) => {
 export class Api {
   public user_profile: Profile | null;
 
-  api_url: string;
   locations: [EventLocation] | null;
+  axios: AxiosInstance | null;
 
-  public constructor(url: string) {
-    this.api_url = url;
+  constructor() {
     this.user_profile = null;
     this.locations = null;
+    this.axios = null;
+  }
+
+  public async init(url: string) {
+    this.axios = await this.axios_instance(url);
   }
 
   public async getUserInfo() {
     try {
-      const response = await axios.get(this.api_url + '/api/account/info');
+      const response = await this.axios!.get('/api/account/info');
       this.user_profile = response.data;
       return AuthResult.Authenticated;
     } catch (e) {
@@ -75,7 +95,7 @@ export class Api {
 
   public async getLocations() {
     try {
-      this.locations = (await axios.get(this.api_url + '/api/get_locations')).data;
+      this.locations = (await this.axios!.get('/api/get_locations')).data;
       return true;
     } catch {
       return false;
@@ -90,7 +110,7 @@ export class Api {
     };
 
     try {
-      await axios.post(this.api_url + '/api/account/register', registerData);
+      await this.axios!.post('/api/account/register', registerData);
     } catch (e) {
       var errorMessage = "Ha sucedido un error desconocido";
       if (e.response) {
@@ -113,14 +133,14 @@ export class Api {
     return [true, null];
   }
 
-  async login(email: string, password: string): Promise<[boolean, string | null]> {
+  public async login(email: string, password: string): Promise<[boolean, string | null]> {
     const loginData = {
       email: email,
       password: password,
     };
 
     try {
-      await axios.post(this.api_url + '/api/account/login', loginData);
+      await this.axios!.post('/api/account/login', loginData);
     } catch (e) {
       if (e.response && e.response.status == 400) {
         return [false, "Correo o contraseña incorrecta."];
@@ -130,4 +150,37 @@ export class Api {
 
     return [true, null];
   }
+
+  private async axios_instance(url: string) {
+    var instance = axios.create({
+      withCredentials: true,
+      baseURL: url
+    });
+
+    instance.interceptors.request.use(async (config) => {
+      const cookies = await get_cookies();
+      if (cookies) {
+        config.headers['Cookie'] = cookies;
+      }
+      return config;
+    });
+
+    instance.interceptors.response.use(async (response) => {
+      const setCookie = response.headers['set-cookie'];
+      if (setCookie) {
+        await set_cookies(setCookie.join("; "));
+      }
+      return response;
+    })
+
+    return instance;
+  }
+}
+
+async function get_cookies() {
+  return await AsyncStorage.getItem("api_cookies");
+}
+
+async function set_cookies(cookies: string) {
+  return await AsyncStorage.setItem("api_cookies", cookies);
 }

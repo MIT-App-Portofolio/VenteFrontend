@@ -37,6 +37,7 @@ const Auth: React.FC<AuthPageProps> = ({ onLogin }) => {
 const Login: React.FC<AuthPageProps> = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const api = useApi();
 
   const schema = yup.object().shape({
@@ -58,10 +59,12 @@ const Login: React.FC<AuthPageProps> = ({ onLogin }) => {
 
   const onPressSend = async (formData: any) => {
     setLoading(true);
-    var ok = await api.login(formData.email, formData.password);
+    var [ok, message] = await api.login(formData.email, formData.password);
     setError(!ok);
     if (ok) {
       onLogin();
+    } else {
+      setErrorMessage(message as string);
     }
     setLoading(false);
   };
@@ -112,7 +115,7 @@ const Login: React.FC<AuthPageProps> = ({ onLogin }) => {
 
       <BiggerMarginItem>
         {(error) && (
-          <ErrorText>Algo fue mal...</ErrorText>
+          <ErrorText>{errorMessage}</ErrorText>
         )}
         <BtnPrimary title='Iniciar session' onClick={handleSubmit(onPressSend)}></BtnPrimary>
       </BiggerMarginItem>

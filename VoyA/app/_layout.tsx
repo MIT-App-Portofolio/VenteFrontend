@@ -10,8 +10,8 @@ import 'react-native-reanimated';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import Auth from './auth';
 import { StatusBar } from 'expo-status-bar';
-import { CenterAligned } from '@/components/ThemedComponents';
-import { isLoggedIn } from './api';
+import { CenterAligned, ErrorText } from '@/components/ThemedComponents';
+import { isLoggedIn } from '../api';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 // SplashScreen.preventAutoHideAsync();
@@ -20,31 +20,39 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loadingAuthStatus, setLoading] = useState(true);
   const [isAuthenticated, setAuthenticated] = useState(false);
-
-  const [fontsLoaded] = useFonts({
-    Inter: require('@tamagui/font-inter/otf/Inter-Medium.otf'),
-    InterBold: require('@tamagui/font-inter/otf/Inter-Bold.otf'),
-  });
+  const [unkownError, setUnkownError] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
-      setAuthenticated(await isLoggedIn());
+      const [err, auth] = await isLoggedIn();
+      setAuthenticated(auth);
+      setUnkownError(err);
       setLoading(false);
     }
     checkAuth();
   }, []);
 
+  if (unkownError) {
+    return (
+      <CenterAligned>
+        <ErrorText>No fue posible contactar con los servidores de VoyA. Reinicie la app.</ErrorText>
+      </CenterAligned>
+    )
+  }
+
+  console.log(isAuthenticated);
+
   return (
     <CenterAligned>
-      {(loadingAuthStatus || !fontsLoaded) && (
+      {(loadingAuthStatus) && (
         <ActivityIndicator size="large" color="#0000ff" />
       )}
-      {(!loadingAuthStatus && fontsLoaded && !isAuthenticated) && (
+      {(!loadingAuthStatus && !isAuthenticated) && (
         <View>
           <Auth onLogin={() => setAuthenticated(true)}></Auth>
         </View>
       )}
-      {(!loadingAuthStatus && fontsLoaded && isAuthenticated) && (
+      {(!loadingAuthStatus && isAuthenticated) && (
         <View>
           <Stack>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { StyleSheet, Text, Button, View, SafeAreaView, TouchableOpacity, TextInput, TextInputProps, NativeSyntheticEvent, TextInputChangeEventData } from 'react-native';
+import { StyleSheet, Text, Button, View, SafeAreaView, TouchableOpacity, TextInput, TextInputProps, NativeSyntheticEvent, TextInputChangeEventData, TextProps } from 'react-native';
 
 type ButtonProps = {
   title: string;
@@ -62,6 +62,12 @@ export function BtnSecondary({ title, onClick }: ButtonProps) {
     </TouchableOpacity>
   );
 };
+
+export function ErrorText(props: TextProps) {
+  return (
+    <Text {...props} style={{ color: 'red' }}></Text>
+  )
+}
 
 interface StyledTextInputProps extends TextInputProps {
   title?: string;

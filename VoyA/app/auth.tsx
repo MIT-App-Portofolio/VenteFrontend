@@ -1,9 +1,12 @@
 // LoginPage.tsx
 import { useState } from 'react';
 import { StyleSheet, TextInput, Modal, ActivityIndicator, View, Text, Button } from 'react-native';
-import { BtnSecondary, BtnPrimary, StyledTextInput, StyledEmailInput, StyledPasswordInput } from '../components/ThemedComponents';
+import { BtnSecondary, BtnPrimary, StyledTextInput, StyledEmailInput, StyledPasswordInput, ErrorText } from '../components/ThemedComponents';
 import Config from 'react-native-config';
-import { createAccount, login } from './api';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { createAccount, login } from '../api';
+import * as yup from 'yup';
+import { Controller, ControllerFieldState, ControllerRenderProps, FieldValues, useForm, UseFormStateReturn } from 'react-hook-form';
 
 // Define the type for the props that LoginPage will accept
 type AuthPageProps = {
@@ -35,23 +38,38 @@ const Auth: React.FC<AuthPageProps> = ({ onLogin }) => {
 const Login: React.FC<AuthPageProps> = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
 
-  const submit = async () => {
+  const schema = yup.object().shape({
+    email: yup.string().required('El correo es obligatorio').email('Dirreccion invalida'),
+    password: ProperPassword(),
+  });
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: yupResolver(schema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
+
+  const onPressSend = async (formData: any) => {
     setLoading(true);
-    var ok = await login(email, password);
-
+    var ok = await login(formData.email, formData.password);
     setError(!ok);
-    setLoading(false);
-
     if (ok) {
       onLogin();
     }
+    setLoading(false);
   };
 
   return (
-    <View>
+    <View style={{
+      width: 400
+    }}>
       <Modal
         transparent={true}
         visible={loading}
@@ -65,41 +83,78 @@ const Login: React.FC<AuthPageProps> = ({ onLogin }) => {
       </Modal>
 
       <MarginItem>
-        <StyledEmailInput value={email} setValue={setEmail}></StyledEmailInput>
+        <Controller
+          control={control}
+          rules={{
+            required: true,
+          }}
+          render={({ field: { onChange, value } }) => (
+            <StyledEmailInput value={value} setValue={onChange}></StyledEmailInput>
+          )}
+          name="email"
+        />
+        {errors.email && <ErrorText>{errors.email.message}</ErrorText>}
       </MarginItem>
+
       <MarginItem>
-        <StyledPasswordInput title='Contraseña' value={password} setValue={setPassword}></StyledPasswordInput>
+        <Controller
+          control={control}
+          rules={{
+            required: true,
+          }}
+          render={({ field: { onChange, value } }) => (
+            <StyledPasswordInput title='Contraseña' value={value} setValue={onChange}></StyledPasswordInput>
+          )}
+          name="password"
+        />
+        {errors.password && <ErrorText>{errors.password.message}</ErrorText>}
       </MarginItem>
 
       <BiggerMarginItem>
-        <BtnPrimary title='Iniciar session' onClick={submit}></BtnPrimary>
+        {(error) && (
+          <ErrorText>Algo fue mal...</ErrorText>
+        )}
+        <BtnPrimary title='Iniciar session' onClick={handleSubmit(onPressSend)}></BtnPrimary>
       </BiggerMarginItem>
-    </View>
+    </View >
   )
 };
 
 const Register: React.FC<AuthPageProps> = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
-  const [state, setState] = useState('email');
-  const [email, setEmail] = useState('');
-  const [username, setUsername] = useState('');
-  const [name, setName] = useState('');
-  const [password, setPassword] = useState('');
-  const [ig, setIg] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
-  const submit = async () => {
+  const schema = yup.object().shape({
+    username: yup.string().required('El nombre de usuario es obligatorio'),
+    email: yup.string().required('El correo es obligatorio').email('Dirreccion invalida'),
+    password: ProperPassword(),
+  });
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: yupResolver(schema),
+    defaultValues: {
+      email: '',
+      username: '',
+      password: '',
+    },
+  });
+
+  const onPressSend = async (formData: any) => {
     setLoading(true);
-    var ok = await createAccount(name, username, email, password, ig);
-    setError(!ok);
-    setLoading(false);
+    var [ok, error] = await createAccount(formData.username, formData.email, formData.password);
+    setError(error);
     if (ok) {
       onLogin();
     }
+    setLoading(false);
   };
 
   return (
-    <View>
+    <View style={{ width: 400 }}>
       <Modal
         transparent={true}
         visible={loading}
@@ -111,45 +166,71 @@ const Register: React.FC<AuthPageProps> = ({ onLogin }) => {
           </View>
         </View>
       </Modal>
-      {(state === 'email') && (
-        <View>
-          <MarginItem>
-            <StyledTextInput title='Nombre de usuario' placeholder='' value={username} setValue={setUsername} autoCapitalize='none'></StyledTextInput>
-          </MarginItem>
-          <MarginItem>
-            <StyledEmailInput value={email} setValue={setEmail}></StyledEmailInput>
-          </MarginItem>
-          <MarginItem>
-            <StyledPasswordInput title='Contraseña' value={password} setValue={setPassword}></StyledPasswordInput>
-          </MarginItem>
+      <View>
+        <MarginItem>
+          <Controller
+            control={control}
+            rules={{
+              required: true,
+            }}
+            render={({ field: { onChange, value } }) => (
+              <StyledTextInput title='Nombre de usuario' placeholder='' value={value} setValue={onChange} autoCapitalize='none'></StyledTextInput>
+            )}
+            name="username"
+          />
+          {errors.username && <ErrorText>{errors.username.message}</ErrorText>}
+        </MarginItem>
 
-          <BiggerMarginItem>
-            <BtnPrimary title='Continuar' onClick={() => setState('setup account')}></BtnPrimary>
-          </BiggerMarginItem>
-        </View>
-      )}
+        <MarginItem>
+          <Controller
+            control={control}
+            rules={{
+              required: true,
+            }}
+            render={({ field: { onChange, value } }) => (
+              <StyledEmailInput value={value} setValue={onChange}></StyledEmailInput>
+            )}
+            name="email"
+          />
+          {errors.email && <ErrorText>{errors.email.message}</ErrorText>}
+        </MarginItem>
 
-      {(state === 'setup account') && (
-        <View>
-          <MarginItem>
-            <StyledTextInput title='Tu nombre real' value={name} setValue={setName} autoCapitalize='words'></StyledTextInput>
-          </MarginItem>
-          <MarginItem>
-            <StyledTextInput title='Nombre de usuario de Instagram (Opcional)' value={ig} setValue={setIg} autoCapitalize='none'></StyledTextInput>
-          </MarginItem>
+        <MarginItem>
+          <Controller
+            control={control}
+            rules={{
+              required: true,
+            }}
+            render={({ field: { onChange, value } }) => (
+              <StyledPasswordInput title='Contraseña' value={value} setValue={onChange}></StyledPasswordInput>
+            )}
+            name="password"
+          />
+          {errors.password && <ErrorText>{errors.password.message}</ErrorText>}
+        </MarginItem>
 
+
+        <BiggerMarginItem>
           {(error) && (
-            <Text>Algo fue mal...</Text>
+            <ErrorText>
+              {error}
+            </ErrorText>
           )}
-
-          <BiggerMarginItem>
-            <BtnPrimary title='Crea tu cuenta' onClick={submit}></BtnPrimary>
-          </BiggerMarginItem>
-        </View>
-      )}
+          <BtnPrimary title='Crea tu cuenta' onClick={handleSubmit(onPressSend)}></BtnPrimary>
+        </BiggerMarginItem>
+      </View>
     </View>
   )
 };
+
+function ProperPassword() {
+  return yup.string()
+    .min(6, 'La contraseña debe tener al menos 6 caracteres.')
+    .matches(/[^a-zA-Z0-9]/, 'La contraseña debe tener al menos un carácter no alfanumérico.')
+    .matches(/\d/, 'La contraseña debe tener al menos un dígito (0-9).')
+    .matches(/[A-Z]/, 'La contraseña debe tener al menos una letra mayúscula (A-Z).')
+    .required('La contraseña es requerida.');
+}
 
 function MarginItem({ children }) {
   return (
@@ -164,3 +245,4 @@ function BiggerMarginItem({ children }) {
 }
 
 export default Auth;
+

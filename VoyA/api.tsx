@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
+import axios from 'axios';
 
 export enum AuthResult {
   UnkownError,
@@ -61,35 +62,24 @@ export class Api {
 
   public async getUserInfo() {
     try {
-      var response = await fetch(this.api_url + '/api/account/info');
-      if (response.ok) {
-        this.user_profile = (await response.json());
-      } else if (response.status == 401) {
+      const response = await axios.get(this.api_url + '/api/account/info');
+      this.user_profile = response.data;
+      return AuthResult.Authenticated;
+    } catch (e) {
+      if (e.response && e.response.status === 401) {
         return AuthResult.Unauthenticated;
       }
-    } catch (e) {
-      console.log(e);
-      return AuthResult.UnkownError;
     }
-
-    return AuthResult.Authenticated;
+    return AuthResult.UnkownError;
   }
 
   public async getLocations() {
-    var response = null;
     try {
-      response = await fetch(this.api_url + '/api/get_locations');
+      this.locations = (await axios.get(this.api_url + '/api/get_locations')).data;
+      return true;
     } catch {
       return false;
     }
-
-    try {
-      this.locations = await response.json();
-    } catch {
-      return false;
-    }
-
-    return response.ok;
   }
 
   public async createAccount(username: string, email: string, password: string): Promise<[boolean, string | null]> {
@@ -99,32 +89,19 @@ export class Api {
       password: password,
     };
 
-    var response = null;
-
     try {
-      response = await fetch(this.api_url + '/api/account/register', {
-        method: 'post',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(registerData),
-      });
-    } catch {
-      return [false, 'Ha sucedido un error desconocido'];
-    }
-
-
-    if (!response.ok) {
+      await axios.post(this.api_url + '/api/account/register', registerData);
+    } catch (e) {
       var errorMessage = "Ha sucedido un error desconocido";
-      try {
-        (await response.json() as [any]).forEach(element => {
+      if (e.response) {
+        e.response.data.forEach(element => {
           if (element.code == 'DuplicateUserName') {
             errorMessage = "Ya hay alguien con este nombre de usuario";
           } else if (element.code == 'DuplicateEmail') {
             errorMessage = "Ya hay alguien con este email";
           }
         });
-      } catch { }
+      }
 
       return [false, errorMessage];
     }
@@ -142,22 +119,13 @@ export class Api {
       password: password,
     };
 
-    var response = null;
-
     try {
-      response = await fetch(this.api_url + '/api/account/login', {
-        method: 'post',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(loginData),
-      });
-    } catch {
+      await axios.post(this.api_url + '/api/account/login', loginData);
+    } catch (e) {
+      if (e.response && e.response.status == 400) {
+        return [false, "Correo o contraseña incorrecta."];
+      }
       return [false, "Error al contactar con servidores de VoyA."];
-    }
-
-    if (!response.ok) {
-      return [false, "Correo o contraseña incorrecta."];
     }
 
     return [true, null];

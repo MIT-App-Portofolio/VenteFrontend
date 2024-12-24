@@ -7,6 +7,7 @@ import Auth from './auth';
 import { StatusBar } from 'expo-status-bar';
 import { CenterAligned, ErrorText, FullScreenLoading } from '@/components/ThemedComponents';
 import { ApiProvider, AuthResult, useApi } from '../api';
+import { DarkTheme, ThemeProvider } from '@react-navigation/native';
 
 export default function RootLayout() {
   return (
@@ -51,25 +52,25 @@ function Inner() {
     )
   }
 
+  if (loadingAuthStatus) {
+    return <FullScreenLoading />;
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <CenterAligned>
+        <Auth onLogin={() => setAuthenticated(true)} />
+      </CenterAligned>
+    );
+  }
+
   return (
-    <CenterAligned>
-      {(loadingAuthStatus) && (
-        <FullScreenLoading></FullScreenLoading>
-      )}
-      {(!loadingAuthStatus && !isAuthenticated) && (
-        <View>
-          <Auth onLogin={() => setAuthenticated(true)}></Auth>
-        </View>
-      )}
-      {(!loadingAuthStatus && isAuthenticated) && (
-        <View>
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="+not-found" />
-          </Stack>
-          <StatusBar style="auto" />
-        </View>
-      )}
-    </CenterAligned >
+    <ThemeProvider value={DarkTheme}>
+      <Stack>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="+not-found" />
+      </Stack>
+      <StatusBar style="auto" />
+    </ThemeProvider>
   );
 }

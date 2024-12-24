@@ -11,9 +11,9 @@ export enum AuthResult {
 }
 
 type Profile = {
-  username: string,
+  userName: string,
   name?: string,
-  ig?: string,
+  igHandle?: string,
   description?: string,
   eventStatus: EventStatus,
 };
@@ -54,7 +54,7 @@ export const ApiProvider = ({ children }) => {
   }, []);
 
   if (!apiInstance) {
-    return FullScreenLoading;
+    return <FullScreenLoading></FullScreenLoading>;
   }
 
   return (
@@ -149,6 +149,19 @@ export class Api {
     }
 
     return [true, null];
+  }
+
+  public async updateProfile(profile: Profile) {
+    try {
+      await this.axios!.post('/api/account/update_profile', {
+        igHandle: profile.igHandle,
+        name: profile.name,
+        description: profile.description,
+      });
+    } catch {
+      return false;
+    }
+    return true;
   }
 
   private async axios_instance(url: string) {

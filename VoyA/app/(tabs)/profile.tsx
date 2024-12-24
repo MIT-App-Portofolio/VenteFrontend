@@ -1,18 +1,20 @@
-import { Text, View } from "react-native";
+import { Text, View, Image, Button } from "react-native";
 import { useApi } from "@/api";
 import * as yup from 'yup';
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { BtnPrimary, CenterAligned, ErrorText, StyledTextInput } from "@/components/ThemedComponents";
-import React from "react";
+import React, { useState } from "react";
+import * as ImagePicker from 'expo-image-picker';
 
 export default function Profile() {
   const api = useApi();
+  const [image, setImage] = useState(api.profile_picture);
 
   const schema = yup.object().shape({
-    name: yup.string().required(),
-    description: yup.string().required(),
-    ig: yup.string().required(),
+    name: yup.string(),
+    description: yup.string(),
+    ig: yup.string(),
   });
 
   const {
@@ -32,20 +34,41 @@ export default function Profile() {
     await api.updateProfile(data);
   };
 
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      const localUri = result.assets[0].uri;
+      const filename = localUri.split('/').pop();
+      const match = /\.(\w+)$/.exec(filename!);
+      const type = match ? `image/${match[1]}` : `image`;
+
+      const file = new File([await (await fetch(localUri)).blob()], filename!, { type });
+
+      const success = await api.updateProfilePicture(file);
+      if (success) {
+        setImage(api.profile_picture);
+      }
+    }
+  };
+
   return (
     <CenterAligned>
       <View style={{ width: '60%' }}>
-        <Text style={{
-          color: 'white'
-        }}>@{api.user_profile!.userName as string}</Text>
+        <Text style={{ color: 'white' }}>@{api.user_profile!.userName as string}</Text>
+
+        {image && <Image source={{ uri: image }} style={{ width: 100, height: 100, borderRadius: 50 }} />}
+        <Button title="Change Profile Picture" onPress={pickImage} />
 
         <Controller
           control={control}
-          rules={{
-            required: true,
-          }}
           render={({ field: { onChange, value } }) => (
-            <StyledTextInput title='Nombre' placeholder='' value={value} setValue={onChange} autoCapitalize='none'></StyledTextInput>
+            <StyledTextInput title='Nombre' placeholder='' value={value || ''} setValue={onChange} autoCapitalize='none' />
           )}
           name="name"
         />
@@ -53,11 +76,8 @@ export default function Profile() {
 
         <Controller
           control={control}
-          rules={{
-            required: true,
-          }}
           render={({ field: { onChange, value } }) => (
-            <StyledTextInput title='Descripción' placeholder='' value={value} setValue={onChange} autoCapitalize='none'></StyledTextInput>
+            <StyledTextInput title='Descripción' placeholder='' value={value || ''} setValue={onChange} autoCapitalize='none' />
           )}
           name="description"
         />
@@ -65,17 +85,14 @@ export default function Profile() {
 
         <Controller
           control={control}
-          rules={{
-            required: true,
-          }}
           render={({ field: { onChange, value } }) => (
-            <StyledTextInput title='Instagram' placeholder='' value={value} setValue={onChange} autoCapitalize='none'></StyledTextInput>
+            <StyledTextInput title='Instagram' placeholder='' value={value || ''} setValue={onChange} autoCapitalize='none' />
           )}
           name="ig"
         />
         {errors.ig && <ErrorText>{errors.ig.message}</ErrorText>}
 
-        <BtnPrimary title='Guardar' onClick={handleSubmit(onPressSend)}></BtnPrimary>
+        <Button title="Send" onPress={handleSubmit(onPressSend)} />
       </View>
     </CenterAligned>
   );

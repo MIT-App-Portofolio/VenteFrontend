@@ -66,12 +66,14 @@ export const ApiProvider = ({ children }) => {
 
 export class Api {
   public user_profile: Profile | null;
+  public profile_picture: string | null;
 
   locations: [EventLocation] | null;
   axios: AxiosInstance | null;
 
   constructor() {
     this.user_profile = null;
+    this.profile_picture = null;
     this.locations = null;
     this.axios = null;
   }
@@ -84,6 +86,7 @@ export class Api {
     try {
       const response = await this.axios!.get('/api/account/info');
       this.user_profile = response.data;
+      await this.fetchProfilePicture();
       return AuthResult.Authenticated;
     } catch (e) {
       if (e.response && e.response.status === 401) {
@@ -91,6 +94,34 @@ export class Api {
       }
     }
     return AuthResult.UnkownError;
+  }
+
+  public async fetchProfilePicture() {
+    try {
+      const response = await this.axios!.get('/api/access_pfp?userName=' + this.user_profile!.userName);
+      const imageUrl = response.data;
+
+      this.profile_picture = imageUrl;
+    } catch {
+      this.profile_picture = null;
+    }
+  }
+
+  public async updateProfilePicture(picture: File) {
+    const formData = new FormData();
+    formData.append('file', picture);
+
+    try {
+      await this.axios!.post('/api/account/update_pfp', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      await this.fetchProfilePicture();
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   public async getLocations() {

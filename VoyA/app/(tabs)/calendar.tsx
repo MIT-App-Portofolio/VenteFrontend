@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Text, View, Button } from "react-native";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from "@react-native-picker/picker";
@@ -66,6 +66,7 @@ export default function Calendar() {
         <Button title="Escoge una fecha" onPress={() => setShowDatePicker(true)} />
         {showDatePicker && (
           <DateTimePicker
+            minimumDate={new Date()}
             value={date}
             mode="date"
             display="default"

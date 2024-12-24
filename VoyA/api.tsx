@@ -97,7 +97,7 @@ export class Api {
         ...response.data,
         eventStatus: {
           ...response.data.eventStatus,
-          time: new Date(response.data.eventStatus.time),
+          time: response.data.eventStatus.time ? new Date(response.data.eventStatus.time) : null,
         },
       };
 

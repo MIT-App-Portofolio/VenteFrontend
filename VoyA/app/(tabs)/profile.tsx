@@ -3,7 +3,7 @@ import { useApi } from "@/api";
 import * as yup from 'yup';
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { BtnPrimary, CenterAligned, ErrorText, StyledTextInput } from "@/components/ThemedComponents";
+import { CenterAligned, ErrorText, StyledTextInput } from "@/components/ThemedComponents";
 import React, { useState } from "react";
 import * as ImagePicker from 'expo-image-picker';
 

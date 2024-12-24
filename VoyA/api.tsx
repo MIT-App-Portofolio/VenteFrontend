@@ -9,7 +9,7 @@ export enum AuthResult {
   Unauthenticated
 }
 
-type Profile = {
+export type Profile = {
   userName: string,
   name?: string,
   igHandle?: string,
@@ -17,14 +17,14 @@ type Profile = {
   eventStatus: EventStatus,
 };
 
-type EventStatus = {
+export type EventStatus = {
   active: boolean,
   time?: Date,
   with?: [string],
   location?: EventLocation
 }
 
-type EventLocation = {
+export type EventLocation = {
   id: number,
   name: string,
 };
@@ -93,7 +93,7 @@ export class Api {
         },
       };
 
-      await this.fetchProfilePicture();
+      await this.fetchUserPfp();
       return AuthResult.Authenticated;
     } catch (e) {
       if (e.response && e.response.status === 401) {
@@ -103,7 +103,7 @@ export class Api {
     return AuthResult.UnkownError;
   }
 
-  public async fetchProfilePicture() {
+  public async fetchUserPfp() {
     try {
       const response = await this.axios!.get('/api/access_pfp?userName=' + this.userProfile!.userName);
       const imageUrl = response.data;
@@ -111,6 +111,15 @@ export class Api {
       this.profilePicture = imageUrl;
     } catch {
       this.profilePicture = null;
+    }
+  }
+
+  public async fetchPfp(userName: string) {
+    try {
+      const response = await this.axios!.get('/api/access_pfp?userName=' + userName);
+      return response.data;
+    } catch {
+      return null;
     }
   }
 
@@ -124,7 +133,7 @@ export class Api {
           'Content-Type': 'multipart/form-data',
         },
       });
-      await this.fetchProfilePicture();
+      await this.fetchUserPfp();
       return true;
     } catch {
       return false;
@@ -218,6 +227,14 @@ export class Api {
       return false;
     }
     return await this.getUserInfo() == AuthResult.Authenticated;
+  }
+
+  public async queryVisitors(page: number): Promise<[Profile] | null> {
+    try {
+      return (await this.axios?.get('/api/query_visitors?page=' + page))!.data;
+    } catch {
+      return null;
+    }
   }
 
   private async axios_instance(url: string) {

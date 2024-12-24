@@ -14,7 +14,7 @@ export default function Profile() {
   const schema = yup.object().shape({
     name: yup.string(),
     description: yup.string(),
-    ig: yup.string(),
+    igHandle: yup.string(),
   });
 
   const {
@@ -26,7 +26,7 @@ export default function Profile() {
     defaultValues: {
       name: api.userProfile?.name || '',
       description: api.userProfile?.description || '',
-      ig: api.userProfile?.igHandle || '',
+      igHandle: api.userProfile?.igHandle || '',
     },
   });
 
@@ -88,9 +88,9 @@ export default function Profile() {
           render={({ field: { onChange, value } }) => (
             <StyledTextInput title='Instagram' placeholder='' value={value || ''} setValue={onChange} autoCapitalize='none' />
           )}
-          name="ig"
+          name="igHandle"
         />
-        {errors.ig && <ErrorText>{errors.ig.message}</ErrorText>}
+        {errors.igHandle && <ErrorText>{errors.igHandle.message}</ErrorText>}
 
         <Button title="Send" onPress={handleSubmit(onPressSend)} />
       </View>

@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Text } from 'react-native';
 import axios, { AxiosInstance } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { CenterAligned, FullScreenLoading } from './components/ThemedComponents';
+import { FullScreenLoading } from './components/ThemedComponents';
 
 export enum AuthResult {
   UnkownError,
@@ -20,14 +19,14 @@ type Profile = {
 
 type EventStatus = {
   active: boolean,
-  date?: Date,
+  time?: Date,
   with?: [string],
   location?: EventLocation
 }
 
 type EventLocation = {
   id: number,
-  name: String,
+  name: string,
 };
 
 const ApiContext = createContext<Api | null>(null);
@@ -85,7 +84,14 @@ export class Api {
   public async getUserInfo() {
     try {
       const response = await this.axios!.get('/api/account/info');
-      this.user_profile = response.data;
+      this.user_profile = {
+        ...response.data,
+        eventStatus: {
+          ...response.data.eventStatus,
+          time: new Date(response.data.eventStatus.time),
+        },
+      };
+
       await this.fetchProfilePicture();
       return AuthResult.Authenticated;
     } catch (e) {
@@ -193,6 +199,24 @@ export class Api {
       return false;
     }
     return true;
+  }
+
+  public async registerEvent(location: EventLocation, date: Date) {
+    try {
+      await this.axios!.post('/api/register_event?location=' + location.id + '&time=' + date.toISOString());
+    } catch (e) {
+      return false;
+    }
+    return await this.getUserInfo() == AuthResult.Authenticated;
+  }
+
+  public async cancelEvent() {
+    try {
+      await this.axios!.post('/api/cancel_event');
+    } catch {
+      return false;
+    }
+    return await this.getUserInfo() == AuthResult.Authenticated;
   }
 
   private async axios_instance(url: string) {

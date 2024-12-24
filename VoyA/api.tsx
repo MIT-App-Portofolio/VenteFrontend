@@ -46,6 +46,7 @@ export const ApiProvider = ({ children }) => {
     const initializeApi = async () => {
       const instance = new Api();
       await instance.init('http://localhost:5192');
+
       setApiInstance(instance);
     };
 
@@ -64,15 +65,15 @@ export const ApiProvider = ({ children }) => {
 };
 
 export class Api {
-  public user_profile: Profile | null;
-  public profile_picture: string | null;
+  public userProfile: Profile | null;
+  public profilePicture: string | null;
 
   locations: [EventLocation] | null;
   axios: AxiosInstance | null;
 
   constructor() {
-    this.user_profile = null;
-    this.profile_picture = null;
+    this.userProfile = null;
+    this.profilePicture = null;
     this.locations = null;
     this.axios = null;
   }
@@ -84,7 +85,7 @@ export class Api {
   public async getUserInfo() {
     try {
       const response = await this.axios!.get('/api/account/info');
-      this.user_profile = {
+      this.userProfile = {
         ...response.data,
         eventStatus: {
           ...response.data.eventStatus,
@@ -104,12 +105,12 @@ export class Api {
 
   public async fetchProfilePicture() {
     try {
-      const response = await this.axios!.get('/api/access_pfp?userName=' + this.user_profile!.userName);
+      const response = await this.axios!.get('/api/access_pfp?userName=' + this.userProfile!.userName);
       const imageUrl = response.data;
 
-      this.profile_picture = imageUrl;
+      this.profilePicture = imageUrl;
     } catch {
-      this.profile_picture = null;
+      this.profilePicture = null;
     }
   }
 

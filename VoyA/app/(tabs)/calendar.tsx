@@ -1,19 +1,25 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Text, View, Button } from "react-native";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from "@react-native-picker/picker";
 import { useApi } from "@/api";
-import { CenterAligned, BtnPrimary, ErrorText, BtnSecondary } from "@/components/ThemedComponents";
+import { CenterAligned, BtnPrimary, ErrorText, BtnSecondary, FullScreenLoading } from "@/components/ThemedComponents";
 
 export default function Calendar() {
   const api = useApi();
-  const [picking, setPicking] = useState(api.user_profile?.eventStatus.active);
-  const [selectedLocation, setSelectedLocation] = useState<number>(api.user_profile?.eventStatus.location?.id ?? 0);
-  const [date, setDate] = useState(api.user_profile?.eventStatus.time ?? new Date());
+  const [loading, setLoading] = useState(false);
+  const [picking, setPicking] = useState(api.userProfile?.eventStatus.active);
+  const [selectedLocation, setSelectedLocation] = useState<number>(api.userProfile?.eventStatus.location?.id ?? 0);
+  const [date, setDate] = useState(api.userProfile?.eventStatus.time ?? new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    setPicking(api.userProfile?.eventStatus.active);
+  }, [api.userProfile?.eventStatus.active]);
+
   const onSubmit = async () => {
+    setLoading(true);
     if (selectedLocation == null) {
       setError("Escoge un lugar.");
       return;
@@ -26,16 +32,23 @@ export default function Calendar() {
     } else {
       setError(null);
     }
+    setLoading(false);
   };
 
   const onCancel = async () => {
+    setLoading(true);
     const success = await api.cancelEvent();
     if (!success) {
       setError("No se pudo cancelar el evento.");
     } else {
       setError(null);
     }
+    setLoading(false);
   };
+
+  if (loading) {
+    return <FullScreenLoading></FullScreenLoading>
+  }
 
   if (!picking) {
     return (
@@ -81,7 +94,7 @@ export default function Calendar() {
         <BtnPrimary title="Guardar" onClick={onSubmit} />
 
         {
-          api.user_profile?.eventStatus.active &&
+          api.userProfile?.eventStatus.active &&
           <BtnSecondary title="Cancelar Evento" onClick={onCancel} />
         }
 

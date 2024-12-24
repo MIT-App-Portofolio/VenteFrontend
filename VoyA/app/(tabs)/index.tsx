@@ -8,7 +8,7 @@ export default function HomeScreen() {
   const api = useApi();
   const router = useRouter();
 
-  if (!api.user_profile?.eventStatus.active) {
+  if (!api.userProfile?.eventStatus.active) {
     return (
       <CenterAligned>
         <Text style={{ color: 'white' }}>No estas registrado en ningun evento.</Text>

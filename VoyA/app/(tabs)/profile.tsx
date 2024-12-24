@@ -9,7 +9,7 @@ import * as ImagePicker from 'expo-image-picker';
 
 export default function Profile() {
   const api = useApi();
-  const [image, setImage] = useState(api.profile_picture);
+  const [image, setImage] = useState(api.profilePicture);
 
   const schema = yup.object().shape({
     name: yup.string(),
@@ -24,9 +24,9 @@ export default function Profile() {
   } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
-      name: api.user_profile?.name || '',
-      description: api.user_profile?.description || '',
-      ig: api.user_profile?.igHandle || '',
+      name: api.userProfile?.name || '',
+      description: api.userProfile?.description || '',
+      ig: api.userProfile?.igHandle || '',
     },
   });
 
@@ -52,7 +52,7 @@ export default function Profile() {
 
       const success = await api.updateProfilePicture(file);
       if (success) {
-        setImage(api.profile_picture);
+        setImage(api.profilePicture);
       }
     }
   };
@@ -60,7 +60,7 @@ export default function Profile() {
   return (
     <CenterAligned>
       <View style={{ width: '60%' }}>
-        <Text style={{ color: 'white' }}>@{api.user_profile!.userName as string}</Text>
+        <Text style={{ color: 'white' }}>@{api.userProfile!.userName as string}</Text>
 
         {image && <Image source={{ uri: image }} style={{ width: 100, height: 100, borderRadius: 50 }} />}
         <Button title="Change Profile Picture" onPress={pickImage} />

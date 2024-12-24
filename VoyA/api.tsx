@@ -29,6 +29,14 @@ export type EventLocation = {
   name: string,
 };
 
+export type EventPlace = {
+  name: string,
+  description: string,
+  imageUrls: [string],
+  priceRangeBegin: number,
+  priceRangeEnd: number,
+}
+
 const ApiContext = createContext<Api | null>(null);
 
 export const useApi = () => {
@@ -232,6 +240,14 @@ export class Api {
   public async queryVisitors(page: number): Promise<[Profile] | null> {
     try {
       return (await this.axios?.get('/api/query_visitors?page=' + page))!.data;
+    } catch {
+      return null;
+    }
+  }
+
+  public async queryEventPlaces(): Promise<[EventPlace] | null> {
+    try {
+      return (await this.axios?.get('/api/query_event_places'))!.data;
     } catch {
       return null;
     }

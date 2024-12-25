@@ -6,6 +6,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { CenterAligned, ErrorText, StyledTextInput } from "@/components/ThemedComponents";
 import React, { useState } from "react";
 import * as ImagePicker from 'expo-image-picker';
+import { Picker } from "@react-native-picker/picker";
 
 export default function Profile() {
   const api = useApi();
@@ -15,6 +16,7 @@ export default function Profile() {
     name: yup.string(),
     description: yup.string(),
     igHandle: yup.string(),
+    gender: yup.number().required('El género es obligatorio').oneOf([0, 1], 'Género inválido'),
   });
 
   const {
@@ -27,6 +29,7 @@ export default function Profile() {
       name: api.userProfile?.name || '',
       description: api.userProfile?.description || '',
       igHandle: api.userProfile?.igHandle || '',
+      gender: api.userProfile?.gender || 0,
     },
   });
 
@@ -91,6 +94,22 @@ export default function Profile() {
           name="igHandle"
         />
         {errors.igHandle && <ErrorText>{errors.igHandle.message}</ErrorText>}
+
+        <Controller
+          control={control}
+          render={({ field: { onChange, value } }) => (
+            <Picker
+              selectedValue={value}
+              onValueChange={onChange}
+              style={{ color: 'white', marginBottom: 20, backgroundColor: 'black' }}
+            >
+              <Picker.Item label="Hombre" value={0} />
+              <Picker.Item label="Mujer" value={1} />
+            </Picker>
+          )}
+          name="gender"
+        />
+        {errors.gender && <ErrorText>{errors.gender.message}</ErrorText>}
 
         <Button title="Send" onPress={handleSubmit(onPressSend)} />
       </View>

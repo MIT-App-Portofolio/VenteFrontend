@@ -6,6 +6,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { Controller, useForm } from 'react-hook-form';
 import { useApi } from '@/api';
+import { Picker } from '@react-native-picker/picker';
 
 // Define the type for the props that LoginPage will accept
 type AuthPageProps = {
@@ -132,6 +133,7 @@ const Register: React.FC<AuthPageProps> = ({ onLogin }) => {
     username: yup.string().required('El nombre de usuario es obligatorio'),
     email: yup.string().required('El correo es obligatorio').email('Dirreccion invalida'),
     password: ProperPassword(),
+    gender: yup.number().required('El género es obligatorio').oneOf([0, 1], 'Género inválido'),
   });
 
   const {
@@ -144,12 +146,13 @@ const Register: React.FC<AuthPageProps> = ({ onLogin }) => {
       email: '',
       username: '',
       password: '',
+      gender: 0,
     },
   });
 
   const onPressSend = async (formData: any) => {
     setLoading(true);
-    var [ok, error] = await api.createAccount(formData.username, formData.email, formData.password);
+    var [ok, error] = await api.createAccount(formData.username, formData.email, formData.password, formData.gender);
     setError(error);
     if (ok) {
       onLogin();
@@ -213,6 +216,26 @@ const Register: React.FC<AuthPageProps> = ({ onLogin }) => {
           {errors.password && <ErrorText>{errors.password.message}</ErrorText>}
         </MarginItem>
 
+        <MarginItem>
+          <Controller
+            control={control}
+            rules={{
+              required: true,
+            }}
+            render={({ field: { onChange, value } }) => (
+              <Picker
+                selectedValue={value}
+                onValueChange={onChange}
+                style={{ color: 'white', marginBottom: 20, backgroundColor: 'black' }}
+              >
+                <Picker.Item label="Hombre" value={0} />
+                <Picker.Item label="Mujer" value={1} />
+              </Picker>
+            )}
+            name="gender"
+          />
+          {errors.gender && <ErrorText>{errors.gender.message}</ErrorText>}
+        </MarginItem>
 
         <BiggerMarginItem>
           {(error) && (

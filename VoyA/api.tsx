@@ -11,6 +11,7 @@ export enum AuthResult {
 
 export type Profile = {
   userName: string,
+  gender: number,
   name?: string,
   igHandle?: string,
   description?: string,
@@ -157,11 +158,12 @@ export class Api {
     }
   }
 
-  public async createAccount(username: string, email: string, password: string): Promise<[boolean, string | null]> {
+  public async createAccount(username: string, email: string, password: string, gender: number): Promise<[boolean, string | null]> {
     const registerData = {
       email: email,
       userName: username,
       password: password,
+      gender: gender,
     };
 
     try {
@@ -212,6 +214,7 @@ export class Api {
         igHandle: profile.igHandle,
         name: profile.name,
         description: profile.description,
+        gender: profile.gender,
       });
     } catch {
       return false;

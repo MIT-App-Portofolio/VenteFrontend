@@ -7,6 +7,7 @@ import { CenterAligned, ErrorText, StyledTextInput } from "@/components/ThemedCo
 import React, { useState } from "react";
 import * as ImagePicker from 'expo-image-picker';
 import { Picker } from "@react-native-picker/picker";
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 
 export default function Profile() {
   const api = useApi();
@@ -47,11 +48,19 @@ export default function Profile() {
 
     if (!result.canceled) {
       const localUri = result.assets[0].uri;
-      const filename = localUri.split('/').pop();
-      const match = /\.(\w+)$/.exec(filename!);
-      const type = match ? `image/${match[1]}` : `image`;
 
-      const file = new File([await (await fetch(localUri)).blob()], filename!, { type });
+      // Convert the image to JPEG
+      const manipulatedImage = await manipulateAsync(
+        localUri,
+        [],
+        { compress: 1, format: SaveFormat.JPEG }
+      );
+
+      const filename = manipulatedImage.uri.split('/').pop();
+      const match = /\.(\w+)$/.exec(filename!);
+      const type = match ? `image/${match[1]}` : `image/jpeg`;
+
+      const file = new File([await (await fetch(manipulatedImage.uri)).blob()], filename!, { type });
 
       const success = await api.updateProfilePicture(file);
       if (success) {

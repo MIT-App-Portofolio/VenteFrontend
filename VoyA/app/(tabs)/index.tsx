@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Text, View, Image, StyleSheet, FlatList, Modal, TouchableOpacity, ScrollView } from 'react-native';
+import { Text, View, Image, StyleSheet, FlatList, Modal, TouchableOpacity, ScrollView, Linking } from 'react-native';
 import { BtnPrimary, CenterAligned } from '@/components/ThemedComponents';
 import { useApi } from '@/api';
 import { useRouter } from 'expo-router';
 import { Profile, EventPlace } from '@/api';
+import { FontAwesome } from '@expo/vector-icons';
 
 export default function HomeScreen() {
   const api = useApi();
@@ -88,13 +89,22 @@ export default function HomeScreen() {
     );
   }
 
-  const renderVisitor = ({ item }: { item: Profile }) => (
-    <TouchableOpacity key={item.userName} style={styles.card} onPress={() => handleProfileClick(item)}>
-      <Image source={{ uri: visitorPfps[item.userName] }} style={styles.profilePicture} />
-      <Text style={styles.name}>{item.name}</Text>
-      <Text style={styles.igHandle}>{item.igHandle}</Text>
-    </TouchableOpacity>
-  );
+  const renderVisitor = ({ item }: { item: Profile }) => {
+    const displayName = item.name || `@${item.userName}`;
+
+    return (
+      <TouchableOpacity key={item.userName} style={styles.card} onPress={() => handleProfileClick(item)}>
+        <Image source={{ uri: visitorPfps[item.userName] }} style={styles.profilePicture} />
+        <Text style={styles.name}>{displayName}</Text>
+        {item.igHandle && (
+          <View style={styles.igContainer}>
+            <FontAwesome name="instagram" size={16} color="black" />
+            <Text style={styles.igHandle}>{item.igHandle}</Text>
+          </View>
+        )}
+      </TouchableOpacity>
+    );
+  };
 
   const renderEventPlace = ({ item }: { item: EventPlace }) => (
     <TouchableOpacity key={item.name} style={styles.card} onPress={() => handleEventPlaceClick(item)}>
@@ -134,7 +144,14 @@ export default function HomeScreen() {
               <Image source={{ uri: visitorPfps[selectedProfile.userName] }} style={styles.modalProfilePicture} />
               <Text style={styles.modalName}>{selectedProfile.name}</Text>
               <Text style={styles.modalUsername}>{selectedProfile.userName}</Text>
-              <Text style={styles.modalIgHandle}>{selectedProfile.igHandle}</Text>
+              {selectedProfile.igHandle && (
+                <View style={styles.modalIgContainer}>
+                  <FontAwesome name="instagram" size={16} color="black" />
+                  <Text style={styles.modalIgHandle} onPress={() => Linking.openURL(`https://www.instagram.com/${selectedProfile.igHandle}`)}>
+                    {selectedProfile.igHandle}
+                  </Text>
+                </View>
+              )}
               <Text style={styles.modalDescription}>{selectedProfile.description}</Text>
               <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
                 <Text style={styles.closeButtonText}>Back</Text>
@@ -188,6 +205,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginTop: 5,
   },
+  igContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   igHandle: {
     color: 'gray',
     fontSize: 14,
@@ -219,6 +240,10 @@ const styles = StyleSheet.create({
   modalUsername: {
     fontSize: 18,
     color: 'gray',
+  },
+  modalIgContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   modalIgHandle: {
     fontSize: 18,

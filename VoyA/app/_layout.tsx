@@ -8,11 +8,14 @@ import { StatusBar } from 'expo-status-bar';
 import { CenterAligned, ErrorText, FullScreenLoading } from '@/components/ThemedComponents';
 import { ApiProvider, AuthResult, useApi } from '../api';
 import { DarkTheme, ThemeProvider } from '@react-navigation/native';
+import { RedirectProvider } from '@/context/RedirectContext';
 
 export default function RootLayout() {
   return (
     <ApiProvider>
-      <Inner></Inner>
+      <RedirectProvider>
+        <Inner></Inner>
+      </RedirectProvider>
     </ApiProvider>
   )
 }

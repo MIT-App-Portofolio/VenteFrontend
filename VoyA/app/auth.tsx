@@ -7,7 +7,7 @@ import * as yup from 'yup';
 import { Controller, useForm } from 'react-hook-form';
 import { useApi } from '@/api';
 import { Picker } from '@react-native-picker/picker';
-import { useRouter } from 'expo-router';
+import { useRedirect } from '@/context/RedirectContext';
 
 // Define the type for the props that LoginPage will accept
 type AuthPageProps = {
@@ -129,7 +129,7 @@ const Register: React.FC<AuthPageProps> = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const api = useApi();
-  const router = useRouter();
+  const { setRedirectTo } = useRedirect()!;
 
   const schema = yup.object().shape({
     username: yup.string().required('El nombre de usuario es obligatorio'),
@@ -158,7 +158,7 @@ const Register: React.FC<AuthPageProps> = ({ onLogin }) => {
     setError(error);
     if (ok) {
       onLogin();
-      router.push('/profile');
+      setRedirectTo('/profile');
     }
     setLoading(false);
   };

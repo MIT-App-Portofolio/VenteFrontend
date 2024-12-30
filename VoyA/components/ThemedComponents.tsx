@@ -48,9 +48,8 @@ export function BtnPrimary({ title, onClick }: ButtonProps) {
       backgroundColor: 'white',
       padding: 10,
       borderRadius: 5,
-      flex: 1,
     }}>
-      <Text style={{ flex: 1, color: 'black', alignSelf: 'center', textTransform: 'uppercase' }}>{title}</Text>
+      <Text style={{ color: 'black', alignSelf: 'center', textTransform: 'uppercase' }}>{title}</Text>
     </TouchableOpacity>
   );
 };
@@ -61,11 +60,10 @@ export function BtnSecondary({ title, onClick }: ButtonProps) {
       backgroundColor: 'black',
       padding: 10,
       borderRadius: 5,
-      flex: 1,
       borderColor: 'white',
       borderWidth: 2,
     }}>
-      <Text style={{ flex: 1, color: 'white', alignSelf: 'center', textTransform: 'uppercase' }}>{title}</Text>
+      <Text style={{ color: 'white', alignSelf: 'center', textTransform: 'uppercase' }}>{title}</Text>
     </TouchableOpacity>
   );
 };
@@ -88,7 +86,6 @@ export function StyledTextInput({ title, placeholder, value, setValue, autoCapit
       <Text style={{ color: 'white', fontSize: 15, }}>{title as string}</Text>
       <TextInput value={value} onChangeText={setValue} placeholder={placeholder} placeholderTextColor='white' autoCapitalize={autoCapitalize} secureTextEntry={secureTextEntry}
         style={{
-          minWidth: 250,
           padding: 10,
           borderColor: 'white',
           color: 'white',

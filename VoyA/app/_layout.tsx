@@ -1,4 +1,3 @@
-import { View, ActivityIndicator } from 'react-native';
 import { Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
 import 'react-native-reanimated';

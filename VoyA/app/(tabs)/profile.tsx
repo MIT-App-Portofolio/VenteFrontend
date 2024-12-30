@@ -3,7 +3,7 @@ import { useApi } from "@/api";
 import * as yup from 'yup';
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { CenterAligned, ErrorText, StyledTextInput } from "@/components/ThemedComponents";
+import { BtnPrimary, BtnSecondary, CenterAligned, ErrorText, FullScreenLoading, StyledTextInput } from "@/components/ThemedComponents";
 import React, { useState } from "react";
 import * as ImagePicker from 'expo-image-picker';
 import { Picker } from "@react-native-picker/picker";
@@ -12,6 +12,8 @@ import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 export default function Profile() {
   const api = useApi();
   const [image, setImage] = useState(api.profilePicture);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const schema = yup.object().shape({
     name: yup.string(),
@@ -35,10 +37,25 @@ export default function Profile() {
   });
 
   const onPressSend = async (data: any) => {
-    await api.updateProfile(data);
+    setLoading(true);
+    if (!await api.updateProfile(data)) {
+      setError("Ha sucedido un error desconocido");
+    } else {
+      setError(null);
+    }
+    setLoading(false);
   };
 
   const pickImage = async () => {
+    setLoading(true);
+
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      setError('Se necesita permiso para acceder a la galería');
+      setLoading(false);
+      return;
+    }
+
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -49,7 +66,6 @@ export default function Profile() {
     if (!result.canceled) {
       const localUri = result.assets[0].uri;
 
-      // Convert the image to JPEG
       const manipulatedImage = await manipulateAsync(
         localUri,
         [],
@@ -65,17 +81,43 @@ export default function Profile() {
       const success = await api.updateProfilePicture(file);
       if (success) {
         setImage(api.profilePicture);
+        setError(null);
+      } else {
+        setError("Ha sucedido un error desconocido");
       }
     }
+    setLoading(false);
   };
+
+  if (loading) {
+    return <FullScreenLoading />
+  }
 
   return (
     <CenterAligned>
       <View style={{ width: '60%' }}>
-        <Text style={{ color: 'white' }}>@{api.userProfile!.userName as string}</Text>
+        {image && <Image source={{ uri: image }} style={{ width: '100%', height: undefined, aspectRatio: 1 }} />}
 
-        {image && <Image source={{ uri: image }} style={{ width: 100, height: 100, borderRadius: 50 }} />}
-        <Button title="Change Profile Picture" onPress={pickImage} />
+        <BtnSecondary title="Cambiar foto de perfil" onClick={pickImage} />
+
+        <Text style={{ color: 'white', fontSize: 15 }}>@{api.userProfile!.userName as string}</Text>
+
+
+        <Controller
+          control={control}
+          render={({ field: { onChange, value } }) => (
+            <Picker
+              selectedValue={value}
+              onValueChange={onChange}
+              style={{ color: 'white', marginBottom: 20, backgroundColor: 'black', borderColor: 'white', borderWidth: 1 }}
+            >
+              <Picker.Item label="Hombre" value={0} />
+              <Picker.Item label="Mujer" value={1} />
+            </Picker>
+          )}
+          name="gender"
+        />
+        {errors.gender && <ErrorText>{errors.gender.message}</ErrorText>}
 
         <Controller
           control={control}
@@ -104,23 +146,8 @@ export default function Profile() {
         />
         {errors.igHandle && <ErrorText>{errors.igHandle.message}</ErrorText>}
 
-        <Controller
-          control={control}
-          render={({ field: { onChange, value } }) => (
-            <Picker
-              selectedValue={value}
-              onValueChange={onChange}
-              style={{ color: 'white', marginBottom: 20, backgroundColor: 'black' }}
-            >
-              <Picker.Item label="Hombre" value={0} />
-              <Picker.Item label="Mujer" value={1} />
-            </Picker>
-          )}
-          name="gender"
-        />
-        {errors.gender && <ErrorText>{errors.gender.message}</ErrorText>}
-
-        <Button title="Send" onPress={handleSubmit(onPressSend)} />
+        {error && <ErrorText>{error}</ErrorText>}
+        <BtnPrimary title="Guardar cambios" onClick={handleSubmit(onPressSend)} />
       </View>
     </CenterAligned>
   );

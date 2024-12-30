@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import axios, { AxiosInstance } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FullScreenLoading } from './components/ThemedComponents';
+import { Platform } from 'react-native';
 
 export enum AuthResult {
   UnkownError,
@@ -54,8 +55,13 @@ export const ApiProvider = ({ children }) => {
   useEffect(() => {
     const initializeApi = async () => {
       const instance = new Api();
-      await instance.init('http://localhost:5192');
-
+      if (__DEV__) {
+        if (Platform.OS === 'android') {
+          await instance.init('http://10.0.2.2:5192');
+        } else {
+          await instance.init('http://localhost:5192');
+        }
+      }
       setApiInstance(instance);
     };
 
@@ -203,6 +209,10 @@ export class Api {
         return [false, "Correo o contraseña incorrecta."];
       }
       return [false, "Error al contactar con servidores de VoyA."];
+    }
+
+    if (await this.getUserInfo() != AuthResult.Authenticated) {
+      return [false, "Ha sucedido un error desconocido"];
     }
 
     return [true, null];

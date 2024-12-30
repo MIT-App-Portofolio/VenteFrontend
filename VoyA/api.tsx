@@ -3,6 +3,7 @@ import axios, { AxiosInstance } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FullScreenLoading } from './components/ThemedComponents';
 import { Platform } from 'react-native';
+import RNFetchBlob from 'rn-fetch-blob';
 
 export enum AuthResult {
   UnkownError,
@@ -48,6 +49,12 @@ export const useApi = () => {
   }
   return context;
 };
+
+class RNBlob extends Blob {
+  get [Symbol.toStringTag]() {
+    return 'Blob';
+  }
+}
 
 export const ApiProvider = ({ children }) => {
   const [apiInstance, setApiInstance] = useState<Api | null>(null);
@@ -138,9 +145,22 @@ export class Api {
     }
   }
 
-  public async updateProfilePicture(picture: File) {
+  public async updateProfilePicture(uri: string) {
     const formData = new FormData();
-    formData.append('file', picture);
+
+    // I don't know why this is necessary, but it is. react native fetch blob is weird works on web but not on android
+    if (Platform.OS === 'android') {
+      formData.append('file', {
+        uri: uri,
+        name: 'file',
+        type: 'image/jpeg',
+      });
+    } else {
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      const file = new File([blob], 'file', { type: 'image/jpeg' });
+      formData.append('file', file);
+    }
 
     try {
       await this.axios!.post('/api/account/update_pfp', formData, {
@@ -150,7 +170,9 @@ export class Api {
       });
       await this.fetchUserPfp();
       return true;
-    } catch {
+    } catch (e) {
+      console.log(e);
+      console.log(e.response.data)
       return false;
     }
   }

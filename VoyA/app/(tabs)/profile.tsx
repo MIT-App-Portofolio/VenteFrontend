@@ -59,7 +59,7 @@ export default function Profile() {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      aspect: [4, 3],
+      aspect: [1, 1],
       quality: 1,
     });
 
@@ -72,13 +72,7 @@ export default function Profile() {
         { compress: 1, format: SaveFormat.JPEG }
       );
 
-      const filename = manipulatedImage.uri.split('/').pop();
-      const match = /\.(\w+)$/.exec(filename!);
-      const type = match ? `image/${match[1]}` : `image/jpeg`;
-
-      const file = new File([await (await fetch(manipulatedImage.uri)).blob()], filename!, { type });
-
-      const success = await api.updateProfilePicture(file);
+      const success = await api.updateProfilePicture(manipulatedImage.uri);
       if (success) {
         setImage(api.profilePicture);
         setError(null);

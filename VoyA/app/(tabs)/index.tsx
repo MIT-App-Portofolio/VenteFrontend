@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Text, View, Image, StyleSheet, FlatList, Modal, TouchableOpacity, ScrollView, Linking } from 'react-native';
-import { BtnPrimary, CenterAligned } from '@/components/ThemedComponents';
+import { Text, View, Image, StyleSheet, FlatList, Modal, TouchableOpacity, ScrollView, Linking, ImageBackground } from 'react-native';
+import { BtnPrimary, CenterAligned, HorizontallyAligned, ImageBtn, MarginItem } from '@/components/ThemedComponents';
 import { useApi } from '@/api';
 import { useRouter } from 'expo-router';
 import { Profile, EventPlace } from '@/api';
@@ -125,8 +125,27 @@ export default function HomeScreen() {
   );
 
   return (
-    <CenterAligned>
-      <BtnPrimary title={viewingEventPlaces ? 'Ver Usuarios' : 'Ver Lugares de Eventos'} onClick={toggleView} />
+    <HorizontallyAligned>
+      <TouchableOpacity onPress={toggleView} style={{
+        backgroundColor: 'black',
+        borderRadius: 15,
+        width: '100%',
+        height: 200,
+      }}>
+        <Image source={require('../../assets/images/club.jpeg')} style={{ width: '100%', height: '100%', borderRadius: 5, opacity: 0.4 }} />
+        <Text style={{
+          color: 'white',
+          position: 'absolute',
+          bottom: 10,
+          left: 10,
+          textTransform: 'uppercase'
+        }}>
+          {viewingEventPlaces ? 'Ver Usuarios' : 'Ver Lugares de Eventos'}
+        </Text>
+      </TouchableOpacity>
+
+      {/* <BtnPrimary title={viewingEventPlaces ? 'Ver Usuarios' : 'Ver Lugares de Eventos'} onClick={toggleView} /> */}
+
       {viewingEventPlaces ? (
         <FlatList
           data={eventPlaces}
@@ -134,70 +153,78 @@ export default function HomeScreen() {
           keyExtractor={item => item.name}
         />
       ) : (
-        <FlatList
-          data={visitors}
-          renderItem={renderVisitor}
-          keyExtractor={item => item.userName}
-          onEndReached={() => setPage(prevPage => prevPage + 1)}
-          onEndReachedThreshold={0.5}
-          ListFooterComponent={loading ? (<CenterAligned><Text style={{ color: 'white' }}>Loading...</Text></CenterAligned>) : null}
-        />
-      )}
-      {selectedProfile && (
-        <Modal
-          visible={isModalVisible}
-          animationType="slide"
-          transparent={true}
-        >
-          <View style={styles.modalContainer}>
-            <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
-              <Ionicons name="arrow-back" size={24} color="white" />
-            </TouchableOpacity>
-            <ScrollView style={styles.modalContent}>
-              <Image source={{ uri: visitorPfps[selectedProfile.userName] }} style={styles.modalProfilePicture} />
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
-                <Text style={{ ...styles.modalName, marginRight: 10 }}>{selectedProfile.name}</Text>
-                <Text style={styles.modalUsername}>@{selectedProfile.userName}</Text>
-              </View>
-              {selectedProfile.igHandle && (
-                <View style={styles.modalIgContainer}>
-                  <FontAwesome name="instagram" size={16} color="white" />
-                  <Text style={styles.modalIgHandle} onPress={() => Linking.openURL(`https://www.instagram.com/${selectedProfile.igHandle}`)}>
-                    {selectedProfile.igHandle}
-                  </Text>
+        <View style={{ width: '100%', alignItems: 'center', marginTop: 20 }}>
+          <Text style={{ color: 'white', fontSize: 20, alignSelf: 'flex-start' }}>Usuarios que tambien van a {api.userProfile.eventStatus.location?.name}</Text>
+          <FlatList
+            data={visitors}
+            renderItem={renderVisitor}
+            keyExtractor={item => item.userName}
+            onEndReached={() => setPage(prevPage => prevPage + 1)}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={loading ? (<CenterAligned><Text style={{ color: 'white' }}>Loading...</Text></CenterAligned>) : null}
+          />
+        </View>
+      )
+      }
+      {
+        selectedProfile && (
+          <Modal
+            visible={isModalVisible}
+            animationType="slide"
+            transparent={true}
+          >
+            <View style={styles.modalContainer}>
+              <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
+                <Ionicons name="arrow-back" size={24} color="white" />
+              </TouchableOpacity>
+              <ScrollView style={styles.modalContent}>
+                <Image source={{ uri: visitorPfps[selectedProfile.userName] }} style={styles.modalProfilePicture} />
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
+                  <Text style={{ ...styles.modalName, marginRight: 10 }}>{selectedProfile.name}</Text>
+                  <Text style={styles.modalUsername}>@{selectedProfile.userName}</Text>
                 </View>
-              )}
-              <Text style={styles.modalDescription}>{selectedProfile.description}</Text>
-            </ScrollView>
-          </View>
-        </Modal>
-      )}
-      {selectedEventPlace && (
-        <Modal
-          visible={isEventPlaceModalVisible}
-          animationType="slide"
-          transparent={true}
-        >
-          <View style={styles.modalContainer}>
-            <TouchableOpacity onPress={closeEventPlaceModal} style={styles.closeButton}>
-              <Ionicons name="arrow-back" size={24} color="white" />
-            </TouchableOpacity>
-            <ScrollView style={styles.modalContent}>
-              <ScrollView horizontal pagingEnabled>
-                {selectedEventPlace.imageUrls.map((image, index) => (
-                  <Image key={index} source={{ uri: image }} style={styles.modalProfilePicture} />
-                ))}
+                {selectedProfile.igHandle && (
+                  <View style={styles.modalIgContainer}>
+                    <FontAwesome name="instagram" size={16} color="white" />
+                    <Text style={styles.modalIgHandle} onPress={() => Linking.openURL(`https://www.instagram.com/${selectedProfile.igHandle}`)}>
+                      {selectedProfile.igHandle}
+                    </Text>
+                  </View>
+                )}
+                <Text style={styles.modalDescription}>{selectedProfile.description}</Text>
               </ScrollView>
-              <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
-                <Text style={{ ...styles.modalName, marginRight: 5 }}>{selectedEventPlace.name}</Text>
-                <Text style={styles.modalPriceRange}>{selectedEventPlace.priceRangeBegin}€ - {selectedEventPlace.priceRangeEnd}€</Text>
-              </View>
-              <Text style={styles.modalDescription}>{selectedEventPlace.description}</Text>
-            </ScrollView>
-          </View>
-        </Modal>
-      )}
-    </CenterAligned>
+            </View>
+          </Modal>
+        )
+      }
+      {
+        selectedEventPlace && (
+          <Modal
+            visible={isEventPlaceModalVisible}
+            animationType="slide"
+            transparent={true}
+          >
+            <View style={styles.modalContainer}>
+              <TouchableOpacity onPress={closeEventPlaceModal} style={styles.closeButton}>
+                <Ionicons name="arrow-back" size={24} color="white" />
+              </TouchableOpacity>
+              <ScrollView style={styles.modalContent}>
+                <ScrollView horizontal pagingEnabled>
+                  {selectedEventPlace.imageUrls.map((image, index) => (
+                    <Image key={index} source={{ uri: image }} style={styles.modalProfilePicture} />
+                  ))}
+                </ScrollView>
+                <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
+                  <Text style={{ ...styles.modalName, marginRight: 5 }}>{selectedEventPlace.name}</Text>
+                  <Text style={styles.modalPriceRange}>{selectedEventPlace.priceRangeBegin}€ - {selectedEventPlace.priceRangeEnd}€</Text>
+                </View>
+                <Text style={styles.modalDescription}>{selectedEventPlace.description}</Text>
+              </ScrollView>
+            </View>
+          </Modal>
+        )
+      }
+    </HorizontallyAligned >
   );
 }
 

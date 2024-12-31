@@ -1,7 +1,7 @@
 // LoginPage.tsx
 import { useState } from 'react';
 import { Modal, ActivityIndicator, View } from 'react-native';
-import { BtnSecondary, BtnPrimary, StyledTextInput, StyledEmailInput, StyledPasswordInput, ErrorText } from '../components/ThemedComponents';
+import { BtnSecondary, BtnPrimary, StyledTextInput, StyledEmailInput, StyledPasswordInput, ErrorText, MarginItem, BiggerMarginItem } from '../components/ThemedComponents';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { Controller, useForm } from 'react-hook-form';
@@ -260,18 +260,6 @@ function ProperPassword() {
     .matches(/\d/, 'La contraseña debe tener al menos un dígito (0-9).')
     .matches(/[A-Z]/, 'La contraseña debe tener al menos una letra mayúscula (A-Z).')
     .required('La contraseña es requerida.');
-}
-
-function MarginItem({ children }) {
-  return (
-    <View style={{ marginTop: 5, marginBottom: 5 }}>{children}</View>
-  )
-}
-
-function BiggerMarginItem({ children }) {
-  return (
-    <View style={{ marginTop: 15, marginBottom: 15 }}>{children}</View>
-  )
 }
 
 export default Auth;

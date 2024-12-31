@@ -109,3 +109,13 @@ export function StyledPasswordInput({ title, value, setValue }: StyledTextInputP
     <StyledTextInput title={title} value={value} setValue={setValue} secureTextEntry autoCapitalize='none' autoCorrect={false}></StyledTextInput>
   )
 }
+export function MarginItem({ children }) {
+  return (
+    <View style={{ marginTop: 5, marginBottom: 5 }}>{children}</View>
+  );
+} export function BiggerMarginItem({ children }) {
+  return (
+    <View style={{ marginTop: 15, marginBottom: 15 }}>{children}</View>
+  );
+}
+

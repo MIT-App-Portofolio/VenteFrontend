@@ -5,6 +5,7 @@ import { useApi } from '@/api';
 import { useRouter } from 'expo-router';
 import { Profile, EventPlace } from '@/api';
 import { FontAwesome } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function HomeScreen() {
   const api = useApi();
@@ -95,13 +96,15 @@ export default function HomeScreen() {
     return (
       <TouchableOpacity key={item.userName} style={styles.card} onPress={() => handleProfileClick(item)}>
         <Image source={{ uri: visitorPfps[item.userName] }} style={styles.profilePicture} />
-        <Text style={styles.name}>{displayName}</Text>
-        {item.igHandle && (
-          <View style={styles.igContainer}>
-            <FontAwesome name="instagram" size={16} color="black" />
-            <Text style={styles.igHandle}>{item.igHandle}</Text>
-          </View>
-        )}
+        <View style={{ alignItems: 'center', flexDirection: 'row' }}>
+          <Text style={styles.name}>{displayName}</Text>
+          {item.igHandle && (
+            <View style={styles.igContainer}>
+              <FontAwesome name="instagram" size={16} color="gray" />
+              <Text style={styles.igHandle}>{item.igHandle}</Text>
+            </View>
+          )}
+        </View>
       </TouchableOpacity>
     );
   };
@@ -140,23 +143,25 @@ export default function HomeScreen() {
           transparent={true}
         >
           <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
+            <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
+              <Ionicons name="arrow-back" size={24} color="white" />
+            </TouchableOpacity>
+            <ScrollView style={styles.modalContent}>
               <Image source={{ uri: visitorPfps[selectedProfile.userName] }} style={styles.modalProfilePicture} />
-              <Text style={styles.modalName}>{selectedProfile.name}</Text>
-              <Text style={styles.modalUsername}>{selectedProfile.userName}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
+                <Text style={{ ...styles.modalName, marginRight: 10 }}>{selectedProfile.name}</Text>
+                <Text style={styles.modalUsername}>@{selectedProfile.userName}</Text>
+              </View>
               {selectedProfile.igHandle && (
                 <View style={styles.modalIgContainer}>
-                  <FontAwesome name="instagram" size={16} color="black" />
+                  <FontAwesome name="instagram" size={16} color="white" />
                   <Text style={styles.modalIgHandle} onPress={() => Linking.openURL(`https://www.instagram.com/${selectedProfile.igHandle}`)}>
                     {selectedProfile.igHandle}
                   </Text>
                 </View>
               )}
               <Text style={styles.modalDescription}>{selectedProfile.description}</Text>
-              <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
-                <Text style={styles.closeButtonText}>Back</Text>
-              </TouchableOpacity>
-            </View>
+            </ScrollView>
           </View>
         </Modal>
       )}
@@ -167,19 +172,21 @@ export default function HomeScreen() {
           transparent={true}
         >
           <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
+            <TouchableOpacity onPress={closeEventPlaceModal} style={styles.closeButton}>
+              <Ionicons name="arrow-back" size={24} color="white" />
+            </TouchableOpacity>
+            <ScrollView style={styles.modalContent}>
               <ScrollView horizontal pagingEnabled>
                 {selectedEventPlace.imageUrls.map((image, index) => (
                   <Image key={index} source={{ uri: image }} style={styles.modalProfilePicture} />
                 ))}
               </ScrollView>
-              <Text style={styles.modalName}>{selectedEventPlace.name}</Text>
-              <Text style={styles.modalPriceRange}>{selectedEventPlace.priceRangeBegin} - {selectedEventPlace.priceRangeEnd}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
+                <Text style={{ ...styles.modalName, marginRight: 5 }}>{selectedEventPlace.name}</Text>
+                <Text style={styles.modalPriceRange}>{selectedEventPlace.priceRangeBegin}€ - {selectedEventPlace.priceRangeEnd}€</Text>
+              </View>
               <Text style={styles.modalDescription}>{selectedEventPlace.description}</Text>
-              <TouchableOpacity onPress={closeEventPlaceModal} style={styles.closeButton}>
-                <Text style={styles.closeButtonText}>Back</Text>
-              </TouchableOpacity>
-            </View>
+            </ScrollView>
           </View>
         </Modal>
       )}
@@ -189,20 +196,22 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#333',
+    backgroundColor: 'black',
     padding: 10,
     margin: 10,
     borderRadius: 5,
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
   profilePicture: {
     width: 250,
     height: 250,
+    borderRadius: 10,
   },
   name: {
     color: 'white',
     fontSize: 16,
     marginTop: 5,
+    marginRight: 5,
   },
   igContainer: {
     flexDirection: 'row',
@@ -223,17 +232,22 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
   },
   modalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: 'black',
     padding: 20,
+    marginTop: 80,
     borderRadius: 10,
-    alignItems: 'center',
+    width: '100%',
+    height: '100%',
   },
   modalProfilePicture: {
-    width: 300,
-    height: 300,
+    width: '100%',
+    borderRadius: 15,
+    height: undefined,
+    aspectRatio: 1,
   },
   modalName: {
     fontSize: 24,
+    color: 'white',
     fontWeight: 'bold',
   },
   modalUsername: {
@@ -241,12 +255,14 @@ const styles = StyleSheet.create({
     color: 'gray',
   },
   modalIgContainer: {
+    marginTop: 10,
     flexDirection: 'row',
     alignItems: 'center',
   },
   modalIgHandle: {
     fontSize: 18,
-    color: 'gray',
+    marginLeft: 5,
+    color: 'white',
   },
   modalPriceRange: {
     fontSize: 18,
@@ -254,13 +270,14 @@ const styles = StyleSheet.create({
   },
   modalDescription: {
     fontSize: 16,
+    color: 'white',
     marginVertical: 10,
   },
   closeButton: {
-    marginTop: 20,
-    padding: 10,
-    backgroundColor: '#333',
-    borderRadius: 5,
+    position: 'absolute',
+    top: 40,
+    left: 20,
+    zIndex: 1,
   },
   closeButtonText: {
     color: 'white',

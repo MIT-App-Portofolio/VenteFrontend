@@ -8,6 +8,7 @@ import { CenterAligned, ErrorText, FullScreenLoading } from '@/components/Themed
 import { ApiProvider, AuthResult, useApi } from '../api';
 import { DarkTheme, ThemeProvider } from '@react-navigation/native';
 import { RedirectProvider } from '@/context/RedirectContext';
+import { useFonts } from 'expo-font';
 
 export default function RootLayout() {
   return (
@@ -24,6 +25,9 @@ function Inner() {
   const api = useApi();
   const [isAuthenticated, setAuthenticated] = useState(false);
   const [unkownError, setUnkownError] = useState(false);
+  const [fontsLoaded] = useFonts({
+    'SpaceMono-Regular': require('../assets/fonts/SpaceMono-Regular.ttf'),
+  });
 
   useEffect(() => {
     const inner = async () => {
@@ -54,7 +58,7 @@ function Inner() {
     )
   }
 
-  if (loadingAuthStatus) {
+  if (loadingAuthStatus || !fontsLoaded) {
     return <FullScreenLoading />;
   }
 

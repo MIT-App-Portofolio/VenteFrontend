@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Text, View, Button } from "react-native";
+import { Text, View, Platform } from "react-native";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from "@react-native-picker/picker";
 import { useApi } from "@/api";
@@ -10,8 +10,10 @@ export default function Calendar() {
   const [loading, setLoading] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<number>(api.userProfile?.eventStatus.location?.id ?? 0);
   const [date, setDate] = useState(api.userProfile?.eventStatus.time ?? new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
 
   const onSubmit = async () => {
     setLoading(true);
@@ -71,10 +73,27 @@ export default function Calendar() {
             <DateTimePicker
               minimumDate={new Date()}
               value={date}
-              mode="date"
+              mode={Platform.OS == 'ios' ? "datetime" : "date"}
               display="default"
               onChange={(_, selectedDate) => {
                 setShowDatePicker(false);
+                if (selectedDate) {
+                  setDate(selectedDate);
+                  if (Platform.OS != 'ios') {
+                    setShowTimePicker(true);
+                  }
+                }
+              }}
+            />
+          )}
+
+          {showTimePicker && (
+            <DateTimePicker
+              value={date}
+              mode="time"
+              display="default"
+              onChange={(_, selectedDate) => {
+                setShowTimePicker(false);
                 if (selectedDate) {
                   setDate(selectedDate);
                 }

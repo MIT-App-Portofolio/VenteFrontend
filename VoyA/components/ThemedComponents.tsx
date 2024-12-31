@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity, TextInput, Text
 type ButtonProps = {
   title: string;
   onClick: () => void;
+  disabled?: boolean;
 };
 
 export function FullScreenLoading() {
@@ -70,19 +71,19 @@ export function HorizontallyAligned({ children }) {
   );
 }
 
-export function BtnPrimary({ title, onClick }: ButtonProps) {
+export function BtnPrimary({ title, onClick, disabled }: ButtonProps) {
   return (
     <TouchableOpacity onPress={onClick} style={{
-      backgroundColor: 'white',
+      backgroundColor: disabled ? 'gray' : 'white',
       padding: 10,
       borderRadius: 5,
-    }}>
+    }} disabled={disabled}>
       <Text style={{ color: 'black', alignSelf: 'center', textTransform: 'uppercase' }}>{title}</Text>
     </TouchableOpacity>
   );
 };
 
-export function BtnSecondary({ title, onClick }: ButtonProps) {
+export function BtnSecondary({ title, onClick, disabled }: ButtonProps) {
   return (
     <TouchableOpacity onPress={onClick} style={{
       backgroundColor: 'black',
@@ -90,7 +91,7 @@ export function BtnSecondary({ title, onClick }: ButtonProps) {
       borderRadius: 5,
       borderColor: 'white',
       borderWidth: 2,
-    }}>
+    }} disabled={disabled}>
       <Text style={{ color: 'white', alignSelf: 'center', textTransform: 'uppercase' }}>{title}</Text>
     </TouchableOpacity>
   );

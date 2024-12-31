@@ -25,7 +25,7 @@ export default function Profile() {
   const {
     control,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
@@ -153,7 +153,7 @@ export default function Profile() {
 
         <BiggerMarginItem>
           {error && <ErrorText>{error}</ErrorText>}
-          <BtnPrimary title="Guardar cambios" onClick={handleSubmit(onPressSend)} />
+          <BtnPrimary title="Guardar cambios" onClick={handleSubmit(onPressSend)} disabled={!isDirty} />
         </BiggerMarginItem>
       </View>
     </CenterAligned>

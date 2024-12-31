@@ -7,10 +7,13 @@ import { CenterAligned, BtnPrimary, ErrorText, BtnSecondary, FullScreenLoading, 
 
 export default function Calendar() {
   const api = useApi();
+
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const [selectedLocation, setSelectedLocation] = useState<number>(api.userProfile?.eventStatus.location?.id ?? 0);
   const [date, setDate] = useState(api.userProfile?.eventStatus.time ?? new Date());
-  const [error, setError] = useState<string | null>(null);
+  const [isDirty, setIsDirty] = useState(false);
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -30,6 +33,7 @@ export default function Calendar() {
       setError(null);
     }
     setLoading(false);
+    setIsDirty(false);
   };
 
   const onCancel = async () => {
@@ -57,7 +61,10 @@ export default function Calendar() {
       <View style={{ width: '80%' }}>
         <MarginItem>
           <Picker selectedValue={selectedLocation}
-            onValueChange={(itemValue, _) => setSelectedLocation(itemValue)}
+            onValueChange={(itemValue, _) => {
+              setIsDirty(true);
+              setSelectedLocation(itemValue);
+            }}
             style={{ color: 'white', marginBottom: 20, backgroundColor: 'black' }}
           >
             {api.locations!.map(location => (
@@ -78,6 +85,7 @@ export default function Calendar() {
               onChange={(_, selectedDate) => {
                 setShowDatePicker(false);
                 if (selectedDate) {
+                  setIsDirty(true);
                   setDate(selectedDate);
                   if (Platform.OS != 'ios') {
                     setShowTimePicker(true);
@@ -95,6 +103,7 @@ export default function Calendar() {
               onChange={(_, selectedDate) => {
                 setShowTimePicker(false);
                 if (selectedDate) {
+                  setIsDirty(true);
                   setDate(selectedDate);
                 }
               }}
@@ -105,8 +114,8 @@ export default function Calendar() {
         <BiggerMarginItem>
           {error && <ErrorText>{error}</ErrorText>}
 
-          {api.userProfile?.eventStatus.active && <BtnPrimary title="Actualizar" onClick={onSubmit} />}
-          {!api.userProfile?.eventStatus.active && <BtnPrimary title="Registrarte" onClick={onSubmit} />}
+          {api.userProfile?.eventStatus.active && <BtnPrimary title="Actualizar" onClick={onSubmit} disabled={!isDirty} />}
+          {!api.userProfile?.eventStatus.active && <BtnPrimary title="Registrarte" onClick={onSubmit} disabled={!isDirty} />}
 
           {
             api.userProfile?.eventStatus.active &&

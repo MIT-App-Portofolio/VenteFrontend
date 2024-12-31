@@ -3,7 +3,6 @@ import axios, { AxiosInstance } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FullScreenLoading } from './components/ThemedComponents';
 import { Platform } from 'react-native';
-import RNFetchBlob from 'rn-fetch-blob';
 
 export enum AuthResult {
   UnkownError,
@@ -23,7 +22,7 @@ export type Profile = {
 export type EventStatus = {
   active: boolean,
   time?: Date,
-  with?: [string],
+  with?: string[],
   location?: EventLocation
 }
 
@@ -35,7 +34,7 @@ export type EventLocation = {
 export type EventPlace = {
   name: string,
   description: string,
-  imageUrls: [string],
+  imageUrls: string[],
   priceRangeBegin: number,
   priceRangeEnd: number,
 }
@@ -49,12 +48,6 @@ export const useApi = () => {
   }
   return context;
 };
-
-class RNBlob extends Blob {
-  get [Symbol.toStringTag]() {
-    return 'Blob';
-  }
-}
 
 export const ApiProvider = ({ children }) => {
   const [apiInstance, setApiInstance] = useState<Api | null>(null);
@@ -90,7 +83,7 @@ export class Api {
   public userProfile: Profile | null;
   public profilePicture: string | null;
 
-  locations: [EventLocation] | null;
+  locations: EventLocation[] | null;
   axios: AxiosInstance | null;
 
   constructor() {
@@ -171,8 +164,6 @@ export class Api {
       await this.fetchUserPfp();
       return true;
     } catch (e) {
-      console.log(e);
-      console.log(e.response.data)
       return false;
     }
   }
@@ -272,7 +263,7 @@ export class Api {
     return await this.getUserInfo() == AuthResult.Authenticated;
   }
 
-  public async queryVisitors(page: number): Promise<[Profile] | null> {
+  public async queryVisitors(page: number): Promise<Profile[] | null> {
     try {
       return (await this.axios?.get('/api/query_visitors?page=' + page))!.data;
     } catch {
@@ -280,7 +271,7 @@ export class Api {
     }
   }
 
-  public async queryEventPlaces(): Promise<[EventPlace] | null> {
+  public async queryEventPlaces(): Promise<EventPlace[] | null> {
     try {
       return (await this.axios?.get('/api/query_event_places'))!.data;
     } catch {

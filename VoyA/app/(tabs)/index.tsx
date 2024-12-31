@@ -20,14 +20,22 @@ export default function HomeScreen() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isEventPlaceModalVisible, setIsEventPlaceModalVisible] = useState(false);
   const [viewingEventPlaces, setViewingEventPlaces] = useState(false);
+  const [lastUserFetchEmpty, setLastUserFetchEmpty] = useState(false);
 
   useEffect(() => {
     fetchVisitors();
   }, [page]);
 
   const fetchVisitors = async () => {
+    if (lastUserFetchEmpty) return;
+
     setLoading(true);
     const newVisitors = await api.queryVisitors(page);
+
+    if (!newVisitors || newVisitors.length === 0) {
+      setLastUserFetchEmpty(true);
+    }
+
     if (newVisitors) {
       setVisitors(prevVisitors => [...prevVisitors, ...newVisitors]);
       const pfps = await Promise.all(
@@ -46,7 +54,6 @@ export default function HomeScreen() {
     if (eventPlaces.length === 0) {
       setLoading(true);
       const places = await api.queryEventPlaces();
-      console.log(places);
       if (places) {
         setEventPlaces(places);
       }
@@ -113,7 +120,7 @@ export default function HomeScreen() {
     <TouchableOpacity key={item.name} style={styles.card} onPress={() => handleEventPlaceClick(item)}>
       <Image source={{ uri: item.imageUrls[0] }} style={styles.profilePicture} />
       <Text style={styles.name}>{item.name}</Text>
-      <Text style={styles.priceRange}>{item.priceRangeBegin} - {item.priceRangeEnd}</Text>
+      <Text style={styles.priceRange}>{item.priceRangeBegin}€ - {item.priceRangeEnd}€</Text>
     </TouchableOpacity>
   );
 

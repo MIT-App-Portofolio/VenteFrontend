@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Text, View, Platform, Modal, TouchableOpacity, TextInput, FlatList, ListRenderItem } from "react-native";
+import { Text, View, Platform, Modal, TouchableOpacity, TextInput, FlatList, ListRenderItem, ScrollView } from "react-native";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from "@react-native-picker/picker";
 import { useApi } from "@/api";
@@ -183,9 +183,9 @@ export default function Calendar() {
 
               <FlatList
                 data={api.userProfile?.eventStatus.with}
-                style={{ marginBottom: 10 }}
-                horizontal={true}
                 renderItem={renderInvited}
+                horizontal
+                style={{ marginBottom: 10 }}
                 keyExtractor={(item, index) => index.toString()}
               />
 

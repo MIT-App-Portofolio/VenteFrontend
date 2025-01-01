@@ -145,13 +145,15 @@ export default function HomeScreen() {
       </TouchableOpacity>
 
       {viewingEventPlaces ? (
-        <FlatList
-          data={eventPlaces}
-          renderItem={renderEventPlace}
-          keyExtractor={item => item.name}
-        />
+        <View style={{ width: '100%', height: '100%', alignItems: 'center', marginTop: 20 }}>
+          <FlatList
+            data={eventPlaces}
+            renderItem={renderEventPlace}
+            keyExtractor={item => item.name}
+          />
+        </View>
       ) : (
-        <View style={{ width: '100%', alignItems: 'center', marginTop: 20 }}>
+        <View style={{ width: '100%', height: '100%', alignItems: 'center', marginTop: 20 }}>
           <Text style={{ color: 'white', fontSize: 20, alignSelf: 'flex-start' }}>Usuarios que tambien van a {api.userProfile.eventStatus.location?.name}</Text>
           <FlatList
             data={visitors}
@@ -162,8 +164,8 @@ export default function HomeScreen() {
             ListFooterComponent={loading ? (<CenterAligned><Text style={{ color: 'white' }}>Loading...</Text></CenterAligned>) : null}
           />
         </View>
-      )
-      }
+      )}
+
       {
         selectedProfile && (
           <Modal

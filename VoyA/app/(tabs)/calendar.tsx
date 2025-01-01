@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { Text, View, Platform } from "react-native";
+import { Text, View, Platform, Modal, TouchableOpacity, TextInput, FlatList, ListRenderItem } from "react-native";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from "@react-native-picker/picker";
 import { useApi } from "@/api";
 import { CenterAligned, BtnPrimary, ErrorText, BtnSecondary, FullScreenLoading, MarginItem, BiggerMarginItem } from "@/components/ThemedComponents";
+import { IconSymbol } from "@/components/ui/IconSymbol";
 
 export default function Calendar() {
   const api = useApi();
@@ -17,6 +18,9 @@ export default function Calendar() {
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [inviteUsername, setInviteUsername] = useState('');
 
   const onSubmit = async () => {
     setLoading(true);
@@ -46,6 +50,53 @@ export default function Calendar() {
     }
     setLoading(false);
   };
+
+  const inviteUser = async () => {
+    setLoading(true);
+    const success = await api.inviteUser(inviteUsername);
+    if (success) {
+      setInviteUsername('');
+    } else {
+      setError("No se pudo invitar al usuario.");
+      setIsModalVisible(false);
+    }
+    setLoading(false);
+  };
+
+  const kickUser = async (username: string) => {
+    setLoading(true);
+    const success = await api.kickUser(username);
+    if (!success) {
+      setError("No se pudo expulsar al usuario.");
+    }
+    setLoading(false);
+  };
+
+  const renderInvited = ({ item }: { item: string }) => {
+    return (
+      <View style={{
+        margin: 5,
+
+        paddingLeft: 5,
+        paddingRight: 5,
+        paddingBottom: 2,
+        paddingTop: 2,
+
+        flexDirection: 'row',
+        justifyContent: 'flex-start',
+        alignItems: 'flex-end',
+        borderRadius: 25,
+        borderColor: 'white',
+        borderWidth: 1
+      }}>
+        <Text style={{ color: 'white' }}>@{item}</Text>
+
+        <TouchableOpacity onPress={() => kickUser(item)}>
+          <IconSymbol name="cross" color='white' size={15} />
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   if (loading) {
     return <FullScreenLoading></FullScreenLoading>
@@ -110,6 +161,61 @@ export default function Calendar() {
             />
           )}
         </MarginItem>
+
+        <Modal
+          visible={isModalVisible}
+          animationType="slide"
+          transparent={true}
+        >
+          <View style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          }}>
+            <View style={{
+              backgroundColor: 'black',
+              padding: 20,
+              borderRadius: 10,
+              width: '80%',
+            }}>
+              <Text style={{ color: 'white', fontSize: 20, marginBottom: 10 }}>Invitados</Text>
+
+              <FlatList
+                data={api.userProfile?.eventStatus.with}
+                style={{ marginBottom: 10 }}
+                horizontal={true}
+                renderItem={renderInvited}
+                keyExtractor={(item, index) => index.toString()}
+              />
+
+              <TextInput
+                value={inviteUsername}
+                onChangeText={setInviteUsername}
+                placeholder="Nombre de usuario"
+                placeholderTextColor="gray"
+                style={{
+                  padding: 10,
+                  borderColor: 'white',
+                  color: 'white',
+                  fontSize: 15,
+                  borderWidth: 1,
+                  borderRadius: 4,
+                  marginBottom: 10,
+                }}
+              />
+              <BtnPrimary title="Invitar" onClick={inviteUser} disabled={inviteUsername ? false : true} />
+              <BtnSecondary title="Cancelar" onClick={() => setIsModalVisible(false)} />
+            </View>
+          </View>
+        </Modal>
+
+        {
+          api.userProfile?.eventStatus.active &&
+          <MarginItem>
+            <BtnPrimary title="Invitar Usuarios" onClick={() => setIsModalVisible(true)} />
+          </MarginItem>
+        }
 
         <BiggerMarginItem>
           {error && <ErrorText>{error}</ErrorText>}

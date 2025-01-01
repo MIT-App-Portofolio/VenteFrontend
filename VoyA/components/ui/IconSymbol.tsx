@@ -11,6 +11,7 @@ const MAPPING = {
   // See MaterialIcons here: https://icons.expo.fyi
   // See SF Symbols in the SF Symbols app on Mac.
   'house.fill': 'home',
+  'cross': 'close',
   'calendar': 'event',
   'person': 'person',
   'paperplane.fill': 'send',

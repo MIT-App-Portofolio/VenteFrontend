@@ -272,6 +272,24 @@ export class Api {
     return await this.getUserInfo() == AuthResult.Authenticated;
   }
 
+  public async inviteUser(username: string) {
+    try {
+      await this.axios!.post('/api/invite_to_event?invited=' + username)
+    } catch {
+      return false;
+    }
+    return await this.getUserInfo() == AuthResult.Authenticated;
+  }
+
+  public async kickUser(username: string) {
+    try {
+      await this.axios!.post('/api/kick_from_event?kicked=' + username)
+    } catch {
+      return false;
+    }
+    return await this.getUserInfo() == AuthResult.Authenticated;
+  }
+
   public async queryVisitors(page: number): Promise<Profile[] | null> {
     try {
       return (await this.axios?.get('/api/query_visitors?page=' + page))!.data;

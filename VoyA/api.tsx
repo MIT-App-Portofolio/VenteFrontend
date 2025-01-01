@@ -37,6 +37,15 @@ export type EventPlace = {
   imageUrls: string[],
   priceRangeBegin: number,
   priceRangeEnd: number,
+  offers: EventPlaceOffer[]
+}
+
+export type EventPlaceOffer = {
+  name: string,
+  activeOn: Date,
+  description?: string,
+  price?: number,
+  image?: string
 }
 
 const ApiContext = createContext<Api | null>(null);

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Text, View, Image, StyleSheet, FlatList, Modal, TouchableOpacity, ScrollView, Linking, ImageBackground } from 'react-native';
-import { BtnPrimary, CenterAligned, HorizontallyAligned, ImageBtn, MarginItem } from '@/components/ThemedComponents';
+import { Text, View, Image, StyleSheet, FlatList, Modal, TouchableOpacity, ScrollView, Linking } from 'react-native';
+import { BtnPrimary, CenterAligned, HorizontallyAligned } from '@/components/ThemedComponents';
 import { useApi } from '@/api';
 import { useRouter } from 'expo-router';
 import { Profile, EventPlace } from '@/api';
@@ -144,8 +144,6 @@ export default function HomeScreen() {
         </Text>
       </TouchableOpacity>
 
-      {/* <BtnPrimary title={viewingEventPlaces ? 'Ver Usuarios' : 'Ver Lugares de Eventos'} onClick={toggleView} /> */}
-
       {viewingEventPlaces ? (
         <FlatList
           data={eventPlaces}
@@ -208,17 +206,38 @@ export default function HomeScreen() {
               <TouchableOpacity onPress={closeEventPlaceModal} style={styles.closeButton}>
                 <Ionicons name="arrow-back" size={24} color="white" />
               </TouchableOpacity>
+
               <ScrollView style={styles.modalContent}>
                 <ScrollView horizontal pagingEnabled>
                   {selectedEventPlace.imageUrls.map((image, index) => (
                     <Image key={index} source={{ uri: image }} style={styles.modalProfilePicture} />
                   ))}
                 </ScrollView>
+
                 <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
                   <Text style={{ ...styles.modalName, marginRight: 5 }}>{selectedEventPlace.name}</Text>
+
                   <Text style={styles.modalPriceRange}>{selectedEventPlace.priceRangeBegin}€ - {selectedEventPlace.priceRangeEnd}€</Text>
                 </View>
+
                 <Text style={styles.modalDescription}>{selectedEventPlace.description}</Text>
+
+                <View style={styles.offersContainer}>
+                  <Text style={styles.offersTitle}>Ofertas:</Text>
+
+                  {selectedEventPlace.offers.map((offer, index) => (
+                    <View key={index} style={styles.offer}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'flex-end' }}>
+                        <Text style={styles.offerName}>{offer.name}</Text>
+                        {offer.price && <Text style={styles.offerPrice}>{offer.price}€</Text>}
+                      </View>
+
+                      {offer.description && <Text style={styles.offerDescription}>{offer.description}</Text>}
+
+                      {offer.image && <Image source={{ uri: offer.image }} style={styles.offerImage} />}
+                    </View>
+                  ))}
+                </View>
               </ScrollView>
             </View>
           </Modal>
@@ -315,5 +334,40 @@ const styles = StyleSheet.create({
   },
   closeButtonText: {
     color: 'white',
+  },
+  offersContainer: {
+    marginTop: 20,
+  },
+  offersTitle: {
+    fontSize: 20,
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  offer: {
+    marginTop: 10,
+    padding: 10,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: 'white'
+  },
+  offerName: {
+    fontSize: 18,
+    marginRight: 5,
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  offerDescription: {
+    fontSize: 16,
+    color: 'white',
+  },
+  offerPrice: {
+    fontSize: 16,
+    color: 'white',
+  },
+  offerImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 5,
+    marginTop: 10,
   },
 });

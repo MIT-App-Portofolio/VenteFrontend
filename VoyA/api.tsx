@@ -120,6 +120,7 @@ export class Api {
       await this.fetchUserPfp();
       return AuthResult.Authenticated;
     } catch (e) {
+      console.log('info: ' + e);
       if (e.response && e.response.status === 401) {
         return AuthResult.Unauthenticated;
       }
@@ -195,7 +196,9 @@ export class Api {
     };
 
     try {
-      await this.axios!.post('/api/account/register', registerData);
+      const response = await this.axios!.post('/api/account/register', registerData);
+      const token = response.data;
+      await AsyncStorage.setItem('authToken', token);
     } catch (e) {
       var errorMessage = "Ha sucedido un error desconocido";
       if (e.response) {
@@ -225,8 +228,11 @@ export class Api {
     };
 
     try {
-      await this.axios!.post('/api/account/login', loginData);
+      const response = await this.axios!.post('/api/account/login', loginData);
+      const token = response.data;
+      await AsyncStorage.setItem('authToken', token);
     } catch (e) {
+      console.log('login: ' + e);
       if (e.response && e.response.status == 400) {
         return [false, "Correo o contraseña incorrecta."];
       }
@@ -313,29 +319,13 @@ export class Api {
     });
 
     instance.interceptors.request.use(async (config) => {
-      const cookies = await get_cookies();
-      if (cookies) {
-        config.headers['Cookie'] = cookies;
+      const token = await AsyncStorage.getItem('authToken');
+      if (token) {
+        config.headers['Authorization'] = `Bearer ${token}`;
       }
       return config;
     });
 
-    instance.interceptors.response.use(async (response) => {
-      const setCookie = response.headers['set-cookie'];
-      if (setCookie) {
-        await set_cookies(setCookie.join("; "));
-      }
-      return response;
-    })
-
     return instance;
   }
-}
-
-async function get_cookies() {
-  return await AsyncStorage.getItem("api_cookies");
-}
-
-async function set_cookies(cookies: string) {
-  return await AsyncStorage.setItem("api_cookies", cookies);
 }

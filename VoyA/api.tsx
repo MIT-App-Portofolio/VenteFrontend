@@ -37,6 +37,7 @@ export type EventPlace = {
   imageUrls: string[],
   priceRangeBegin: number,
   priceRangeEnd: number,
+  ageRequirement?: number,
   offers: EventPlaceOffer[]
 }
 

@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Text, View, Image, StyleSheet, FlatList, Modal, TouchableOpacity, ScrollView, Linking } from 'react-native';
+import { Text, View, Image, StyleSheet, FlatList, Modal, TouchableOpacity, ScrollView, Linking, Dimensions } from 'react-native';
 import { BtnPrimary, CenterAligned, HorizontallyAligned } from '@/components/ThemedComponents';
 import { useApi } from '@/api';
 import { useRouter } from 'expo-router';
 import { Profile, EventPlace } from '@/api';
 import { FontAwesome } from '@expo/vector-icons';
 import { Ionicons } from '@expo/vector-icons';
+import Carousel from 'react-native-reanimated-carousel';
 
 export default function HomeScreen() {
   const api = useApi();
@@ -21,6 +22,8 @@ export default function HomeScreen() {
   const [viewingEventPlaces, setViewingEventPlaces] = useState(false);
   const [lastUserFetchEmpty, setLastUserFetchEmpty] = useState(false);
 
+  const screenWidth = Dimensions.get('window').width;
+
   useEffect(() => {
     fetchVisitors();
   }, [page]);
@@ -31,7 +34,7 @@ export default function HomeScreen() {
       if (profile.eventStatus.with) {
         profile.eventStatus.with.forEach(async withUser => {
           if (!api.hasUser(withUser)) {
-            // These functions would cache the respective values so that they can be accessed with sync unstable functions
+            // These functions would cache the respective values so that they can be accessed with unstable functions
             await api.getUser(withUser);
             await api.fetchPfp(withUser);
           }
@@ -136,20 +139,30 @@ export default function HomeScreen() {
   const renderEventPlace = ({ item }: { item: EventPlace }) => (
     <TouchableOpacity key={item.name} style={styles.card} onPress={() => handleEventPlaceClick(item)}>
       <Image source={{ uri: item.imageUrls[0] }} style={styles.profilePicture} />
-      <Text style={styles.name}>{item.name}</Text>
+      <View style={{ alignItems: 'flex-end', flexDirection: 'row', marginBottom: 5 }}>
+        <Text style={styles.name}>{item.name}</Text>
+        {item.ageRequirement && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', borderRadius: 5, borderColor: 'white', borderWidth: 1, paddingRight: 3, paddingLeft: 3 }}>
+            <Text style={{ color: 'white' }}>+{item.ageRequirement}</Text>
+          </View>
+        )}
+      </View>
       <Text style={styles.priceRange}>{item.priceRangeBegin}€ - {item.priceRangeEnd}€</Text>
     </TouchableOpacity>
   );
 
   return (
     <HorizontallyAligned>
+
+      {/* Normal view */}
+
       <TouchableOpacity onPress={toggleView} style={{
         backgroundColor: 'black',
         borderRadius: 15,
         width: '100%',
         height: 200,
       }}>
-        <Image source={require('../../assets/images/club.jpeg')} style={{ width: '100%', height: '100%', borderRadius: 5, opacity: 0.4 }} />
+        <Image source={require('../../assets/images/club.jpeg')} style={{ width: '100%', height: '100%', borderRadius: 15, opacity: 0.4 }} />
         <Text style={{
           color: 'white',
           position: 'absolute',
@@ -183,6 +196,7 @@ export default function HomeScreen() {
         </View>
       )}
 
+      {/* Profile modal */}
       {
         selectedProfile && (
           <Modal
@@ -238,6 +252,9 @@ export default function HomeScreen() {
           </Modal>
         )
       }
+
+
+      {/* Event place modal */}
       {
         selectedEventPlace && (
           <Modal
@@ -251,17 +268,28 @@ export default function HomeScreen() {
               </TouchableOpacity>
 
               <ScrollView style={styles.modalContent}>
-                <ScrollView horizontal pagingEnabled>
-                  {selectedEventPlace.imageUrls.map((image, index) => (
-                    <Image key={index} source={{ uri: image }} style={styles.modalProfilePicture} />
-                  ))}
-                </ScrollView>
+                <CenterAligned>
+                  <Carousel
+                    loop
+                    width={screenWidth * 0.9}
+                    height={200}
+                    autoPlay={true}
+                    data={selectedEventPlace.imageUrls}
+                    renderItem={({ item }) => <Image source={{ uri: item }} style={{ width: '100%', height: 200 }} />}
+                  />
+                </CenterAligned>
 
-                <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <Text style={{ ...styles.modalName, marginRight: 5 }}>{selectedEventPlace.name}</Text>
 
-                  <Text style={styles.modalPriceRange}>{selectedEventPlace.priceRangeBegin}€ - {selectedEventPlace.priceRangeEnd}€</Text>
+                  {selectedEventPlace.ageRequirement && (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', borderRadius: 5, borderColor: 'white', borderWidth: 1, paddingRight: 3, paddingLeft: 3 }}>
+                      <Text style={{ color: 'white' }}>+{selectedEventPlace.ageRequirement}</Text>
+                    </View>
+                  )}
                 </View>
+
+                <Text style={styles.modalPriceRange}>{selectedEventPlace.priceRangeBegin}€ - {selectedEventPlace.priceRangeEnd}€</Text>
 
                 <Text style={styles.modalDescription}>{selectedEventPlace.description}</Text>
 

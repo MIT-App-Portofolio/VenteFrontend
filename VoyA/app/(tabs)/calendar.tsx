@@ -66,7 +66,9 @@ export default function Calendar() {
   const kickUser = async (username: string) => {
     setLoading(true);
     const success = await api.kickUser(username);
-    if (!success) {
+    if (success) {
+      setError(null);
+    } else {
       setError("No se pudo expulsar al usuario.");
     }
     setLoading(false);

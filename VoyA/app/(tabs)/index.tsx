@@ -297,9 +297,15 @@ export default function HomeScreen() {
                 <Image source={{ uri: api.getPfpUnstable(selectedProfile.userName) }} style={styles.modalProfilePicture} />
 
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
-                  <Text style={{ ...styles.modalName, marginRight: 10 }}>{selectedProfile.name}</Text>
+                  {
+                    selectedProfile.name &&
+                    <Text style={{ ...styles.modalName, marginRight: 10 }}>{selectedProfile.name}</Text>
+                  }
+
                   <Text style={styles.modalUsername}>@{selectedProfile.userName}</Text>
                 </View>
+
+                <Text style={{ color: 'white', fontSize: 18, marginTop: 10, }}>{selectedProfile.years} años</Text>
 
                 {selectedProfile.igHandle && (
                   <View style={styles.modalIgContainer}>

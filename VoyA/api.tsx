@@ -120,7 +120,6 @@ export class Api {
       await this.fetchUserPfp();
       return AuthResult.Authenticated;
     } catch (e) {
-      console.log('info: ' + e);
       if (e.response && e.response.status === 401) {
         return AuthResult.Unauthenticated;
       }
@@ -232,7 +231,6 @@ export class Api {
       const token = response.data;
       await AsyncStorage.setItem('authToken', token);
     } catch (e) {
-      console.log('login: ' + e);
       if (e.response && e.response.status == 400) {
         return [false, "Correo o contraseña incorrecta."];
       }

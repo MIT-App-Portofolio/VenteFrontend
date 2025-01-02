@@ -180,6 +180,7 @@ export default function HomeScreen() {
             data={eventPlaces}
             renderItem={renderEventPlace}
             keyExtractor={item => item.name}
+            contentContainerStyle={{ paddingBottom: 250 }}
           />
         </View>
       ) : (
@@ -191,6 +192,7 @@ export default function HomeScreen() {
             keyExtractor={item => item}
             onEndReached={() => setPage(prevPage => prevPage + 1)}
             onEndReachedThreshold={0.5}
+            contentContainerStyle={{ paddingBottom: 250 }}
             ListFooterComponent={loading ? (<CenterAligned><Text style={{ color: 'white' }}>Loading...</Text></CenterAligned>) : null}
           />
         </View>

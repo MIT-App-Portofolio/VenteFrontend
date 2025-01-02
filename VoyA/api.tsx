@@ -335,9 +335,14 @@ export class Api {
     return await this.getUserInfo() == AuthResult.Authenticated;
   }
 
-  public async queryVisitors(page: number): Promise<string[] | null> {
+  public async queryVisitors(page: number, gender: number | null, ageRangeMin: number | null, ageRangeMax: number | null): Promise<string[] | null> {
     try {
-      const response = await this.axios!.get('/api/query_visitors?page=' + page);
+      var query = '/api/query_visitors?page=' + page;
+      if (gender) query += '&gender=' + gender;
+      if (ageRangeMin) query += '&ageRangeMin=' + ageRangeMin;
+      if (ageRangeMax) query += '&ageRangeMax=' + ageRangeMax;
+
+      const response = await this.axios!.get(query);
       const profiles: Profile[] = response.data;
 
       profiles.forEach(profile => {

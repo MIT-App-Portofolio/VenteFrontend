@@ -1,26 +1,36 @@
 import React, { useEffect, useState } from 'react';
-import { Text, View, Image, StyleSheet, FlatList, Modal, TouchableOpacity, ScrollView, Linking, Dimensions } from 'react-native';
-import { BtnPrimary, CenterAligned, HorizontallyAligned } from '@/components/ThemedComponents';
+import { Text, View, Image, StyleSheet, FlatList, Modal, TouchableOpacity, ScrollView, Linking, Dimensions, TextInput } from 'react-native';
+import { BtnPrimary, BtnSecondary, CenterAligned, HorizontallyAligned, MarginItem } from '@/components/ThemedComponents';
 import { useApi } from '@/api';
 import { useRouter } from 'expo-router';
 import { Profile, EventPlace } from '@/api';
 import { FontAwesome } from '@expo/vector-icons';
 import { Ionicons } from '@expo/vector-icons';
 import Carousel from 'react-native-reanimated-carousel';
+import { Picker } from '@react-native-picker/picker';
 
 export default function HomeScreen() {
   const api = useApi();
   const router = useRouter();
+
+  const [loading, setLoading] = useState(false);
+
   const [visitors, setVisitors] = useState<string[]>([]);
   const [eventPlaces, setEventPlaces] = useState<EventPlace[]>([]);
   const [page, setPage] = useState(0);
-  const [loading, setLoading] = useState(false);
+
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [selectedEventPlace, setSelectedEventPlace] = useState<EventPlace | null>(null);
-  const [isModalVisible, setIsModalVisible] = useState(false);
+
+  const [isUserModalVisible, setIsUserModalVisible] = useState(false);
   const [isEventPlaceModalVisible, setIsEventPlaceModalVisible] = useState(false);
   const [viewingEventPlaces, setViewingEventPlaces] = useState(false);
   const [lastUserFetchEmpty, setLastUserFetchEmpty] = useState(false);
+
+  const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
+  const [genderFilter, setGenderFilter] = useState<number | null>(null);
+  const [ageRangeMin, setAgeRangeMin] = useState<number | null>(null);
+  const [ageRangeMax, setAgeRangeMax] = useState<number | null>(null);
 
   const screenWidth = Dimensions.get('window').width;
 
@@ -47,7 +57,7 @@ export default function HomeScreen() {
     if (lastUserFetchEmpty) return;
 
     setLoading(true);
-    const newVisitors = await api.queryVisitors(page);
+    const newVisitors = await api.queryVisitors(page, genderFilter, ageRangeMin, ageRangeMax);
 
     if (!newVisitors || newVisitors.length === 0) {
       setLastUserFetchEmpty(true);
@@ -74,9 +84,21 @@ export default function HomeScreen() {
     }
   };
 
+  const applyFilter = async () => {
+    setLoading(true);
+    setPage(0);
+    setLastUserFetchEmpty(false);
+    setVisitors([]);
+
+    await fetchVisitors();
+
+    setIsFilterModalVisible(false);
+    setLoading(false);
+  };
+
   const handleProfileClick = (profile: Profile) => {
     setSelectedProfile(profile);
-    setIsModalVisible(true);
+    setIsUserModalVisible(true);
   };
 
   const handleEventPlaceClick = (place: EventPlace) => {
@@ -85,7 +107,7 @@ export default function HomeScreen() {
   };
 
   const closeModal = () => {
-    setIsModalVisible(false);
+    setIsUserModalVisible(false);
     setSelectedProfile(null);
   };
 
@@ -153,9 +175,7 @@ export default function HomeScreen() {
 
   return (
     <HorizontallyAligned>
-
       {/* Normal view */}
-
       <TouchableOpacity onPress={toggleView} style={{
         backgroundColor: 'black',
         borderRadius: 15,
@@ -186,6 +206,11 @@ export default function HomeScreen() {
       ) : (
         <View style={{ width: '100%', height: '100%', alignItems: 'center', marginTop: 20 }}>
           <Text style={{ color: 'white', fontSize: 20, alignSelf: 'flex-start' }}>Usuarios que tambien van a {api.userProfile.eventStatus.location?.name}</Text>
+
+          <View style={{ flexDirection: 'row', justifyContent: 'center', width: '100%', marginTop: 10 }}>
+            <BtnPrimary title='Filtrar usuarios' onClick={() => setIsFilterModalVisible(true)} />
+          </View>
+
           <FlatList
             data={visitors}
             renderItem={renderVisitor}
@@ -198,11 +223,63 @@ export default function HomeScreen() {
         </View>
       )}
 
+      {/* Filter modal */}
+      <Modal
+        visible={isFilterModalVisible}
+        animationType="slide"
+        transparent={true}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Filtrar</Text>
+
+            <Text style={styles.modalLabel}>Genero</Text>
+            <Picker
+              selectedValue={genderFilter}
+              onValueChange={(itemValue) => setGenderFilter(itemValue)}
+              style={styles.modalPicker}
+            >
+              <Picker.Item label="Qualquier" value={null} />
+              <Picker.Item label="Hombre" value={0} />
+              <Picker.Item label="Mujer" value={1} />
+            </Picker>
+
+            <Text style={styles.modalLabel}>Rango de edad</Text>
+            <View style={styles.modalRow}>
+              <TextInput
+                placeholder="Min"
+                keyboardType="numeric"
+                placeholderTextColor='gray'
+                value={ageRangeMin?.toString() || ''}
+                onChangeText={(text) => setAgeRangeMin(text ? parseInt(text) : null)}
+                style={styles.modalInput}
+              />
+              <Text style={{ color: 'white', fontSize: 25 }}>-</Text>
+              <TextInput
+                placeholder="Max"
+                keyboardType="numeric"
+                placeholderTextColor='gray'
+                value={ageRangeMax?.toString() || ''}
+                onChangeText={(text) => setAgeRangeMax(text ? parseInt(text) : null)}
+                style={styles.modalInput}
+              />
+            </View>
+
+            <MarginItem>
+              <BtnPrimary title="Aplicar filtro" onClick={applyFilter} />
+            </MarginItem>
+            <MarginItem>
+              <BtnSecondary title="Cancelar" onClick={() => setIsFilterModalVisible(false)} />
+            </MarginItem>
+          </View>
+        </View>
+      </Modal>
+
       {/* Profile modal */}
       {
         selectedProfile && (
           <Modal
-            visible={isModalVisible}
+            visible={isUserModalVisible}
             animationType="slide"
             transparent={true}
           >
@@ -460,6 +537,78 @@ const styles = StyleSheet.create({
   },
   invitedUserName: {
     fontSize: 16,
+    color: 'white',
+  },
+  modalTitle: {
+    color: 'white',
+    fontSize: 20,
+    marginBottom: 10,
+  },
+  modalLabel: {
+    color: 'white',
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  modalPicker: {
+    color: 'white',
+    marginBottom: 20,
+    backgroundColor: 'black',
+  },
+  modalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalInput: {
+    padding: 10,
+    borderColor: 'white',
+    color: 'white',
+    fontSize: 15,
+    borderWidth: 1,
+    borderRadius: 4,
+    width: '45%',
+  },
+  toggleButton: {
+    backgroundColor: 'black',
+    borderRadius: 15,
+    width: '100%',
+    height: 200,
+  },
+  toggleButtonImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 15,
+    opacity: 0.4,
+  },
+  toggleButtonText: {
+    color: 'white',
+    position: 'absolute',
+    bottom: 10,
+    left: 10,
+    textTransform: 'uppercase',
+  },
+  eventPlacesContainer: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  visitorsContainer: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  visitorsTitle: {
+    color: 'white',
+    fontSize: 20,
+    alignSelf: 'flex-start',
+  },
+  flatListContent: {
+    paddingBottom: 250,
+  },
+  loadingText: {
     color: 'white',
   },
 });

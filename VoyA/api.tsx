@@ -95,6 +95,7 @@ export class Api {
   locations: EventLocation[] | null;
   axios: AxiosInstance | null;
   usersDb: { [key: string]: Profile } = {};
+  pfpDb: { [key: string]: string } = {};
 
   constructor() {
     this.userProfile = null;
@@ -105,6 +106,10 @@ export class Api {
 
   public async init(url: string) {
     this.axios = await this.axios_instance(url);
+  }
+
+  public hasUser(username: string) {
+    return this.usersDb[username] !== undefined;
   }
 
   public async getUser(username: string) {
@@ -160,12 +165,24 @@ export class Api {
   }
 
   public async fetchPfp(userName: string) {
+    if (this.pfpDb[userName]) {
+      return this.pfpDb[userName];
+    }
+
     try {
       const response = await this.axios!.get('/api/access_pfp?userName=' + userName);
-      return response.data;
-    } catch {
+      const imageUrl = response.data;
+      this.pfpDb[userName] = imageUrl;
+      return imageUrl;
+    } catch (e) {
+      console.log(e);
       return null;
     }
+  }
+
+  // Assumes pfp is already in db
+  public getPfpUnstable(userName: string) {
+    return this.pfpDb[userName];
   }
 
   public async updateProfilePicture(uri: string) {

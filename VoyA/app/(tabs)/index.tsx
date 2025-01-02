@@ -11,7 +11,6 @@ export default function HomeScreen() {
   const api = useApi();
   const router = useRouter();
   const [visitors, setVisitors] = useState<string[]>([]);
-  const [visitorPfps, setVisitorPfps] = useState<{ [key: string]: string }>({});
   const [eventPlaces, setEventPlaces] = useState<EventPlace[]>([]);
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -26,6 +25,21 @@ export default function HomeScreen() {
     fetchVisitors();
   }, [page]);
 
+  useEffect(() => {
+    visitors.forEach(visitor => {
+      var profile = api.getUserUnstable(visitor);
+      if (profile.eventStatus.with) {
+        profile.eventStatus.with.forEach(async withUser => {
+          if (!api.hasUser(withUser)) {
+            // These functions would cache the respective values so that they can be accessed with sync unstable functions
+            await api.getUser(withUser);
+            await api.fetchPfp(withUser);
+          }
+        });
+      }
+    });
+  }, [visitors]);
+
   const fetchVisitors = async () => {
     if (lastUserFetchEmpty) return;
 
@@ -38,15 +52,11 @@ export default function HomeScreen() {
 
     if (newVisitors) {
       setVisitors(prevVisitors => [...prevVisitors, ...newVisitors]);
-      const pfps = await Promise.all(
-        newVisitors.map(visitor => api.fetchPfp(visitor))
-      );
-      const pfpMap = newVisitors.reduce((acc, visitor, index) => {
-        acc[visitor] = pfps[index];
-        return acc;
-      }, {} as { [key: string]: string });
-      setVisitorPfps(prevPfps => ({ ...prevPfps, ...pfpMap }));
+      newVisitors.forEach(async visitor => {
+        await api.fetchPfp(visitor);
+      });
     }
+
     setLoading(false);
   };
 
@@ -99,6 +109,7 @@ export default function HomeScreen() {
 
   const renderVisitor = ({ item }: { item: string }) => {
     var visitor = api.getUserUnstable(item);
+    var pfpUrl = api.getPfpUnstable(item);
 
     if (visitor == null) {
       return null;
@@ -108,7 +119,7 @@ export default function HomeScreen() {
 
     return (
       <TouchableOpacity key={visitor.userName} style={styles.card} onPress={() => handleProfileClick(visitor!)}>
-        <Image source={{ uri: visitorPfps[visitor.userName] }} style={styles.profilePicture} />
+        <Image source={{ uri: pfpUrl }} style={styles.profilePicture} />
         <View style={{ alignItems: 'center', flexDirection: 'row' }}>
           <Text style={styles.name}>{displayName}</Text>
           {visitor.igHandle && (
@@ -183,12 +194,15 @@ export default function HomeScreen() {
               <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
                 <Ionicons name="arrow-back" size={24} color="white" />
               </TouchableOpacity>
+
               <ScrollView style={styles.modalContent}>
-                <Image source={{ uri: visitorPfps[selectedProfile.userName] }} style={styles.modalProfilePicture} />
+                <Image source={{ uri: api.getPfpUnstable(selectedProfile.userName) }} style={styles.modalProfilePicture} />
+
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
                   <Text style={{ ...styles.modalName, marginRight: 10 }}>{selectedProfile.name}</Text>
                   <Text style={styles.modalUsername}>@{selectedProfile.userName}</Text>
                 </View>
+
                 {selectedProfile.igHandle && (
                   <View style={styles.modalIgContainer}>
                     <FontAwesome name="instagram" size={16} color="white" />
@@ -197,7 +211,28 @@ export default function HomeScreen() {
                     </Text>
                   </View>
                 )}
+
                 <Text style={styles.modalDescription}>{selectedProfile.description}</Text>
+
+                {selectedProfile.eventStatus.with && selectedProfile.eventStatus.with.length > 0 && (
+                  <Text style={{ color: 'white', fontSize: 16, marginTop: 10 }}>Va con:</Text>
+                )}
+
+                {/* Render profiles of users that go with the selected profile */}
+                <View style={styles.invitedUsersContainer}>
+                  {selectedProfile.eventStatus.with?.map((username) => {
+                    const user = api.getUserUnstable(username);
+
+                    if (!user) return null;
+
+                    return (
+                      <View key={username} style={styles.invitedUserCard}>
+                        <Image source={{ uri: api.getPfpUnstable(username) }} style={styles.invitedUserProfilePicture} />
+                        <Text style={styles.invitedUserName}>{user.name || `@${user.userName}`}</Text>
+                      </View>
+                    );
+                  })}
+                </View>
               </ScrollView>
             </View>
           </Modal>
@@ -237,6 +272,7 @@ export default function HomeScreen() {
                     <View key={index} style={styles.offer}>
                       <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'flex-end' }}>
                         <Text style={styles.offerName}>{offer.name}</Text>
+
                         {offer.price && <Text style={styles.offerPrice}>{offer.price}€</Text>}
                       </View>
 
@@ -377,5 +413,23 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: 5,
     marginTop: 10,
+  },
+  invitedUsersContainer: {
+    marginTop: 20,
+  },
+  invitedUserCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  invitedUserProfilePicture: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 10,
+  },
+  invitedUserName: {
+    fontSize: 16,
+    color: 'white',
   },
 });

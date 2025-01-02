@@ -145,16 +145,20 @@ export default function HomeScreen() {
     return (
       <TouchableOpacity key={visitor.userName} style={styles.card} onPress={() => handleProfileClick(visitor!)}>
         <Image source={{ uri: pfpUrl }} style={styles.profilePicture} />
-        <View style={{ alignItems: 'center', flexDirection: 'row' }}>
+        <View style={{ alignItems: 'flex-start', flexDirection: 'column' }}>
           <Text style={styles.name}>{displayName}</Text>
-          {visitor.igHandle && (
-            <View style={styles.igContainer}>
-              <FontAwesome name="instagram" size={16} color="gray" />
-              <Text style={styles.igHandle}>{visitor.igHandle}</Text>
-            </View>
-          )}
-        </View>
-      </TouchableOpacity>
+          <Text style={{ color: 'white' }}>{visitor.years} años</Text>
+
+          {
+            visitor.igHandle && (
+              <View style={styles.igContainer}>
+                <FontAwesome name="instagram" size={16} color="gray" />
+                <Text style={styles.igHandle}>{visitor.igHandle}</Text>
+              </View>
+            )
+          }
+        </View >
+      </TouchableOpacity >
     );
   };
 
@@ -466,6 +470,7 @@ const styles = StyleSheet.create({
   },
   modalIgHandle: {
     fontSize: 18,
+    textDecorationLine: 'underline',
     marginLeft: 5,
     color: 'white',
   },

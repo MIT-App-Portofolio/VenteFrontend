@@ -13,6 +13,7 @@ export enum AuthResult {
 export type Profile = {
   userName: string,
   gender: number,
+  years: number,
   name?: string,
   igHandle?: string,
   description?: string,
@@ -225,12 +226,13 @@ export class Api {
     }
   }
 
-  public async createAccount(username: string, email: string, password: string, gender: number): Promise<[boolean, string | null]> {
+  public async createAccount(username: string, email: string, password: string, gender: number, birthDate: Date): Promise<[boolean, string | null]> {
     const registerData = {
       email: email,
       userName: username,
       password: password,
       gender: gender,
+      birthDate: birthDate.toISOString()
     };
 
     try {

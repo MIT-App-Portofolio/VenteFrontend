@@ -8,6 +8,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { useApi } from '@/api';
 import { Picker } from '@react-native-picker/picker';
 import { useRedirect } from '@/context/RedirectContext';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 // Define the type for the props that LoginPage will accept
 type AuthPageProps = {
@@ -128,6 +129,8 @@ const Login: React.FC<AuthPageProps> = ({ onLogin }) => {
 const Register: React.FC<AuthPageProps> = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [birthDate, setBirthDate] = useState<Date | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const api = useApi();
   const { setRedirectTo } = useRedirect()!;
 
@@ -154,7 +157,14 @@ const Register: React.FC<AuthPageProps> = ({ onLogin }) => {
 
   const onPressSend = async (formData: any) => {
     setLoading(true);
-    var [ok, error] = await api.createAccount(formData.username, formData.email, formData.password, formData.gender);
+
+    if (birthDate == null) {
+      setError('La fecha de nacimiento es obligatoria');
+      setLoading(false);
+      return;
+    }
+
+    var [ok, error] = await api.createAccount(formData.username, formData.email, formData.password, formData.gender, birthDate!);
     setError(error);
     if (ok) {
       onLogin();
@@ -238,6 +248,23 @@ const Register: React.FC<AuthPageProps> = ({ onLogin }) => {
             name="gender"
           />
           {errors.gender && <ErrorText>{errors.gender.message}</ErrorText>}
+        </MarginItem>
+
+        <MarginItem>
+          <BtnPrimary title={birthDate ? birthDate.toLocaleDateString('es-ES') : "Escoge tu fecha de nacimiento"} onClick={() => setShowDatePicker(true)} />
+          {showDatePicker && (
+            <DateTimePicker
+              value={birthDate || new Date()}
+              mode="date"
+              display="default"
+              onChange={(_, selectedDate) => {
+                setShowDatePicker(false);
+                if (selectedDate) {
+                  setBirthDate(selectedDate);
+                }
+              }}
+            />
+          )}
         </MarginItem>
 
         <BiggerMarginItem>

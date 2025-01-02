@@ -13,7 +13,7 @@ export default function Calendar() {
   const [error, setError] = useState<string | null>(null);
 
   const [selectedLocation, setSelectedLocation] = useState<number>(api.userProfile?.eventStatus.location?.id ?? 0);
-  const [date, setDate] = useState(api.userProfile?.eventStatus.time ?? new Date());
+  const [date, setDate] = useState<Date | null>(api.userProfile?.eventStatus.time ?? null);
   const [isDirty, setIsDirty] = useState(false);
 
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -26,6 +26,13 @@ export default function Calendar() {
     setLoading(true);
     if (selectedLocation == null) {
       setError("Escoge un lugar.");
+      setLoading(false);
+      return;
+    }
+
+    if (date == null) {
+      setError("Escoge una fecha.");
+      setLoading(false);
       return;
     }
 
@@ -127,12 +134,12 @@ export default function Calendar() {
         </MarginItem>
 
         <MarginItem>
-          <BtnPrimary title={api.userProfile?.eventStatus.active ? date.toLocaleString('es-ES') : "Escoge una fecha"} onClick={() => setShowDatePicker(true)} />
+          <BtnPrimary title={date ? date.toLocaleString('es-ES') : "Escoge una fecha"} onClick={() => setShowDatePicker(true)} />
 
           {showDatePicker && (
             <DateTimePicker
               minimumDate={new Date()}
-              value={date}
+              value={date ?? new Date()}
               mode={Platform.OS == 'ios' ? "datetime" : "date"}
               display="default"
               onChange={(_, selectedDate) => {
@@ -150,7 +157,7 @@ export default function Calendar() {
 
           {showTimePicker && (
             <DateTimePicker
-              value={date}
+              value={date ?? new Date()}
               mode="time"
               display="default"
               onChange={(_, selectedDate) => {

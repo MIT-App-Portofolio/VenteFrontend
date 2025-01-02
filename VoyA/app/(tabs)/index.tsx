@@ -179,8 +179,9 @@ export default function HomeScreen() {
       <TouchableOpacity onPress={toggleView} style={{
         backgroundColor: 'black',
         borderRadius: 15,
+        marginTop: 160,
         width: '100%',
-        height: 200,
+        height: 160,
       }}>
         <Image source={require('../../assets/images/club.jpeg')} style={{ width: '100%', height: '100%', borderRadius: 15, opacity: 0.4 }} />
         <Text style={{
@@ -200,14 +201,14 @@ export default function HomeScreen() {
             data={eventPlaces}
             renderItem={renderEventPlace}
             keyExtractor={item => item.name}
-            contentContainerStyle={{ paddingBottom: 250 }}
+            contentContainerStyle={{ paddingBottom: 350 }}
           />
         </View>
       ) : (
         <View style={{ width: '100%', height: '100%', alignItems: 'center', marginTop: 20 }}>
           <Text style={{ color: 'white', fontSize: 20, alignSelf: 'flex-start' }}>Usuarios que tambien van a {api.userProfile.eventStatus.location?.name}</Text>
 
-          <View style={{ flexDirection: 'row', justifyContent: 'center', width: '100%', marginTop: 10 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'center', width: '100%', marginTop: 10, marginBottom: 10 }}>
             <BtnPrimary title='Filtrar usuarios' onClick={() => setIsFilterModalVisible(true)} />
           </View>
 
@@ -217,7 +218,7 @@ export default function HomeScreen() {
             keyExtractor={item => item}
             onEndReached={() => setPage(prevPage => prevPage + 1)}
             onEndReachedThreshold={0.5}
-            contentContainerStyle={{ paddingBottom: 250 }}
+            contentContainerStyle={{ paddingBottom: 350 }}
             ListFooterComponent={loading ? (<CenterAligned><Text style={{ color: 'white' }}>Loading...</Text></CenterAligned>) : null}
           />
         </View>

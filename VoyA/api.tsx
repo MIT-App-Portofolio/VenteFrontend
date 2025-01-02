@@ -94,6 +94,7 @@ export class Api {
 
   locations: EventLocation[] | null;
   axios: AxiosInstance | null;
+  usersDb: { [key: string]: Profile } = {};
 
   constructor() {
     this.userProfile = null;
@@ -104,6 +105,26 @@ export class Api {
 
   public async init(url: string) {
     this.axios = await this.axios_instance(url);
+  }
+
+  public async getUser(username: string) {
+    if (this.usersDb[username]) {
+      return this.usersDb[username];
+    }
+
+    try {
+      const response = await this.axios!.get('/api/account/profile?username=' + username);
+      const profile: Profile = response.data;
+      this.usersDb[username] = profile;
+      return profile;
+    } catch {
+      return null;
+    }
+  }
+
+  // Assumes user is already in the db
+  public getUserUnstable(username: string) {
+    return this.usersDb[username];
   }
 
   public async getUserInfo() {
@@ -294,9 +315,16 @@ export class Api {
     return await this.getUserInfo() == AuthResult.Authenticated;
   }
 
-  public async queryVisitors(page: number): Promise<Profile[] | null> {
+  public async queryVisitors(page: number): Promise<string[] | null> {
     try {
-      return (await this.axios?.get('/api/query_visitors?page=' + page))!.data;
+      const response = await this.axios!.get('/api/query_visitors?page=' + page);
+      const profiles: Profile[] = response.data;
+
+      profiles.forEach(profile => {
+        this.usersDb[profile.userName] = profile;
+      });
+
+      return profiles.map(profile => profile.userName);
     } catch {
       return null;
     }

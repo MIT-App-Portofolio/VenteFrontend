@@ -10,7 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 export default function HomeScreen() {
   const api = useApi();
   const router = useRouter();
-  const [visitors, setVisitors] = useState<Profile[]>([]);
+  const [visitors, setVisitors] = useState<string[]>([]);
   const [visitorPfps, setVisitorPfps] = useState<{ [key: string]: string }>({});
   const [eventPlaces, setEventPlaces] = useState<EventPlace[]>([]);
   const [page, setPage] = useState(0);
@@ -39,10 +39,10 @@ export default function HomeScreen() {
     if (newVisitors) {
       setVisitors(prevVisitors => [...prevVisitors, ...newVisitors]);
       const pfps = await Promise.all(
-        newVisitors.map(visitor => api.fetchPfp(visitor.userName))
+        newVisitors.map(visitor => api.fetchPfp(visitor))
       );
       const pfpMap = newVisitors.reduce((acc, visitor, index) => {
-        acc[visitor.userName] = pfps[index];
+        acc[visitor] = pfps[index];
         return acc;
       }, {} as { [key: string]: string });
       setVisitorPfps(prevPfps => ({ ...prevPfps, ...pfpMap }));
@@ -97,18 +97,24 @@ export default function HomeScreen() {
     );
   }
 
-  const renderVisitor = ({ item }: { item: Profile }) => {
-    const displayName = item.name || `@${item.userName}`;
+  const renderVisitor = ({ item }: { item: string }) => {
+    var visitor = api.getUserUnstable(item);
+
+    if (visitor == null) {
+      return null;
+    }
+
+    const displayName = visitor.name || `@${visitor.userName}`;
 
     return (
-      <TouchableOpacity key={item.userName} style={styles.card} onPress={() => handleProfileClick(item)}>
-        <Image source={{ uri: visitorPfps[item.userName] }} style={styles.profilePicture} />
+      <TouchableOpacity key={visitor.userName} style={styles.card} onPress={() => handleProfileClick(visitor!)}>
+        <Image source={{ uri: visitorPfps[visitor.userName] }} style={styles.profilePicture} />
         <View style={{ alignItems: 'center', flexDirection: 'row' }}>
           <Text style={styles.name}>{displayName}</Text>
-          {item.igHandle && (
+          {visitor.igHandle && (
             <View style={styles.igContainer}>
               <FontAwesome name="instagram" size={16} color="gray" />
-              <Text style={styles.igHandle}>{item.igHandle}</Text>
+              <Text style={styles.igHandle}>{visitor.igHandle}</Text>
             </View>
           )}
         </View>
@@ -158,7 +164,7 @@ export default function HomeScreen() {
           <FlatList
             data={visitors}
             renderItem={renderVisitor}
-            keyExtractor={item => item.userName}
+            keyExtractor={item => item}
             onEndReached={() => setPage(prevPage => prevPage + 1)}
             onEndReachedThreshold={0.5}
             ListFooterComponent={loading ? (<CenterAligned><Text style={{ color: 'white' }}>Loading...</Text></CenterAligned>) : null}

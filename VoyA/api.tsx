@@ -50,7 +50,7 @@ export type EventPlaceOffer = {
   image?: string
 }
 
-const ApiContext = createContext<Api | null>(null);
+const ApiContext = createContext<{ api: Api, userProfile: Profile | null, userPfp: string | null } | null>(null);
 
 export const useApi = () => {
   const context = useContext(ApiContext);
@@ -61,11 +61,13 @@ export const useApi = () => {
 };
 
 export const ApiProvider = ({ children }) => {
-  const [apiInstance, setApiInstance] = useState<Api | null>(null);
+  const [api, setApiInstance] = useState<Api | null>(null);
+  const [userProfile, setUserProfile] = useState<Profile | null>(null);
+  const [userPfp, setUserPfp] = useState<string | null>(null);
 
   useEffect(() => {
     const initializeApi = async () => {
-      const instance = new Api();
+      const instance = new Api(setUserProfile, setUserPfp);
       if (__DEV__) {
         if (Platform.OS === 'android') {
           await instance.init('http://10.0.2.2:5192');
@@ -79,31 +81,34 @@ export const ApiProvider = ({ children }) => {
     initializeApi();
   }, []);
 
-  if (!apiInstance) {
+  if (!api) {
     return <FullScreenLoading></FullScreenLoading>;
   }
 
   return (
-    <ApiContext.Provider value={apiInstance}>
+    <ApiContext.Provider value={{ api, userProfile, userPfp }}>
       {children}
     </ApiContext.Provider>
   );
 };
 
 export class Api {
-  public userProfile: Profile | null;
-  public profilePicture: string | null;
+  public locations: EventLocation[] | null;
 
-  locations: EventLocation[] | null;
-  axios: AxiosInstance | null;
-  usersDb: { [key: string]: Profile } = {};
-  pfpDb: { [key: string]: string } = {};
+  private axios: AxiosInstance | null;
+  private usersDb: { [key: string]: Profile } = {};
+  private pfpDb: { [key: string]: string } = {};
+  private username: string | null;
 
-  constructor() {
-    this.userProfile = null;
-    this.profilePicture = null;
+  private setUserProfile: React.Dispatch<React.SetStateAction<Profile | null>>;
+  private setUserPfp: React.Dispatch<React.SetStateAction<string | null>>;
+
+  constructor(setUserProfile: React.Dispatch<React.SetStateAction<Profile | null>>, setUserPfp: React.Dispatch<React.SetStateAction<string | null>>) {
     this.locations = null;
     this.axios = null;
+    this.username = null;
+    this.setUserProfile = setUserProfile;
+    this.setUserPfp = setUserPfp;
   }
 
   public async init(url: string) {
@@ -137,13 +142,16 @@ export class Api {
   public async getUserInfo() {
     try {
       const response = await this.axios!.get('/api/account/info');
-      this.userProfile = {
+      const profile = {
         ...response.data,
         eventStatus: {
           ...response.data.eventStatus,
           time: response.data.eventStatus.time ? new Date(response.data.eventStatus.time) : null,
         },
       };
+
+      this.username = profile.userName;
+      this.setUserProfile(profile);
 
       await this.fetchUserPfp();
       return AuthResult.Authenticated;
@@ -157,12 +165,12 @@ export class Api {
 
   public async fetchUserPfp() {
     try {
-      const response = await this.axios!.get('/api/access_pfp?userName=' + this.userProfile!.userName);
+      const response = await this.axios!.get('/api/access_pfp?userName=' + this.username);
       const imageUrl = response.data;
 
-      this.profilePicture = imageUrl;
+      this.setUserPfp(imageUrl);
     } catch {
-      this.profilePicture = null;
+      this.setUserPfp(null);
     }
   }
 

@@ -22,7 +22,7 @@ export default function RootLayout() {
 
 function Inner() {
   const [loadingAuthStatus, setLoading] = useState(true);
-  const api = useApi();
+  const { api } = useApi();
   const [isAuthenticated, setAuthenticated] = useState(false);
   const [unkownError, setUnkownError] = useState(false);
   const [fontsLoaded] = useFonts({

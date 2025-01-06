@@ -10,7 +10,7 @@ import Carousel from 'react-native-reanimated-carousel';
 import { Picker } from '@react-native-picker/picker';
 
 export default function HomeScreen() {
-  const api = useApi();
+  const { api, userProfile } = useApi();
   const router = useRouter();
 
   const [loading, setLoading] = useState(false);
@@ -123,7 +123,7 @@ export default function HomeScreen() {
     }
   };
 
-  if (!api.userProfile?.eventStatus.active) {
+  if (!userProfile?.eventStatus.active) {
     return (
       <CenterAligned>
         <Text style={{ color: 'white' }}>No estas registrado en ningun evento.</Text>
@@ -210,7 +210,7 @@ export default function HomeScreen() {
         </View>
       ) : (
         <View style={{ width: '100%', height: '100%', alignItems: 'center', marginTop: 20 }}>
-          <Text style={{ color: 'white', fontSize: 20, alignSelf: 'flex-start' }}>Usuarios que tambien van a {api.userProfile.eventStatus.location?.name}</Text>
+          <Text style={{ color: 'white', fontSize: 20, alignSelf: 'flex-start' }}>Usuarios que tambien van a {userProfile.eventStatus.location?.name}</Text>
 
           <View style={{ flexDirection: 'row', justifyContent: 'center', width: '100%', marginTop: 10, marginBottom: 10 }}>
             <BtnPrimary title='Filtrar usuarios' onClick={() => setIsFilterModalVisible(true)} />

@@ -7,13 +7,13 @@ import { CenterAligned, BtnPrimary, ErrorText, BtnSecondary, FullScreenLoading, 
 import { IconSymbol } from "@/components/ui/IconSymbol";
 
 export default function Calendar() {
-  const api = useApi();
+  const { api, userProfile } = useApi();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [selectedLocation, setSelectedLocation] = useState<number>(api.userProfile?.eventStatus.location?.id ?? 0);
-  const [date, setDate] = useState<Date | null>(api.userProfile?.eventStatus.time ?? null);
+  const [selectedLocation, setSelectedLocation] = useState<number>(userProfile?.eventStatus.location?.id ?? 0);
+  const [date, setDate] = useState<Date | null>(userProfile?.eventStatus.time ?? null);
   const [isDirty, setIsDirty] = useState(false);
 
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -114,8 +114,8 @@ export default function Calendar() {
   return (
     <CenterAligned>
       <MarginItem>
-        {api.userProfile?.eventStatus.active && <Text style={{ color: 'white', fontSize: 20 }}>Cambia tu evento.</Text>}
-        {!api.userProfile?.eventStatus.active && <Text style={{ color: 'white', fontSize: 20 }}>Reigstrate en un evento.</Text>}
+        {userProfile?.eventStatus.active && <Text style={{ color: 'white', fontSize: 20 }}>Cambia tu evento.</Text>}
+        {!userProfile?.eventStatus.active && <Text style={{ color: 'white', fontSize: 20 }}>Reigstrate en un evento.</Text>}
       </MarginItem>
 
       <View style={{ width: '80%' }}>
@@ -191,7 +191,7 @@ export default function Calendar() {
               <Text style={{ color: 'white', fontSize: 20, marginBottom: 10 }}>Invitados</Text>
 
               <FlatList
-                data={api.userProfile?.eventStatus.with}
+                data={userProfile?.eventStatus.with}
                 renderItem={renderInvited}
                 horizontal
                 style={{ marginBottom: 10 }}
@@ -220,7 +220,7 @@ export default function Calendar() {
         </Modal>
 
         {
-          api.userProfile?.eventStatus.active &&
+          userProfile?.eventStatus.active &&
           <MarginItem>
             <BtnPrimary title="Invitar Usuarios" onClick={() => setIsModalVisible(true)} />
           </MarginItem>
@@ -229,11 +229,11 @@ export default function Calendar() {
         <BiggerMarginItem>
           {error && <ErrorText>{error}</ErrorText>}
 
-          {api.userProfile?.eventStatus.active && <BtnPrimary title="Actualizar" onClick={onSubmit} disabled={!isDirty} />}
-          {!api.userProfile?.eventStatus.active && <BtnPrimary title="Registrarte" onClick={onSubmit} disabled={!isDirty} />}
+          {userProfile?.eventStatus.active && <BtnPrimary title="Actualizar" onClick={onSubmit} disabled={!isDirty} />}
+          {!userProfile?.eventStatus.active && <BtnPrimary title="Registrarte" onClick={onSubmit} disabled={!isDirty} />}
 
           {
-            api.userProfile?.eventStatus.active &&
+            userProfile?.eventStatus.active &&
             <BtnSecondary title="Cancelar Evento" onClick={onCancel} />
           }
         </BiggerMarginItem>

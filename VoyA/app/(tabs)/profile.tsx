@@ -10,8 +10,7 @@ import { Picker } from "@react-native-picker/picker";
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 
 export default function Profile() {
-  const api = useApi();
-  const [image, setImage] = useState(api.profilePicture);
+  const { api, userPfp, userProfile } = useApi();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,10 +28,10 @@ export default function Profile() {
   } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
-      name: api.userProfile?.name || '',
-      description: api.userProfile?.description || '',
-      igHandle: api.userProfile?.igHandle || '',
-      gender: api.userProfile?.gender || 0,
+      name: userProfile?.name || '',
+      description: userProfile?.description || '',
+      igHandle: userProfile?.igHandle || '',
+      gender: userProfile?.gender || 0,
     },
   });
 
@@ -74,7 +73,6 @@ export default function Profile() {
 
       const success = await api.updateProfilePicture(manipulatedImage.uri);
       if (success) {
-        setImage(api.profilePicture);
         setError(null);
       } else {
         setError("Ha sucedido un error desconocido");
@@ -91,11 +89,11 @@ export default function Profile() {
     <CenterAligned>
       <View style={{ width: '60%' }}>
         <View style={{ marginBottom: 20, alignItems: 'center', width: '100%' }}>
-          <Text style={{ color: 'white', fontSize: 25 }}>@{api.userProfile!.userName as string}</Text>
+          <Text style={{ color: 'white', fontSize: 25 }}>@{userProfile?.userName as string}</Text>
         </View>
 
         <MarginItem>
-          {image && <Image source={{ uri: image }} style={{ width: '100%', height: undefined, aspectRatio: 1, borderRadius: 5 }} />}
+          {userPfp && <Image source={{ uri: userPfp }} style={{ width: '100%', height: undefined, aspectRatio: 1, borderRadius: 5 }} />}
 
           <BtnSecondary title="Cambiar foto de perfil" onClick={pickImage} />
         </MarginItem>

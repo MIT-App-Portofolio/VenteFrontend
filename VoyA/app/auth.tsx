@@ -41,7 +41,7 @@ const Login: React.FC<AuthPageProps> = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const api = useApi();
+  const { api } = useApi();
 
   const schema = yup.object().shape({
     email: yup.string().required('El correo es obligatorio').email('Dirreccion invalida'),
@@ -131,7 +131,7 @@ const Register: React.FC<AuthPageProps> = ({ onLogin }) => {
   const [error, setError] = useState<string | null>(null);
   const [birthDate, setBirthDate] = useState<Date | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const api = useApi();
+  const { api } = useApi();
   const { setRedirectTo } = useRedirect()!;
 
   const schema = yup.object().shape({

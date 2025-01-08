@@ -1,10 +1,10 @@
 // LoginPage.tsx
 import { useState } from 'react';
-import { Modal, ActivityIndicator, View } from 'react-native';
-import { BtnSecondary, BtnPrimary, StyledTextInput, StyledEmailInput, StyledPasswordInput, ErrorText, MarginItem, BiggerMarginItem } from '../components/ThemedComponents';
+import { Modal, ActivityIndicator, View, Dimensions, Platform, Text } from 'react-native';
+import { BtnSecondary, BtnPrimary, StyledTextInput, StyledEmailInput, StyledPasswordInput, ErrorText, MarginItem, BiggerMarginItem, CenterAligned, StyledModal, StyledGenderPicker, StyledDatePicker } from '../components/ThemedComponents';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { Controller, useForm } from 'react-hook-form';
+import { Control, Controller, FieldValues, useForm } from 'react-hook-form';
 import { useApi } from '@/api';
 import { Picker } from '@react-native-picker/picker';
 import { useRedirect } from '@/context/RedirectContext';
@@ -36,6 +36,8 @@ const Auth: React.FC<AuthPageProps> = ({ onLogin }) => {
     </View>
   );
 };
+
+const viewWidth = Dimensions.get('window').width * 0.8;
 
 const Login: React.FC<AuthPageProps> = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
@@ -74,7 +76,7 @@ const Login: React.FC<AuthPageProps> = ({ onLogin }) => {
 
   return (
     <View style={{
-      width: 400
+      width: viewWidth
     }}>
       <Modal
         transparent={true}
@@ -130,7 +132,6 @@ const Register: React.FC<AuthPageProps> = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [birthDate, setBirthDate] = useState<Date | null>(null);
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const { api } = useApi();
   const { setRedirectTo } = useRedirect()!;
 
@@ -145,6 +146,7 @@ const Register: React.FC<AuthPageProps> = ({ onLogin }) => {
     control,
     handleSubmit,
     formState: { errors },
+    watch
   } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
@@ -174,7 +176,9 @@ const Register: React.FC<AuthPageProps> = ({ onLogin }) => {
   };
 
   return (
-    <View style={{ width: 400 }}>
+    <View style={{
+      width: viewWidth
+    }}>
       <Modal
         transparent={true}
         visible={loading}
@@ -229,43 +233,9 @@ const Register: React.FC<AuthPageProps> = ({ onLogin }) => {
           {errors.password && <ErrorText>{errors.password.message}</ErrorText>}
         </MarginItem>
 
-        <MarginItem>
-          <Controller
-            control={control}
-            rules={{
-              required: true,
-            }}
-            render={({ field: { onChange, value } }) => (
-              <Picker
-                selectedValue={value}
-                onValueChange={onChange}
-                style={{ color: 'white', marginBottom: 20, backgroundColor: 'black' }}
-              >
-                <Picker.Item label="Hombre" value={0} />
-                <Picker.Item label="Mujer" value={1} />
-              </Picker>
-            )}
-            name="gender"
-          />
-          {errors.gender && <ErrorText>{errors.gender.message}</ErrorText>}
-        </MarginItem>
+        <StyledGenderPicker gender={watch("gender")} control={control} errorsGender={errors.gender} />
 
-        <MarginItem>
-          <BtnPrimary title={birthDate ? birthDate.toLocaleDateString('es-ES') : "Escoge tu fecha de nacimiento"} onClick={() => setShowDatePicker(true)} />
-          {showDatePicker && (
-            <DateTimePicker
-              value={birthDate || new Date()}
-              mode="date"
-              display="default"
-              onChange={(_, selectedDate) => {
-                setShowDatePicker(false);
-                if (selectedDate) {
-                  setBirthDate(selectedDate);
-                }
-              }}
-            />
-          )}
-        </MarginItem>
+        <StyledDatePicker date={birthDate} setDate={setBirthDate} title='Fecha de nacimiento' />
 
         <BiggerMarginItem>
           {(error) && (

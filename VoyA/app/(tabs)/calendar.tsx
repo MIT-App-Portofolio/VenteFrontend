@@ -1,9 +1,7 @@
 import React, { useState } from "react";
-import { Text, View, Platform, Modal, TouchableOpacity, TextInput, FlatList, ListRenderItem, ScrollView } from "react-native";
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { Picker } from "@react-native-picker/picker";
+import { Text, View, Modal, TouchableOpacity, TextInput, FlatList } from "react-native";
 import { useApi } from "@/api";
-import { CenterAligned, BtnPrimary, ErrorText, BtnSecondary, FullScreenLoading, MarginItem, BiggerMarginItem } from "@/components/ThemedComponents";
+import { CenterAligned, BtnPrimary, ErrorText, BtnSecondary, FullScreenLoading, MarginItem, BiggerMarginItem, StyledDateTimePicker, StyledLocationPicker } from "@/components/ThemedComponents";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 
 export default function Calendar() {
@@ -15,9 +13,6 @@ export default function Calendar() {
   const [selectedLocation, setSelectedLocation] = useState<number>(userProfile?.eventStatus.location?.id ?? 0);
   const [date, setDate] = useState<Date | null>(userProfile?.eventStatus.time ?? null);
   const [isDirty, setIsDirty] = useState(false);
-
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [inviteUsername, setInviteUsername] = useState('');
@@ -119,57 +114,9 @@ export default function Calendar() {
       </MarginItem>
 
       <View style={{ width: '80%' }}>
-        <MarginItem>
-          <Picker selectedValue={selectedLocation}
-            onValueChange={(itemValue, _) => {
-              setIsDirty(true);
-              setSelectedLocation(itemValue);
-            }}
-            style={{ color: 'white', marginBottom: 20, backgroundColor: 'black' }}
-          >
-            {api.locations!.map(location => (
-              <Picker.Item key={location.id} label={location.name} value={location.id} />
-            ))}
-          </Picker>
-        </MarginItem>
+        <StyledLocationPicker locations={api.locations!} location={selectedLocation} setLocation={setSelectedLocation} setIsDirty={setIsDirty} />
 
-        <MarginItem>
-          <BtnPrimary title={date ? date.toLocaleString('es-ES') : "Escoge una fecha"} onClick={() => setShowDatePicker(true)} />
-
-          {showDatePicker && (
-            <DateTimePicker
-              minimumDate={new Date()}
-              value={date ?? new Date()}
-              mode={Platform.OS == 'ios' ? "datetime" : "date"}
-              display="default"
-              onChange={(_, selectedDate) => {
-                setShowDatePicker(false);
-                if (selectedDate) {
-                  setIsDirty(true);
-                  setDate(selectedDate);
-                  if (Platform.OS != 'ios') {
-                    setShowTimePicker(true);
-                  }
-                }
-              }}
-            />
-          )}
-
-          {showTimePicker && (
-            <DateTimePicker
-              value={date ?? new Date()}
-              mode="time"
-              display="default"
-              onChange={(_, selectedDate) => {
-                setShowTimePicker(false);
-                if (selectedDate) {
-                  setIsDirty(true);
-                  setDate(selectedDate);
-                }
-              }}
-            />
-          )}
-        </MarginItem>
+        <StyledDateTimePicker title="Escoge una fecha" date={date} setIsDirty={setIsDirty} setDate={setDate} />
 
         <Modal
           visible={isModalVisible}
@@ -195,7 +142,7 @@ export default function Calendar() {
                 renderItem={renderInvited}
                 horizontal
                 style={{ marginBottom: 10 }}
-                keyExtractor={(item, index) => index.toString()}
+                keyExtractor={(_, index) => index.toString()}
               />
 
               <TextInput

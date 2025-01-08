@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Text, View, Image, StyleSheet, FlatList, Modal, TouchableOpacity, ScrollView, Linking, Dimensions, TextInput } from 'react-native';
-import { BtnPrimary, BtnSecondary, CenterAligned, HorizontallyAligned, MarginItem } from '@/components/ThemedComponents';
+import { BtnPrimary, BtnSecondary, CenterAligned, HorizontallyAligned, MarginItem, StyledGenderFilter } from '@/components/ThemedComponents';
 import { useApi } from '@/api';
 import { useRouter } from 'expo-router';
 import { Profile, EventPlace } from '@/api';
@@ -239,15 +239,7 @@ export default function HomeScreen() {
             <Text style={styles.modalTitle}>Filtrar</Text>
 
             <Text style={styles.modalLabel}>Genero</Text>
-            <Picker
-              selectedValue={genderFilter}
-              onValueChange={(itemValue) => setGenderFilter(itemValue)}
-              style={styles.modalPicker}
-            >
-              <Picker.Item label="Qualquier" value={null} />
-              <Picker.Item label="Hombre" value={0} />
-              <Picker.Item label="Mujer" value={1} />
-            </Picker>
+            <StyledGenderFilter gender={genderFilter} setGender={setGenderFilter} />
 
             <Text style={styles.modalLabel}>Rango de edad</Text>
             <View style={styles.modalRow}>
@@ -274,7 +266,7 @@ export default function HomeScreen() {
               <BtnPrimary title="Aplicar filtro" onClick={applyFilter} />
             </MarginItem>
             <MarginItem>
-              <BtnSecondary title="Cancelar" onClick={() => setIsFilterModalVisible(false)} />
+              <BtnSecondary title="Cerrar" onClick={() => setIsFilterModalVisible(false)} />
             </MarginItem>
           </View>
         </View>
@@ -342,7 +334,6 @@ export default function HomeScreen() {
           </Modal>
         )
       }
-
 
       {/* Event place modal */}
       {

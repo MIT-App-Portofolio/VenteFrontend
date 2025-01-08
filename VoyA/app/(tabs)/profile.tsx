@@ -1,12 +1,11 @@
-import { Text, View, Image, Button } from "react-native";
+import { Text, View, Image, ScrollView } from "react-native";
 import { useApi } from "@/api";
 import * as yup from 'yup';
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { BiggerMarginItem, BtnPrimary, BtnSecondary, CenterAligned, ErrorText, FullScreenLoading, MarginItem, StyledTextInput } from "@/components/ThemedComponents";
+import { BiggerMarginItem, BtnPrimary, BtnSecondary, CenterAligned, ErrorText, FullScreenLoading, MarginItem, StyledGenderPicker, StyledTextInput } from "@/components/ThemedComponents";
 import React, { useState } from "react";
 import * as ImagePicker from 'expo-image-picker';
-import { Picker } from "@react-native-picker/picker";
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 
 export default function Profile() {
@@ -25,6 +24,7 @@ export default function Profile() {
     control,
     handleSubmit,
     formState: { errors, isDirty },
+    watch
   } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
@@ -86,74 +86,60 @@ export default function Profile() {
   }
 
   return (
-    <CenterAligned>
-      <View style={{ width: '60%' }}>
-        <View style={{ marginBottom: 20, alignItems: 'center', width: '100%' }}>
-          <Text style={{ color: 'white', fontSize: 25 }}>@{userProfile?.userName as string}</Text>
+    <ScrollView>
+      <CenterAligned>
+        <View style={{ width: '80%', marginBottom: 30 }}>
+          <View style={{ marginBottom: 20, alignItems: 'center', width: '100%' }}>
+            <Text style={{ color: 'white', fontSize: 25 }}>@{userProfile?.userName as string}</Text>
+          </View>
+
+          <MarginItem>
+            {userPfp && <Image source={{ uri: userPfp }} style={{ width: '100%', height: undefined, aspectRatio: 1, borderRadius: 5 }} />}
+
+            <BtnSecondary title="Cambiar foto de perfil" onClick={pickImage} />
+          </MarginItem>
+
+          <StyledGenderPicker gender={watch("gender")} control={control} errorsGender={errors.gender} />
+
+          <MarginItem>
+            <Controller
+              control={control}
+              render={({ field: { onChange, value } }) => (
+                <StyledTextInput title='Nombre' placeholder='' value={value || ''} setValue={onChange} autoCapitalize='none' />
+              )}
+              name="name"
+            />
+            {errors.name && <ErrorText>{errors.name.message}</ErrorText>}
+          </MarginItem>
+
+          <MarginItem>
+            <Controller
+              control={control}
+              render={({ field: { onChange, value } }) => (
+                <StyledTextInput title='Descripción' placeholder='' value={value || ''} setValue={onChange} autoCapitalize='none' />
+              )}
+              name="description"
+            />
+            {errors.description && <ErrorText>{errors.description.message}</ErrorText>}
+          </MarginItem>
+
+          <MarginItem>
+            <Controller
+              control={control}
+              render={({ field: { onChange, value } }) => (
+                <StyledTextInput title='Instagram' placeholder='' value={value || ''} setValue={onChange} autoCapitalize='none' />
+              )}
+              name="igHandle"
+            />
+            {errors.igHandle && <ErrorText>{errors.igHandle.message}</ErrorText>}
+          </MarginItem>
+
+          <BiggerMarginItem>
+            {error && <ErrorText>{error}</ErrorText>}
+            <BtnPrimary title="Guardar cambios" onClick={handleSubmit(onPressSend)} disabled={!isDirty} />
+          </BiggerMarginItem>
         </View>
-
-        <MarginItem>
-          {userPfp && <Image source={{ uri: userPfp }} style={{ width: '100%', height: undefined, aspectRatio: 1, borderRadius: 5 }} />}
-
-          <BtnSecondary title="Cambiar foto de perfil" onClick={pickImage} />
-        </MarginItem>
-
-        <MarginItem>
-          <Controller
-            control={control}
-            render={({ field: { onChange, value } }) => (
-              <Picker
-                selectedValue={value}
-                onValueChange={onChange}
-                style={{ color: 'white', marginBottom: 20, backgroundColor: 'black', borderColor: 'white', borderWidth: 1 }}
-              >
-                <Picker.Item label="Hombre" value={0} />
-                <Picker.Item label="Mujer" value={1} />
-              </Picker>
-            )}
-            name="gender"
-          />
-          {errors.gender && <ErrorText>{errors.gender.message}</ErrorText>}
-        </MarginItem>
-
-        <MarginItem>
-          <Controller
-            control={control}
-            render={({ field: { onChange, value } }) => (
-              <StyledTextInput title='Nombre' placeholder='' value={value || ''} setValue={onChange} autoCapitalize='none' />
-            )}
-            name="name"
-          />
-          {errors.name && <ErrorText>{errors.name.message}</ErrorText>}
-        </MarginItem>
-
-        <MarginItem>
-          <Controller
-            control={control}
-            render={({ field: { onChange, value } }) => (
-              <StyledTextInput title='Descripción' placeholder='' value={value || ''} setValue={onChange} autoCapitalize='none' />
-            )}
-            name="description"
-          />
-          {errors.description && <ErrorText>{errors.description.message}</ErrorText>}
-        </MarginItem>
-
-        <MarginItem>
-          <Controller
-            control={control}
-            render={({ field: { onChange, value } }) => (
-              <StyledTextInput title='Instagram' placeholder='' value={value || ''} setValue={onChange} autoCapitalize='none' />
-            )}
-            name="igHandle"
-          />
-          {errors.igHandle && <ErrorText>{errors.igHandle.message}</ErrorText>}
-        </MarginItem>
-
-        <BiggerMarginItem>
-          {error && <ErrorText>{error}</ErrorText>}
-          <BtnPrimary title="Guardar cambios" onClick={handleSubmit(onPressSend)} disabled={!isDirty} />
-        </BiggerMarginItem>
-      </View>
-    </CenterAligned>
+      </CenterAligned>
+    </ScrollView>
   );
 }

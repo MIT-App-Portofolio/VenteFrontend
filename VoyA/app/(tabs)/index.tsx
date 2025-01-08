@@ -416,19 +416,9 @@ const styles = StyleSheet.create({
     height: 250,
     borderRadius: 10,
   },
-  name: {
-    color: 'white',
-    fontSize: 16,
-    marginTop: 5,
-    marginRight: 5,
-  },
   igContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  igHandle: {
-    color: 'gray',
-    fontSize: 14,
   },
   priceRange: {
     color: 'white',
@@ -454,34 +444,10 @@ const styles = StyleSheet.create({
     height: undefined,
     aspectRatio: 1,
   },
-  modalName: {
-    fontSize: 24,
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  modalUsername: {
-    fontSize: 18,
-    color: 'gray',
-  },
   modalIgContainer: {
     marginTop: 10,
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  modalIgHandle: {
-    fontSize: 18,
-    textDecorationLine: 'underline',
-    marginLeft: 5,
-    color: 'white',
-  },
-  modalPriceRange: {
-    fontSize: 18,
-    color: 'gray',
-  },
-  modalDescription: {
-    fontSize: 16,
-    color: 'white',
-    marginVertical: 10,
   },
   closeButton: {
     position: 'absolute',
@@ -495,31 +461,12 @@ const styles = StyleSheet.create({
   offersContainer: {
     marginTop: 20,
   },
-  offersTitle: {
-    fontSize: 20,
-    color: 'white',
-    fontWeight: 'bold',
-  },
   offer: {
     marginTop: 10,
     padding: 10,
     borderRadius: 5,
     borderWidth: 1,
     borderColor: 'white'
-  },
-  offerName: {
-    fontSize: 18,
-    marginRight: 5,
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  offerDescription: {
-    fontSize: 16,
-    color: 'white',
-  },
-  offerPrice: {
-    fontSize: 16,
-    color: 'white',
   },
   offerImage: {
     width: '100%',
@@ -540,20 +487,6 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 25,
     marginRight: 10,
-  },
-  invitedUserName: {
-    fontSize: 16,
-    color: 'white',
-  },
-  modalTitle: {
-    color: 'white',
-    fontSize: 20,
-    marginBottom: 10,
-  },
-  modalLabel: {
-    color: 'white',
-    fontSize: 16,
-    marginBottom: 5,
   },
   modalPicker: {
     color: 'white',
@@ -605,11 +538,6 @@ const styles = StyleSheet.create({
     height: '100%',
     alignItems: 'center',
     marginTop: 20,
-  },
-  visitorsTitle: {
-    color: 'white',
-    fontSize: 20,
-    alignSelf: 'flex-start',
   },
   flatListContent: {
     paddingBottom: 250,

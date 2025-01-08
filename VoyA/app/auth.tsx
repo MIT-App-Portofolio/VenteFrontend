@@ -1,12 +1,17 @@
 // LoginPage.tsx
 import { useState } from 'react';
 import { Modal, ActivityIndicator, View, Dimensions } from 'react-native';
-import { BtnSecondary, BtnPrimary, StyledTextInput, StyledEmailInput, StyledPasswordInput, ErrorText, MarginItem, BiggerMarginItem, StyledGenderPicker, StyledDatePicker } from '../components/ThemedComponents';
+import { MarginItem, BiggerMarginItem } from '@/components/MarginItem';
+import { StyledTextInput, StyledEmailInput, StyledPasswordInput } from '@/components/StyledInput';
+import { ErrorText } from '@/components/ThemedText';
+import { BtnSecondary, BtnPrimary } from '@/components/Buttons';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { Controller, useForm } from 'react-hook-form';
 import { useApi } from '@/api';
 import { useRedirect } from '@/context/RedirectContext';
+import { StyledGenderPicker } from '@/components/GenderPicker';
+import { StyledDatePicker } from '@/components/StyledDatePicker';
 
 // Define the type for the props that LoginPage will accept
 type AuthPageProps = {

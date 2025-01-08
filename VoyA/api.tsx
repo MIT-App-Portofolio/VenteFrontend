@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import axios, { AxiosInstance } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { FullScreenLoading } from './components/ThemedComponents';
+import { FullScreenLoading } from './components/FullScreenLoading';
 import { Platform } from 'react-native';
 
 export enum AuthResult {

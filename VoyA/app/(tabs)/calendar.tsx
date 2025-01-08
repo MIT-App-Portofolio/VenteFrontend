@@ -1,8 +1,14 @@
 import React, { useState } from "react";
 import { View, Modal, TouchableOpacity, TextInput, FlatList } from "react-native";
 import { useApi } from "@/api";
-import { CenterAligned, BtnPrimary, ErrorText, BtnSecondary, FullScreenLoading, MarginItem, BiggerMarginItem, StyledDateTimePicker, StyledLocationPicker, ThemedText } from "@/components/ThemedComponents";
+import { MarginItem, BiggerMarginItem } from '@/components/MarginItem';
+import { ErrorText, ThemedText } from '@/components/ThemedText';
+import { BtnPrimary, BtnSecondary } from '@/components/Buttons';
+import { CenterAligned } from '@/components/CenterAligned';
+import { FullScreenLoading } from '@/components/FullScreenLoading';
 import { IconSymbol } from "@/components/ui/IconSymbol";
+import { StyledDateTimePicker } from "@/components/StyledDatePicker";
+import { StyledLocationPicker } from "@/components/StyledLocationPicker";
 
 export default function Calendar() {
   const { api, userProfile } = useApi();

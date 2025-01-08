@@ -3,10 +3,16 @@ import { useApi } from "@/api";
 import * as yup from 'yup';
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { BiggerMarginItem, BtnPrimary, BtnSecondary, CenterAligned, ErrorText, FullScreenLoading, MarginItem, StyledGenderPicker, StyledTextInput, ThemedText } from "@/components/ThemedComponents";
+import { BiggerMarginItem, MarginItem } from '@/components/MarginItem';
+import { StyledTextInput } from '@/components/StyledInput';
+import { ErrorText, ThemedText } from '@/components/ThemedText';
+import { BtnPrimary, BtnSecondary } from '@/components/Buttons';
+import { CenterAligned } from '@/components/CenterAligned';
+import { FullScreenLoading } from '@/components/FullScreenLoading';
 import React, { useState } from "react";
 import * as ImagePicker from 'expo-image-picker';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
+import { StyledGenderPicker } from "@/components/GenderPicker";
 
 export default function Profile() {
   const { api, userPfp, userProfile } = useApi();

@@ -1,12 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { View, Image, StyleSheet, FlatList, Modal, TouchableOpacity, ScrollView, Linking, Dimensions, TextInput } from 'react-native';
-import { BtnPrimary, BtnSecondary, CenterAligned, HorizontallyAligned, MarginItem, StyledGenderFilter, ThemedText } from '@/components/ThemedComponents';
+import { MarginItem } from '@/components/MarginItem';
+import { ThemedText } from '@/components/ThemedText';
+import { BtnPrimary, BtnSecondary } from '@/components/Buttons';
+import { HorizontallyAligned } from '@/components/HorizontallyAligned';
+import { CenterAligned } from '@/components/CenterAligned';
 import { useApi } from '@/api';
 import { useRouter } from 'expo-router';
 import { Profile, EventPlace } from '@/api';
 import { FontAwesome } from '@expo/vector-icons';
 import { Ionicons } from '@expo/vector-icons';
 import Carousel from 'react-native-reanimated-carousel';
+import { StyledGenderFilter } from '@/components/GenderPicker';
 
 export default function HomeScreen() {
   const { api, userProfile } = useApi();

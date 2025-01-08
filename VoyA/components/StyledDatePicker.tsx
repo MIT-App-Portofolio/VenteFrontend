@@ -1,0 +1,141 @@
+import React, { useState } from "react";
+import { Platform } from "react-native";
+import { BtnPrimary } from "./Buttons";
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { MarginItem } from "./MarginItem";
+import { StyledModal } from "./StyledModal";
+
+
+export type StyledDatePickerProps = {
+  date: Date | null;
+  title: string;
+  setDate: (date: Date) => void;
+};
+
+export function StyledDatePicker({ date, setDate, title }: StyledDatePickerProps) {
+  const ios = Platform.OS === 'ios';
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  if (ios) {
+    return (
+      <MarginItem>
+        <BtnPrimary title={date ? date.toLocaleDateString("es") : title} onClick={() => setShowDatePicker(true)}></BtnPrimary>
+
+        {showDatePicker &&
+          <StyledModal isModalVisible={showDatePicker} setIsModalVisible={setShowDatePicker}>
+            <DateTimePicker
+              themeVariant='dark'
+              style={{ width: 450 }}
+              value={date ?? new Date()}
+              onChange={(_, selectedDate) => {
+                if (selectedDate) {
+                  setDate(selectedDate);
+                }
+              }}
+              mode="date"
+              display="spinner"
+            />
+          </StyledModal>
+        }
+      </MarginItem>
+    );
+  }
+
+  return (
+    <MarginItem>
+      <BtnPrimary title={date ? date.toLocaleDateString("es") : title} onClick={() => setShowDatePicker(true)}></BtnPrimary>
+
+      {showDatePicker && (
+        <DateTimePicker
+          value={date ?? new Date()}
+          onChange={(_, selectedDate) => {
+            setShowDatePicker(false);
+            if (selectedDate) {
+              setDate(selectedDate);
+            }
+          }}
+          mode="date"
+          display="default"
+        />
+      )}
+    </MarginItem>
+  );
+}
+
+type StyledDateTimePickerProps = {
+  date: Date | null;
+  title: string;
+  setIsDirty: (dirty: boolean) => void;
+  setDate: (date: Date) => void;
+};
+
+export function StyledDateTimePicker({ date, setDate, title, setIsDirty }: StyledDateTimePickerProps) {
+  const ios = Platform.OS === 'ios';
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+
+  if (ios) {
+    return (
+      <MarginItem>
+        <BtnPrimary title={date ? date.toLocaleDateString("es") : title} onClick={() => setShowDatePicker(true)}></BtnPrimary>
+
+        {showDatePicker &&
+          <StyledModal isModalVisible={showDatePicker} setIsModalVisible={setShowDatePicker}>
+            <DateTimePicker
+              themeVariant='dark'
+              minimumDate={new Date()}
+              style={{ width: 450 }}
+              value={date ?? new Date()}
+              onChange={(_, selectedDate) => {
+                if (selectedDate) {
+                  setDate(selectedDate);
+                }
+              }}
+              mode="datetime"
+              display="spinner"
+            />
+          </StyledModal>
+        }
+      </MarginItem>
+    );
+  }
+
+  return (
+    <MarginItem>
+      <BtnPrimary title={date ? date.toLocaleDateString("es") : title} onClick={() => setShowDatePicker(true)}></BtnPrimary>
+
+      {showDatePicker && (
+        <DateTimePicker
+          value={date ?? new Date()}
+          minimumDate={new Date()}
+          onChange={(_, selectedDate) => {
+            setShowDatePicker(false);
+            if (selectedDate) {
+              setIsDirty(true);
+              setDate(selectedDate);
+              setShowTimePicker(true);
+            }
+          }}
+          mode="date"
+          display="compact"
+        />
+      )}
+
+      {showTimePicker && (
+        <DateTimePicker
+          value={date ?? new Date()}
+          minimumDate={new Date()}
+          onChange={(_, selectedDate) => {
+            setShowTimePicker(false);
+            if (selectedDate) {
+              setIsDirty(true);
+              setDate(selectedDate);
+            }
+          }}
+          mode="time"
+          display="default"
+        />
+      )}
+    </MarginItem>
+  );
+}

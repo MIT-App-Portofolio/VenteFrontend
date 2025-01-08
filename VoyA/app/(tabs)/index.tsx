@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Text, View, Image, StyleSheet, FlatList, Modal, TouchableOpacity, ScrollView, Linking, Dimensions, TextInput } from 'react-native';
-import { BtnPrimary, BtnSecondary, CenterAligned, HorizontallyAligned, MarginItem, StyledGenderFilter } from '@/components/ThemedComponents';
+import { View, Image, StyleSheet, FlatList, Modal, TouchableOpacity, ScrollView, Linking, Dimensions, TextInput } from 'react-native';
+import { BtnPrimary, BtnSecondary, CenterAligned, HorizontallyAligned, MarginItem, StyledGenderFilter, ThemedText } from '@/components/ThemedComponents';
 import { useApi } from '@/api';
 import { useRouter } from 'expo-router';
 import { Profile, EventPlace } from '@/api';
 import { FontAwesome } from '@expo/vector-icons';
 import { Ionicons } from '@expo/vector-icons';
 import Carousel from 'react-native-reanimated-carousel';
-import { Picker } from '@react-native-picker/picker';
 
 export default function HomeScreen() {
   const { api, userProfile } = useApi();
@@ -126,7 +125,7 @@ export default function HomeScreen() {
   if (!userProfile?.eventStatus.active) {
     return (
       <CenterAligned>
-        <Text style={{ color: 'white' }}>No estas registrado en ningun evento.</Text>
+        <ThemedText>No estas registrado en ningun evento.</ThemedText>
         <BtnPrimary title='Ir a calendario' onClick={() => router.push('/calendar')}></BtnPrimary>
       </CenterAligned>
     );
@@ -146,14 +145,14 @@ export default function HomeScreen() {
       <TouchableOpacity key={visitor.userName} style={styles.card} onPress={() => handleProfileClick(visitor!)}>
         <Image source={{ uri: pfpUrl }} style={styles.profilePicture} />
         <View style={{ alignItems: 'flex-start', flexDirection: 'column' }}>
-          <Text style={styles.name}>{displayName}</Text>
-          <Text style={{ color: 'white' }}>{visitor.years} años</Text>
+          <ThemedText type="subtitle">{displayName}</ThemedText>
+          <ThemedText>{visitor.years} años</ThemedText>
 
           {
             visitor.igHandle && (
               <View style={styles.igContainer}>
                 <FontAwesome name="instagram" size={16} color="gray" />
-                <Text style={styles.igHandle}>{visitor.igHandle}</Text>
+                <ThemedText type='link'>{visitor.igHandle}</ThemedText>
               </View>
             )
           }
@@ -166,14 +165,14 @@ export default function HomeScreen() {
     <TouchableOpacity key={item.name} style={styles.card} onPress={() => handleEventPlaceClick(item)}>
       <Image source={{ uri: item.imageUrls[0] }} style={styles.profilePicture} />
       <View style={{ alignItems: 'flex-end', flexDirection: 'row', marginBottom: 5 }}>
-        <Text style={styles.name}>{item.name}</Text>
+        <ThemedText type='subtitle'>{item.name}</ThemedText>
         {item.ageRequirement && (
           <View style={{ flexDirection: 'row', alignItems: 'center', borderRadius: 5, borderColor: 'white', borderWidth: 1, paddingRight: 3, paddingLeft: 3 }}>
-            <Text style={{ color: 'white' }}>+{item.ageRequirement}</Text>
+            <ThemedText>+{item.ageRequirement}</ThemedText>
           </View>
         )}
       </View>
-      <Text style={styles.priceRange}>{item.priceRangeBegin}€ - {item.priceRangeEnd}€</Text>
+      <ThemedText>{item.priceRangeBegin}€ - {item.priceRangeEnd}€</ThemedText>
     </TouchableOpacity>
   );
 
@@ -188,15 +187,14 @@ export default function HomeScreen() {
         height: 160,
       }}>
         <Image source={require('../../assets/images/club.jpeg')} style={{ width: '100%', height: '100%', borderRadius: 15, opacity: 0.4 }} />
-        <Text style={{
-          color: 'white',
+        <ThemedText style={{
           position: 'absolute',
           bottom: 10,
           left: 10,
           textTransform: 'uppercase'
         }}>
           {viewingEventPlaces ? 'Ver Usuarios' : 'Ver Lugares de Eventos'}
-        </Text>
+        </ThemedText>
       </TouchableOpacity>
 
       {viewingEventPlaces ? (
@@ -210,7 +208,7 @@ export default function HomeScreen() {
         </View>
       ) : (
         <View style={{ width: '100%', height: '100%', alignItems: 'center', marginTop: 20 }}>
-          <Text style={{ color: 'white', fontSize: 20, alignSelf: 'flex-start' }}>Usuarios que tambien van a {userProfile.eventStatus.location?.name}</Text>
+          <ThemedText type='title' style={{ alignSelf: 'flex-start' }}>Usuarios que tambien van a {userProfile.eventStatus.location?.name}</ThemedText>
 
           <View style={{ flexDirection: 'row', justifyContent: 'center', width: '100%', marginTop: 10, marginBottom: 10 }}>
             <BtnPrimary title='Filtrar usuarios' onClick={() => setIsFilterModalVisible(true)} />
@@ -223,7 +221,7 @@ export default function HomeScreen() {
             onEndReached={() => setPage(prevPage => prevPage + 1)}
             onEndReachedThreshold={0.5}
             contentContainerStyle={{ paddingBottom: 350 }}
-            ListFooterComponent={loading ? (<CenterAligned><Text style={{ color: 'white' }}>Loading...</Text></CenterAligned>) : null}
+            ListFooterComponent={loading ? (<CenterAligned>< ThemedText>Loading...</ ThemedText></CenterAligned>) : null}
           />
         </View>
       )}
@@ -236,12 +234,12 @@ export default function HomeScreen() {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Filtrar</Text>
+            <ThemedText type="title">Filtrar</ThemedText>
 
-            <Text style={styles.modalLabel}>Genero</Text>
+            <ThemedText type="subtitle" style={{ marginTop: 20 }}>Genero</ThemedText>
             <StyledGenderFilter gender={genderFilter} setGender={setGenderFilter} />
 
-            <Text style={styles.modalLabel}>Rango de edad</Text>
+            <ThemedText type="subtitle" style={{ marginTop: 20 }}>Rango de edad</ThemedText>
             <View style={styles.modalRow}>
               <TextInput
                 placeholder="Min"
@@ -251,7 +249,7 @@ export default function HomeScreen() {
                 onChangeText={(text) => setAgeRangeMin(text ? parseInt(text) : null)}
                 style={styles.modalInput}
               />
-              <Text style={{ color: 'white', fontSize: 25 }}>-</Text>
+              <ThemedText style={{ color: 'white', fontSize: 25 }}>-</ThemedText>
               <TextInput
                 placeholder="Max"
                 keyboardType="numeric"
@@ -291,27 +289,27 @@ export default function HomeScreen() {
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
                   {
                     selectedProfile.name &&
-                    <Text style={{ ...styles.modalName, marginRight: 10 }}>{selectedProfile.name}</Text>
+                    <ThemedText style={{ marginRight: 10 }} type="title">{selectedProfile.name}</ThemedText>
                   }
 
-                  <Text style={styles.modalUsername}>@{selectedProfile.userName}</Text>
+                  <ThemedText>@{selectedProfile.userName}</ThemedText>
                 </View>
 
-                <Text style={{ color: 'white', fontSize: 18, marginTop: 10, }}>{selectedProfile.years} años</Text>
+                <ThemedText style={{ marginTop: 10 }}>{selectedProfile.years} años</ThemedText>
 
                 {selectedProfile.igHandle && (
                   <View style={styles.modalIgContainer}>
                     <FontAwesome name="instagram" size={16} color="white" />
-                    <Text style={styles.modalIgHandle} onPress={() => Linking.openURL(`https://www.instagram.com/${selectedProfile.igHandle}`)}>
+                    <ThemedText type="link" onPress={() => Linking.openURL(`https://www.instagram.com/${selectedProfile.igHandle}`)}>
                       {selectedProfile.igHandle}
-                    </Text>
+                    </ThemedText>
                   </View>
                 )}
 
-                <Text style={styles.modalDescription}>{selectedProfile.description}</Text>
+                <ThemedText>{selectedProfile.description}</ThemedText>
 
                 {selectedProfile.eventStatus.with && selectedProfile.eventStatus.with.length > 0 && (
-                  <Text style={{ color: 'white', fontSize: 16, marginTop: 10 }}>Va con:</Text>
+                  <ThemedText style={{ marginTop: 10 }}>Va con:</ThemedText>
                 )}
 
                 {/* Render profiles of users that go with the selected profile */}
@@ -324,7 +322,7 @@ export default function HomeScreen() {
                     return (
                       <View key={username} style={styles.invitedUserCard}>
                         <Image source={{ uri: api.getPfpUnstable(username) }} style={styles.invitedUserProfilePicture} />
-                        <Text style={styles.invitedUserName}>{user.name || `@${user.userName}`}</Text>
+                        <ThemedText>{user.name || `@${user.userName}`}</ThemedText>
                       </View>
                     );
                   })}
@@ -361,31 +359,31 @@ export default function HomeScreen() {
                 </CenterAligned>
 
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Text style={{ ...styles.modalName, marginRight: 5 }}>{selectedEventPlace.name}</Text>
+                  <ThemedText type="title" style={{ marginRight: 5 }}>{selectedEventPlace.name}</ThemedText>
 
                   {selectedEventPlace.ageRequirement && (
                     <View style={{ flexDirection: 'row', alignItems: 'center', borderRadius: 5, borderColor: 'white', borderWidth: 1, paddingRight: 3, paddingLeft: 3 }}>
-                      <Text style={{ color: 'white' }}>+{selectedEventPlace.ageRequirement}</Text>
+                      <ThemedText>+{selectedEventPlace.ageRequirement}</ThemedText>
                     </View>
                   )}
                 </View>
 
-                <Text style={styles.modalPriceRange}>{selectedEventPlace.priceRangeBegin}€ - {selectedEventPlace.priceRangeEnd}€</Text>
+                <ThemedText>{selectedEventPlace.priceRangeBegin}€ - {selectedEventPlace.priceRangeEnd}€</ThemedText>
 
-                <Text style={styles.modalDescription}>{selectedEventPlace.description}</Text>
+                <ThemedText>{selectedEventPlace.description}</ThemedText>
 
                 <View style={styles.offersContainer}>
-                  <Text style={styles.offersTitle}>Ofertas:</Text>
+                  <ThemedText type="title">Ofertas:</ThemedText>
 
                   {selectedEventPlace.offers.map((offer, index) => (
                     <View key={index} style={styles.offer}>
                       <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'flex-end' }}>
-                        <Text style={styles.offerName}>{offer.name}</Text>
+                        <ThemedText type="subtitle">{offer.name}</ThemedText>
 
-                        {offer.price && <Text style={styles.offerPrice}>{offer.price}€</Text>}
+                        {offer.price && <ThemedText>{offer.price}€</ThemedText>}
                       </View>
 
-                      {offer.description && <Text style={styles.offerDescription}>{offer.description}</Text>}
+                      {offer.description && <ThemedText>{offer.description}</ThemedText>}
 
                       {offer.image && <Image source={{ uri: offer.image }} style={styles.offerImage} />}
                     </View>

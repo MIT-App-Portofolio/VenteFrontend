@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { Text, View, Modal, TouchableOpacity, TextInput, FlatList } from "react-native";
+import { View, Modal, TouchableOpacity, TextInput, FlatList } from "react-native";
 import { useApi } from "@/api";
-import { CenterAligned, BtnPrimary, ErrorText, BtnSecondary, FullScreenLoading, MarginItem, BiggerMarginItem, StyledDateTimePicker, StyledLocationPicker } from "@/components/ThemedComponents";
+import { CenterAligned, BtnPrimary, ErrorText, BtnSecondary, FullScreenLoading, MarginItem, BiggerMarginItem, StyledDateTimePicker, StyledLocationPicker, ThemedText } from "@/components/ThemedComponents";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 
 export default function Calendar() {
@@ -93,7 +93,7 @@ export default function Calendar() {
         borderColor: 'white',
         borderWidth: 1
       }}>
-        <Text style={{ color: 'white' }}>@{item}</Text>
+        <ThemedText>@{item}</ThemedText>
 
         <TouchableOpacity onPress={() => kickUser(item)}>
           <IconSymbol name="cross" color='white' size={15} />
@@ -109,8 +109,8 @@ export default function Calendar() {
   return (
     <CenterAligned>
       <MarginItem>
-        {userProfile?.eventStatus.active && <Text style={{ color: 'white', fontSize: 20 }}>Cambia tu evento.</Text>}
-        {!userProfile?.eventStatus.active && <Text style={{ color: 'white', fontSize: 20 }}>Reigstrate en un evento.</Text>}
+        {userProfile?.eventStatus.active && <ThemedText type="title">Cambia tu evento.</ThemedText>}
+        {!userProfile?.eventStatus.active && <ThemedText type="title">Reigstrate en un evento.</ThemedText>}
       </MarginItem>
 
       <View style={{ width: '80%' }}>
@@ -135,7 +135,7 @@ export default function Calendar() {
               borderRadius: 10,
               width: '80%',
             }}>
-              <Text style={{ color: 'white', fontSize: 20, marginBottom: 10 }}>Invitados</Text>
+              <ThemedText type="subtitle">Invitados</ThemedText>
 
               <FlatList
                 data={userProfile?.eventStatus.with}

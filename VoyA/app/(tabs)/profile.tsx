@@ -1,9 +1,9 @@
-import { Text, View, Image, ScrollView } from "react-native";
+import { View, Image, ScrollView } from "react-native";
 import { useApi } from "@/api";
 import * as yup from 'yup';
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { BiggerMarginItem, BtnPrimary, BtnSecondary, CenterAligned, ErrorText, FullScreenLoading, MarginItem, StyledGenderPicker, StyledTextInput } from "@/components/ThemedComponents";
+import { BiggerMarginItem, BtnPrimary, BtnSecondary, CenterAligned, ErrorText, FullScreenLoading, MarginItem, StyledGenderPicker, StyledTextInput, ThemedText } from "@/components/ThemedComponents";
 import React, { useState } from "react";
 import * as ImagePicker from 'expo-image-picker';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
@@ -90,7 +90,7 @@ export default function Profile() {
       <CenterAligned>
         <View style={{ width: '80%', marginBottom: 30 }}>
           <View style={{ marginBottom: 20, alignItems: 'center', width: '100%' }}>
-            <Text style={{ color: 'white', fontSize: 25 }}>@{userProfile?.userName as string}</Text>
+            <ThemedText type="title">@{userProfile?.userName as string}</ThemedText>
           </View>
 
           <MarginItem>

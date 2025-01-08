@@ -8,7 +8,7 @@ import { CenterAligned, ErrorText, FullScreenLoading } from '@/components/Themed
 import { ApiProvider, AuthResult, useApi } from '../api';
 import { DarkTheme, ThemeProvider } from '@react-navigation/native';
 import { RedirectProvider } from '@/context/RedirectContext';
-import { useFonts } from 'expo-font';
+import { Inter_400Regular, Inter_700Bold, useFonts } from '@expo-google-fonts/inter';
 
 export default function RootLayout() {
   return (
@@ -26,7 +26,8 @@ function Inner() {
   const [isAuthenticated, setAuthenticated] = useState(false);
   const [unkownError, setUnkownError] = useState(false);
   const [fontsLoaded] = useFonts({
-    'SpaceMono-Regular': require('../assets/fonts/SpaceMono-Regular.ttf'),
+    Inter_400Regular,
+    Inter_700Bold
   });
 
   useEffect(() => {

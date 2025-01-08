@@ -6,11 +6,63 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity, TextInput, TextInputProps, TextProps, ActivityIndicator, Modal, ScrollView, Platform } from 'react-native';
 import { EventLocation } from '@/api';
 
-type ButtonProps = {
-  title: string;
-  onClick: () => void;
-  disabled?: boolean;
+export type ThemedTextProps = TextProps & {
+  lightColor?: string;
+  darkColor?: string;
+  type?: 'default' | 'title' | 'defaultSemiBold' | 'subtitle' | 'link';
 };
+
+export function ThemedText({
+  style,
+  lightColor,
+  darkColor,
+  type = 'default',
+  ...rest
+}: ThemedTextProps) {
+  const styles = StyleSheet.create({
+    default: {
+      fontSize: 16,
+      lineHeight: 24,
+    },
+    defaultSemiBold: {
+      fontSize: 16,
+      lineHeight: 24,
+      fontWeight: '600',
+    },
+    title: {
+      fontSize: 28,
+      fontWeight: 'bold',
+      lineHeight: 32,
+    },
+    subtitle: {
+      fontSize: 20,
+      fontWeight: 'bold',
+    },
+    link: {
+      lineHeight: 30,
+      fontSize: 16,
+      textDecorationLine: 'underline',
+      color: '#0a7ea4',
+    },
+  });
+
+  return (
+    <Text
+      style={[
+        { color: 'white', fontFamily: type === 'title' ? 'Inter_700Bold' : 'Inter_400Regular' },
+        type === 'default' ? styles.default : undefined,
+        type === 'title' ? styles.title : undefined,
+        type === 'defaultSemiBold' ? styles.defaultSemiBold : undefined,
+        type === 'subtitle' ? styles.subtitle : undefined,
+        type === 'link' ? styles.link : undefined,
+        style,
+      ]}
+      {...rest}
+    />
+  );
+}
+
+
 
 export function FullScreenLoading() {
   return (
@@ -77,6 +129,12 @@ export function HorizontallyAligned({ children }) {
   );
 }
 
+type ButtonProps = {
+  title: string;
+  onClick: () => void;
+  disabled?: boolean;
+};
+
 export function BtnPrimary({ title, onClick, disabled }: ButtonProps) {
   return (
     <TouchableOpacity onPress={onClick} style={{
@@ -118,7 +176,7 @@ interface StyledTextInputProps extends TextInputProps {
 export function StyledTextInput({ title, placeholder, value, setValue, autoCapitalize, secureTextEntry }: StyledTextInputProps) {
   return (
     <View>
-      <Text style={{ color: 'white', fontSize: 15, }}>{title as string}</Text>
+      <ThemedText>{title as string}</ThemedText>
       <TextInput value={value} onChangeText={setValue} placeholder={placeholder} placeholderTextColor='white' autoCapitalize={autoCapitalize} secureTextEntry={secureTextEntry}
         style={{
           padding: 10,

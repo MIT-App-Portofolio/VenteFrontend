@@ -12,6 +12,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import { Ionicons } from '@expo/vector-icons';
 import Carousel from 'react-native-reanimated-carousel';
 import { StyledGenderFilter } from '@/components/GenderPicker';
+import { StyledModal } from '@/components/StyledModal';
 
 export default function HomeScreen() {
   const { api, userProfile } = useApi();
@@ -232,171 +233,145 @@ export default function HomeScreen() {
       )}
 
       {/* Filter modal */}
-      <Modal
-        visible={isFilterModalVisible}
-        animationType="slide"
-        transparent={true}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <ThemedText type="title">Filtrar</ThemedText>
+      <StyledModal isModalVisible={isFilterModalVisible} setIsModalVisible={setIsFilterModalVisible} includeButton={false}>
+        <ThemedText type="title">Filtrar</ThemedText>
 
-            <ThemedText type="subtitle" style={{ marginTop: 20 }}>Genero</ThemedText>
-            <StyledGenderFilter gender={genderFilter} setGender={setGenderFilter} />
+        <ThemedText type="subtitle" style={{ marginTop: 20 }}>Genero</ThemedText>
+        <StyledGenderFilter gender={genderFilter} setGender={setGenderFilter} />
 
-            <ThemedText type="subtitle" style={{ marginTop: 20 }}>Rango de edad</ThemedText>
-            <View style={styles.modalRow}>
-              <TextInput
-                placeholder="Min"
-                keyboardType="numeric"
-                placeholderTextColor='gray'
-                value={ageRangeMin?.toString() || ''}
-                onChangeText={(text) => setAgeRangeMin(text ? parseInt(text) : null)}
-                style={styles.modalInput}
-              />
-              <ThemedText style={{ color: 'white', fontSize: 25 }}>-</ThemedText>
-              <TextInput
-                placeholder="Max"
-                keyboardType="numeric"
-                placeholderTextColor='gray'
-                value={ageRangeMax?.toString() || ''}
-                onChangeText={(text) => setAgeRangeMax(text ? parseInt(text) : null)}
-                style={styles.modalInput}
-              />
-            </View>
-
-            <MarginItem>
-              <BtnPrimary title="Aplicar filtro" onClick={applyFilter} />
-            </MarginItem>
-            <MarginItem>
-              <BtnSecondary title="Cerrar" onClick={() => setIsFilterModalVisible(false)} />
-            </MarginItem>
-          </View>
+        <ThemedText type="subtitle" style={{ marginTop: 20 }}>Rango de edad</ThemedText>
+        <View style={styles.modalRow}>
+          <TextInput
+            placeholder="Min"
+            keyboardType="numeric"
+            placeholderTextColor='gray'
+            value={ageRangeMin?.toString() || ''}
+            onChangeText={(text) => setAgeRangeMin(text ? parseInt(text) : null)}
+            style={styles.modalInput}
+          />
+          <ThemedText style={{ color: 'white', fontSize: 25 }}>-</ThemedText>
+          <TextInput
+            placeholder="Max"
+            keyboardType="numeric"
+            placeholderTextColor='gray'
+            value={ageRangeMax?.toString() || ''}
+            onChangeText={(text) => setAgeRangeMax(text ? parseInt(text) : null)}
+            style={styles.modalInput}
+          />
         </View>
-      </Modal>
+
+        <MarginItem>
+          <BtnPrimary title="Aplicar filtro" onClick={applyFilter} />
+        </MarginItem>
+        <MarginItem>
+          <BtnSecondary title="Cerrar" onClick={() => setIsFilterModalVisible(false)} />
+        </MarginItem>
+      </StyledModal>
 
       {/* Profile modal */}
-      {
-        selectedProfile && (
-          <Modal
-            visible={isUserModalVisible}
-            animationType="slide"
-            transparent={true}
-          >
-            <View style={styles.modalContainer}>
-              <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
-                <Ionicons name="arrow-back" size={24} color="white" />
-              </TouchableOpacity>
+      {selectedProfile &&
+        (
+          <StyledModal isModalVisible={isUserModalVisible} setIsModalVisible={setIsUserModalVisible}>
+            <ScrollView style={styles.modalContent}>
+              <Image source={{ uri: api.getPfpUnstable(selectedProfile.userName) }} style={styles.modalProfilePicture} />
 
-              <ScrollView style={styles.modalContent}>
-                <Image source={{ uri: api.getPfpUnstable(selectedProfile.userName) }} style={styles.modalProfilePicture} />
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
+                {
+                  selectedProfile.name &&
+                  <ThemedText style={{ marginRight: 10 }} type="title">{selectedProfile.name}</ThemedText>
+                }
 
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
-                  {
-                    selectedProfile.name &&
-                    <ThemedText style={{ marginRight: 10 }} type="title">{selectedProfile.name}</ThemedText>
-                  }
+                <ThemedText>@{selectedProfile.userName}</ThemedText>
+              </View>
 
-                  <ThemedText>@{selectedProfile.userName}</ThemedText>
+              <ThemedText style={{ marginTop: 10 }}>{selectedProfile.years} años</ThemedText>
+
+              {selectedProfile.igHandle && (
+                <View style={styles.modalIgContainer}>
+                  <FontAwesome name="instagram" size={16} color="white" />
+                  <ThemedText type="link" onPress={() => Linking.openURL(`https://www.instagram.com/${selectedProfile.igHandle}`)}>
+                    {selectedProfile.igHandle}
+                  </ThemedText>
                 </View>
+              )}
 
-                <ThemedText style={{ marginTop: 10 }}>{selectedProfile.years} años</ThemedText>
+              <ThemedText>{selectedProfile.description}</ThemedText>
 
-                {selectedProfile.igHandle && (
-                  <View style={styles.modalIgContainer}>
-                    <FontAwesome name="instagram" size={16} color="white" />
-                    <ThemedText type="link" onPress={() => Linking.openURL(`https://www.instagram.com/${selectedProfile.igHandle}`)}>
-                      {selectedProfile.igHandle}
-                    </ThemedText>
-                  </View>
-                )}
+              {selectedProfile.eventStatus.with && selectedProfile.eventStatus.with.length > 0 && (
+                <ThemedText style={{ marginTop: 10 }}>Va con:</ThemedText>
+              )}
 
-                <ThemedText>{selectedProfile.description}</ThemedText>
+              {/* Render profiles of users that go with the selected profile */}
+              <View style={styles.invitedUsersContainer}>
+                {selectedProfile.eventStatus.with?.map((username) => {
+                  const user = api.getUserUnstable(username);
 
-                {selectedProfile.eventStatus.with && selectedProfile.eventStatus.with.length > 0 && (
-                  <ThemedText style={{ marginTop: 10 }}>Va con:</ThemedText>
-                )}
+                  if (!user) return null;
 
-                {/* Render profiles of users that go with the selected profile */}
-                <View style={styles.invitedUsersContainer}>
-                  {selectedProfile.eventStatus.with?.map((username) => {
-                    const user = api.getUserUnstable(username);
+                  return (
+                    <View key={username} style={styles.invitedUserCard}>
+                      <Image source={{ uri: api.getPfpUnstable(username) }} style={styles.invitedUserProfilePicture} />
+                      <ThemedText>{user.name || `@${user.userName}`}</ThemedText>
+                    </View>
+                  );
+                })}
+              </View>
+            </ScrollView>
+          </StyledModal>
 
-                    if (!user) return null;
-
-                    return (
-                      <View key={username} style={styles.invitedUserCard}>
-                        <Image source={{ uri: api.getPfpUnstable(username) }} style={styles.invitedUserProfilePicture} />
-                        <ThemedText>{user.name || `@${user.userName}`}</ThemedText>
-                      </View>
-                    );
-                  })}
-                </View>
-              </ScrollView>
-            </View>
-          </Modal>
         )
       }
 
       {/* Event place modal */}
       {
         selectedEventPlace && (
-          <Modal
-            visible={isEventPlaceModalVisible}
-            animationType="slide"
-            transparent={true}
-          >
-            <View style={styles.modalContainer}>
-              <TouchableOpacity onPress={closeEventPlaceModal} style={styles.closeButton}>
-                <Ionicons name="arrow-back" size={24} color="white" />
-              </TouchableOpacity>
+          <StyledModal isModalVisible={isEventPlaceModalVisible} setIsModalVisible={setIsEventPlaceModalVisible}>
 
-              <ScrollView style={styles.modalContent}>
-                <CenterAligned>
-                  <Carousel
-                    loop
-                    width={screenWidth * 0.9}
-                    height={200}
-                    autoPlay={true}
-                    data={selectedEventPlace.imageUrls}
-                    renderItem={({ item }) => <Image source={{ uri: item }} style={{ width: '100%', height: 200 }} />}
-                  />
-                </CenterAligned>
+            <ScrollView style={styles.modalContent}>
+              <CenterAligned>
+                <Carousel
+                  loop
+                  width={screenWidth * 0.9}
+                  height={200}
+                  autoPlay={true}
+                  data={selectedEventPlace.imageUrls}
+                  renderItem={({ item }) => <Image source={{ uri: item }} style={{ width: '100%', height: 200 }} />}
+                />
+              </CenterAligned>
 
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <ThemedText type="title" style={{ marginRight: 5 }}>{selectedEventPlace.name}</ThemedText>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <ThemedText type="title" style={{ marginRight: 5 }}>{selectedEventPlace.name}</ThemedText>
 
-                  {selectedEventPlace.ageRequirement && (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', borderRadius: 5, borderColor: 'white', borderWidth: 1, paddingRight: 3, paddingLeft: 3 }}>
-                      <ThemedText>+{selectedEventPlace.ageRequirement}</ThemedText>
+                {selectedEventPlace.ageRequirement && (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', borderRadius: 5, borderColor: 'white', borderWidth: 1, paddingRight: 3, paddingLeft: 3 }}>
+                    <ThemedText>+{selectedEventPlace.ageRequirement}</ThemedText>
+                  </View>
+                )}
+              </View>
+
+              <ThemedText>{selectedEventPlace.priceRangeBegin}€ - {selectedEventPlace.priceRangeEnd}€</ThemedText>
+
+              <ThemedText>{selectedEventPlace.description}</ThemedText>
+
+              <View style={styles.offersContainer}>
+                <ThemedText type="title">Ofertas:</ThemedText>
+
+                {selectedEventPlace.offers.map((offer, index) => (
+                  <View key={index} style={styles.offer}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'flex-end' }}>
+                      <ThemedText type="subtitle">{offer.name}</ThemedText>
+
+                      {offer.price && <ThemedText>{offer.price}€</ThemedText>}
                     </View>
-                  )}
-                </View>
 
-                <ThemedText>{selectedEventPlace.priceRangeBegin}€ - {selectedEventPlace.priceRangeEnd}€</ThemedText>
+                    {offer.description && <ThemedText>{offer.description}</ThemedText>}
 
-                <ThemedText>{selectedEventPlace.description}</ThemedText>
-
-                <View style={styles.offersContainer}>
-                  <ThemedText type="title">Ofertas:</ThemedText>
-
-                  {selectedEventPlace.offers.map((offer, index) => (
-                    <View key={index} style={styles.offer}>
-                      <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'flex-end' }}>
-                        <ThemedText type="subtitle">{offer.name}</ThemedText>
-
-                        {offer.price && <ThemedText>{offer.price}€</ThemedText>}
-                      </View>
-
-                      {offer.description && <ThemedText>{offer.description}</ThemedText>}
-
-                      {offer.image && <Image source={{ uri: offer.image }} style={styles.offerImage} />}
-                    </View>
-                  ))}
-                </View>
-              </ScrollView>
-            </View>
-          </Modal>
+                    {offer.image && <Image source={{ uri: offer.image }} style={styles.offerImage} />}
+                  </View>
+                ))}
+              </View>
+            </ScrollView>
+          </StyledModal>
         )
       }
     </HorizontallyAligned >

@@ -3,13 +3,11 @@ import { StyleSheet, Text } from 'react-native';
 import { TextProps } from 'react-native/Libraries/Text/Text';
 
 export type ThemedTextProps = TextProps & {
-  lightColor?: string;
-  darkColor?: string;
   type?: 'default' | 'title' | 'defaultSemiBold' | 'subtitle' | 'link';
 };
 
 export function ThemedText({
-  style, lightColor, darkColor, type = 'default', ...rest
+  style, type = 'default', ...rest
 }: ThemedTextProps) {
   const styles = StyleSheet.create({
     default: {

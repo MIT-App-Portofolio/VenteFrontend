@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import axios, { AxiosInstance } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FullScreenLoading } from './components/FullScreenLoading';
@@ -60,7 +60,7 @@ export const useApi = () => {
   return context;
 };
 
-export const ApiProvider = ({ children }) => {
+export const ApiProvider = ({ children }: { children: ReactNode }) => {
   const [api, setApiInstance] = useState<Api | null>(null);
   const [userProfile, setUserProfile] = useState<Profile | null>(null);
   const [userPfp, setUserPfp] = useState<string | null>(null);

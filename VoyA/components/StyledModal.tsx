@@ -5,10 +5,11 @@ import { StyleSheet, Modal, View, TouchableOpacity, ScrollView } from 'react-nat
 export type ModalProps = {
   children?: React.ReactNode;
   isModalVisible: boolean;
+  includeButton?: boolean;
   setIsModalVisible: (isVisible: boolean) => void;
 };
 
-export function StyledModal({ children, isModalVisible, setIsModalVisible }: ModalProps) {
+export function StyledModal({ children, isModalVisible, setIsModalVisible, includeButton = true }: ModalProps) {
   const styles = StyleSheet.create({
     modalContainer: {
       flex: 1,
@@ -39,9 +40,11 @@ export function StyledModal({ children, isModalVisible, setIsModalVisible }: Mod
       transparent={true}
     >
       <View style={styles.modalContainer}>
-        <TouchableOpacity onPress={() => setIsModalVisible(false)} style={styles.closeButton}>
-          <Ionicons name="arrow-back" size={24} color="white" />
-        </TouchableOpacity>
+        {includeButton && (
+          <TouchableOpacity onPress={() => setIsModalVisible(false)} style={styles.closeButton}>
+            <Ionicons name="arrow-back" size={24} color="white" />
+          </TouchableOpacity>
+        )}
 
         <ScrollView style={styles.modalContent}>
           {children}

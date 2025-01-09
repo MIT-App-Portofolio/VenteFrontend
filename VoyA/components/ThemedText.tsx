@@ -32,7 +32,6 @@ export function ThemedText({
       lineHeight: 30,
       fontSize: 16,
       textDecorationLine: 'underline',
-      color: '#0a7ea4',
     },
   });
 

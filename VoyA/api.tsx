@@ -199,7 +199,7 @@ export class Api {
     const formData = new FormData();
 
     // I don't know why this is necessary, but it is. react native fetch blob is weird works on web but not on android
-    if (Platform.OS === 'android') {
+    if (Platform.OS === 'android' || Platform.OS === 'ios') {
       formData.append('file', {
         uri: uri,
         name: 'file',

@@ -41,7 +41,6 @@ export default function HomeScreen() {
 
   // View event places button interpolation
   const scrollY = useRef(new Animated.Value(0)).current;
-  const minHeight = 40;
   const buttonHeight = scrollY.interpolate({
     inputRange: [0, 200],
     outputRange: [160, 40],
@@ -186,7 +185,6 @@ export default function HomeScreen() {
     </TouchableOpacity>
   );
 
-  console.log(buttonHeight);
   return (
     <HorizontallyAligned>
       {/* Normal view */}

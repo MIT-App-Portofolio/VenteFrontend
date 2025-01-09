@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { StyleSheet, Modal, View, TouchableOpacity, ScrollView } from 'react-native';
+import { StyleSheet, Modal, View, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 
 export type ModalProps = {
   children?: React.ReactNode;
@@ -9,25 +9,28 @@ export type ModalProps = {
   setIsModalVisible: (isVisible: boolean) => void;
 };
 
+const { height } = Dimensions.get('window');
+
 export function StyledModal({ children, isModalVisible, setIsModalVisible, includeButton = true }: ModalProps) {
+  const topBarPercentage = 0.13;
+
   const styles = StyleSheet.create({
     modalContainer: {
-      flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      backgroundColor: 'rgb(0, 0, 0)',
     },
     modalContent: {
       backgroundColor: 'black',
       padding: 20,
-      marginTop: 80,
+      marginTop: height * topBarPercentage,
       borderRadius: 10,
       width: '100%',
       height: '100%',
     },
     closeButton: {
       position: 'absolute',
-      top: 40,
+      top: (height * topBarPercentage) / 2,
       left: 20,
       zIndex: 1,
     },
@@ -46,7 +49,7 @@ export function StyledModal({ children, isModalVisible, setIsModalVisible, inclu
           </TouchableOpacity>
         )}
 
-        <ScrollView style={styles.modalContent}>
+        <ScrollView style={styles.modalContent} contentContainerStyle={{ paddingBottom: height * topBarPercentage }}>
           {children}
         </ScrollView>
       </View>

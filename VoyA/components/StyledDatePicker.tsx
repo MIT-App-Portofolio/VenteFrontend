@@ -80,7 +80,14 @@ export function StyledDateTimePicker({ date, setDate, title, setIsDirty }: Style
         <BtnPrimary title={date ? date.toLocaleDateString("es") : title} onClick={() => setShowDatePicker(true)}></BtnPrimary>
 
         {showDatePicker &&
-          <StyledModal isModalVisible={showDatePicker} setIsModalVisible={setShowDatePicker}>
+          <StyledModal isModalVisible={showDatePicker} setIsModalVisible={(visible) => {
+            if (!visible && date == null) {
+              setDate(new Date());
+              setIsDirty(true);
+            }
+            setShowDatePicker(visible);
+          }
+          }>
             <DateTimePicker
               themeVariant='dark'
               minimumDate={new Date()}

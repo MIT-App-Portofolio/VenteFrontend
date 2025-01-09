@@ -16,7 +16,7 @@ export default function Calendar() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [selectedLocation, setSelectedLocation] = useState<number>(userProfile?.eventStatus.location?.id ?? 0);
+  const [selectedLocation, setSelectedLocation] = useState<number | null>(userProfile?.eventStatus.location?.id ?? null);
   const [date, setDate] = useState<Date | null>(userProfile?.eventStatus.time ?? null);
   const [isDirty, setIsDirty] = useState(false);
 
@@ -95,6 +95,7 @@ export default function Calendar() {
         flexDirection: 'row',
         justifyContent: 'flex-start',
         alignItems: 'flex-end',
+
         borderRadius: 25,
         borderColor: 'white',
         borderWidth: 1
@@ -116,7 +117,7 @@ export default function Calendar() {
     <CenterAligned>
       <MarginItem>
         {userProfile?.eventStatus.active && <ThemedText type="title">Cambia tu evento.</ThemedText>}
-        {!userProfile?.eventStatus.active && <ThemedText type="title">Reigstrate en un evento.</ThemedText>}
+        {!userProfile?.eventStatus.active && <ThemedText type="title">Registrate en un evento.</ThemedText>}
       </MarginItem>
 
       <View style={{ width: '80%' }}>

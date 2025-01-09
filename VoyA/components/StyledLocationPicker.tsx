@@ -15,15 +15,27 @@ export type StyledLocationPickerProps = {
 
 export function StyledLocationPicker({ locations, location, setLocation, setIsDirty }: StyledLocationPickerProps) {
   const ios = Platform.OS === 'ios';
+  const [forceRender, setForceRender] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
+  console.log(location);
 
   if (ios) {
     return (
       <MarginItem>
-        <BtnPrimary title={location ? locations.find(loc => loc.id == location)?.name! : 'Selecciona un lugar'} onClick={() => setShowPicker(true)}></BtnPrimary>
+        <BtnPrimary title={location != null ? locations.find(loc => loc.id == location)?.name! : 'Selecciona un lugar'} onClick={() => setShowPicker(true)}></BtnPrimary>
 
         {showPicker &&
-          <StyledModal isModalVisible={showPicker} setIsModalVisible={setShowPicker}>
+          <StyledModal isModalVisible={showPicker} setIsModalVisible={(visible) => {
+            // The user may have closed the moda without changing the default selected value
+            // That should be considered as selecting the default value
+            if (!visible && location == null) {
+              setLocation(0);
+              setForceRender(!forceRender);
+              setIsDirty(true);
+            }
+
+            setShowPicker(visible);
+          }}>
             <Picker
               selectedValue={location as string | null}
               onValueChange={(itemValue, _) => {

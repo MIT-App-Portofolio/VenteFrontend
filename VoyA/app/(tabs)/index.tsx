@@ -12,7 +12,6 @@ import { FontAwesome } from '@expo/vector-icons';
 import Carousel from 'react-native-reanimated-carousel';
 import { StyledGenderFilter } from '@/components/GenderPicker';
 import { StyledModal } from '@/components/StyledModal';
-import { rgbaColor } from 'react-native-reanimated/lib/typescript/Colors';
 
 export default function HomeScreen() {
   const { api, userProfile } = useApi();
@@ -47,8 +46,20 @@ export default function HomeScreen() {
     extrapolate: 'clamp',
   });
 
+  const fetchedFirstTime = useRef(false);
   useEffect(() => {
-    fetchVisitors();
+    fetchedFirstTime.current = true;
+    setLastUserFetchEmpty(false);
+    setPage(0);
+    setVisitors([]);
+    fetchVisitors(true);
+  }, [userProfile?.eventStatus]);
+
+  useEffect(() => {
+    if (!fetchedFirstTime.current) {
+      fetchVisitors();
+    }
+    fetchedFirstTime.current = false;
   }, [page]);
 
   useEffect(() => {
@@ -66,8 +77,10 @@ export default function HomeScreen() {
     });
   }, [visitors]);
 
-  const fetchVisitors = async () => {
-    if (lastUserFetchEmpty) return;
+  const fetchVisitors = async (overrideLastFetch?: boolean) => {
+    if (!overrideLastFetch && lastUserFetchEmpty) {
+      return;
+    }
 
     setLoading(true);
     const newVisitors = await api.queryVisitors(page, genderFilter, ageRangeMin, ageRangeMax);

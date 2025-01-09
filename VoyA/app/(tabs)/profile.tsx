@@ -9,7 +9,7 @@ import { ErrorText, ThemedText } from '@/components/ThemedText';
 import { BtnPrimary, BtnSecondary } from '@/components/Buttons';
 import { CenterAligned } from '@/components/CenterAligned';
 import { FullScreenLoading } from '@/components/FullScreenLoading';
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import * as ImagePicker from 'expo-image-picker';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { StyledGenderPicker } from "@/components/GenderPicker";
@@ -26,20 +26,29 @@ export default function Profile() {
     gender: yup.number().required('El género es obligatorio').oneOf([0, 1], 'Género inválido'),
   });
 
+  const getDefaultValues = () => {
+    return {
+      name: userProfile?.name || '',
+      description: userProfile?.description || '',
+      igHandle: userProfile?.igHandle,
+      gender: userProfile?.gender || 0,
+    };
+  };
+
   const {
     control,
     handleSubmit,
     formState: { errors, isDirty },
-    watch
+    watch,
+    reset
   } = useForm({
     resolver: yupResolver(schema),
-    defaultValues: {
-      name: userProfile?.name || '',
-      description: userProfile?.description || '',
-      igHandle: userProfile?.igHandle || '',
-      gender: userProfile?.gender || 0,
-    },
+    defaultValues: getDefaultValues()
   });
+
+  useEffect(() => {
+    reset(getDefaultValues());
+  }, [userProfile]);
 
   const onPressSend = async (data: any) => {
     setLoading(true);

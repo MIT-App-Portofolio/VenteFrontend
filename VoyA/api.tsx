@@ -304,7 +304,7 @@ export class Api {
     } catch {
       return false;
     }
-    return true;
+    return await this.getUserInfo() == AuthResult.Authenticated;
   }
 
   public async registerEvent(location: EventLocation, date: Date) {

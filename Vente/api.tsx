@@ -283,7 +283,7 @@ export class Api {
       if (e.response && e.response.status == 400) {
         return [false, "Correo o contraseña incorrecta."];
       }
-      return [false, "Error al contactar con servidores de VoyA."];
+      return [false, "Error al contactar con servidores de Vente."];
     }
 
     if (await this.getUserInfo() != AuthResult.Authenticated) {

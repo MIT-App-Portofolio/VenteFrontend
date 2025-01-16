@@ -2,9 +2,9 @@ const fs = require('fs');
 const path = require('path');
 
 const directories = [
-  'VoyA/components',
-  'VoyA/api.tsx',
-  'VoyA/app'
+  'Vente/components',
+  'Vente/api.tsx',
+  'Vente/app'
 ];
 
 const isCodeLine = (line) => {

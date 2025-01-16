@@ -56,7 +56,7 @@ function Inner() {
   if (unkownError) {
     return (
       <CenterAligned>
-        <ErrorText>No fue posible contactar con los servidores de VoyA. Reinicie la app.</ErrorText>
+        <ErrorText>No fue posible contactar con los servidores de Vente. Reinicie la app.</ErrorText>
       </CenterAligned>
     )
   }

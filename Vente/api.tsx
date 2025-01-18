@@ -39,15 +39,21 @@ export type EventPlace = {
   priceRangeBegin: number,
   priceRangeEnd: number,
   ageRequirement?: number,
+  events: EventPlaceEvent[]
+}
+
+export type EventPlaceEvent = {
+  name: string,
+  description: string,
+  image?: string,
+  time: Date,
   offers: EventPlaceOffer[]
 }
 
 export type EventPlaceOffer = {
   name: string,
-  activeOn: Date,
   description?: string,
   price?: number,
-  image?: string
 }
 
 const ApiContext = createContext<{ api: Api, userProfile: Profile | null, userPfp: string | null } | null>(null);
@@ -68,13 +74,28 @@ export const ApiProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const initializeApi = async () => {
       const instance = new Api(setUserProfile, setUserPfp);
+      var url = "";
+
       if (__DEV__) {
         if (Platform.OS === 'android') {
-          await instance.init('http://10.0.2.2:5192');
+          url = 'http://10.0.2.2:5192';
         } else {
-          await instance.init('http://localhost:5192');
+          url = 'http://localhost:5192';
         }
+
+        try {
+          await axios.get(url + '/online');
+          console.log('Using local api.');
+        } catch {
+          console.log('Could not communicate with local api falling to production.');
+          url = 'https://venteapp.es';
+        }
+      } else {
+        url = 'https://venteapp.es';
       }
+
+      await instance.init(url);
+
       setApiInstance(instance);
     };
 
@@ -156,6 +177,7 @@ export class Api {
       await this.fetchUserPfp();
       return AuthResult.Authenticated;
     } catch (e) {
+      console.log('profile info: ' + e);
       if (e.response && e.response.status === 401) {
         return AuthResult.Unauthenticated;
       }
@@ -169,7 +191,8 @@ export class Api {
       const imageUrl = response.data;
 
       this.setUserPfp(imageUrl);
-    } catch {
+    } catch (e) {
+      console.log('set pfp: ' + e);
       this.setUserPfp(null);
     }
   }
@@ -185,7 +208,7 @@ export class Api {
       this.pfpDb[userName] = imageUrl;
       return imageUrl;
     } catch (e) {
-      console.log(e);
+      console.log('pfp: ' + e);
       return null;
     }
   }
@@ -221,6 +244,7 @@ export class Api {
       await this.fetchUserPfp();
       return true;
     } catch (e) {
+      console.log('update pfp: ' + e);
       return false;
     }
   }
@@ -229,7 +253,8 @@ export class Api {
     try {
       this.locations = (await this.axios!.get('/api/get_locations')).data;
       return true;
-    } catch {
+    } catch (e) {
+      console.log('locations: ' + e);
       return false;
     }
   }
@@ -248,6 +273,8 @@ export class Api {
       const token = response.data;
       await AsyncStorage.setItem('authToken', token);
     } catch (e) {
+      console.log('register: ' + e);
+
       var errorMessage = "Ha sucedido un error desconocido";
       if (e.response) {
         e.response.data.forEach(element => {
@@ -280,6 +307,8 @@ export class Api {
       const token = response.data;
       await AsyncStorage.setItem('authToken', token);
     } catch (e) {
+      console.log('login: ' + e);
+
       if (e.response && e.response.status == 400) {
         return [false, "Correo o contraseña incorrecta."];
       }
@@ -301,7 +330,8 @@ export class Api {
         description: profile.description,
         gender: profile.gender,
       });
-    } catch {
+    } catch (e) {
+      console.log('update profile: ' + e);
       return false;
     }
     return await this.getUserInfo() == AuthResult.Authenticated;
@@ -311,6 +341,7 @@ export class Api {
     try {
       await this.axios!.post('/api/register_event?location=' + location.id + '&time=' + date.toISOString());
     } catch (e) {
+      console.log('register event: ' + e);
       return false;
     }
     return await this.getUserInfo() == AuthResult.Authenticated;
@@ -319,7 +350,8 @@ export class Api {
   public async cancelEvent() {
     try {
       await this.axios!.post('/api/cancel_event');
-    } catch {
+    } catch (e) {
+      console.log('cancel event: ' + e);
       return false;
     }
     return await this.getUserInfo() == AuthResult.Authenticated;
@@ -328,7 +360,8 @@ export class Api {
   public async inviteUser(username: string) {
     try {
       await this.axios!.post('/api/invite_to_event?invited=' + username)
-    } catch {
+    } catch (e) {
+      console.log('invite user: ' + e);
       return false;
     }
     return await this.getUserInfo() == AuthResult.Authenticated;
@@ -337,7 +370,8 @@ export class Api {
   public async kickUser(username: string) {
     try {
       await this.axios!.post('/api/kick_from_event?kicked=' + username)
-    } catch {
+    } catch (e) {
+      console.log('kick user: ' + e);
       return false;
     }
     return await this.getUserInfo() == AuthResult.Authenticated;
@@ -358,7 +392,8 @@ export class Api {
       });
 
       return profiles.map(profile => profile.userName);
-    } catch {
+    } catch (e) {
+      console.log('query visitors: ' + e);
       return null;
     }
   }
@@ -366,7 +401,8 @@ export class Api {
   public async queryEventPlaces(): Promise<EventPlace[] | null> {
     try {
       return (await this.axios?.get('/api/query_event_places'))!.data;
-    } catch {
+    } catch (e) {
+      console.log('query event places: ' + e);
       return null;
     }
   }

@@ -17,7 +17,6 @@ export function StyledLocationPicker({ locations, location, setLocation, setIsDi
   const ios = Platform.OS === 'ios';
   const [forceRender, setForceRender] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
-  console.log(location);
 
   if (ios) {
     return (

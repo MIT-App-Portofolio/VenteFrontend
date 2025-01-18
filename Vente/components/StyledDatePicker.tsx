@@ -77,7 +77,7 @@ export function StyledDateTimePicker({ date, setDate, title, setIsDirty }: Style
   if (ios) {
     return (
       <MarginItem>
-        <BtnPrimary title={date ? date.toLocaleDateString("es") : title} onClick={() => setShowDatePicker(true)}></BtnPrimary>
+        <BtnPrimary title={date ? date.toLocaleString("es") : title} onClick={() => setShowDatePicker(true)}></BtnPrimary>
 
         {showDatePicker &&
           <StyledModal isModalVisible={showDatePicker} setIsModalVisible={(visible) => {

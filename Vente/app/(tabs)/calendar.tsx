@@ -54,6 +54,9 @@ export default function Calendar() {
     if (!success) {
       setError("No se pudo cancelar el evento.");
     } else {
+      setIsDirty(false);
+      setSelectedLocation(null);
+      setDate(null);
       setError(null);
     }
     setLoading(false);

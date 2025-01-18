@@ -12,6 +12,7 @@ import { useApi } from '@/api';
 import { useRedirect } from '@/context/RedirectContext';
 import { StyledGenderPicker } from '@/components/GenderPicker';
 import { StyledDatePicker } from '@/components/StyledDatePicker';
+import { FullScreenLoading } from '@/components/FullScreenLoading';
 
 // Define the type for the props that LoginPage will accept
 type AuthPageProps = {
@@ -24,8 +25,12 @@ const Auth: React.FC<AuthPageProps> = ({ onLogin }) => {
     <View>
       {(currentPage == "main") && (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'stretch' }}>
-          <BtnPrimary title='Crea una cuenta' onClick={() => { setCurrentPage('register') }}></BtnPrimary>
-          <BtnSecondary title='Iniciar Session' onClick={() => { setCurrentPage('login') }}></BtnSecondary>
+          <MarginItem>
+            <BtnPrimary title='Crea una cuenta' onClick={() => { setCurrentPage('register') }}></BtnPrimary>
+          </MarginItem>
+          <MarginItem>
+            <BtnSecondary title='Iniciar Session' onClick={() => { setCurrentPage('login') }}></BtnSecondary>
+          </MarginItem>
         </View>)}
       {(currentPage == "login" || currentPage == 'register') && (
         <BtnSecondary title='Ir atras' onClick={() => setCurrentPage('main')}></BtnSecondary>
@@ -77,22 +82,14 @@ const Login: React.FC<AuthPageProps> = ({ onLogin }) => {
     setLoading(false);
   };
 
+  if (loading) {
+    return <FullScreenLoading />
+  }
+
   return (
     <View style={{
       width: viewWidth
     }}>
-      <Modal
-        transparent={true}
-        visible={loading}
-        animationType="fade"
-      >
-        <View>
-          <View>
-            <ActivityIndicator size="large" color="#ffffff" />
-          </View>
-        </View>
-      </Modal>
-
       <MarginItem>
         <Controller
           control={control}
@@ -178,21 +175,14 @@ const Register: React.FC<AuthPageProps> = ({ onLogin }) => {
     setLoading(false);
   };
 
+  if (loading) {
+    return <FullScreenLoading />
+  }
+
   return (
     <View style={{
       width: viewWidth
     }}>
-      <Modal
-        transparent={true}
-        visible={loading}
-        animationType="fade"
-      >
-        <View>
-          <View>
-            <ActivityIndicator size="large" color="#ffffff" />
-          </View>
-        </View>
-      </Modal>
       <View>
         <MarginItem>
           <Controller

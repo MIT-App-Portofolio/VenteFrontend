@@ -7,38 +7,29 @@ import { HorizontallyAligned } from '@/components/HorizontallyAligned';
 import { CenterAligned } from '@/components/CenterAligned';
 import { useApi } from '@/api';
 import { useRouter } from 'expo-router';
-import { Profile, EventPlace, EventPlaceEvent } from '@/api';
+import { Profile } from '@/api';
 import { FontAwesome } from '@expo/vector-icons';
-import Carousel from 'react-native-reanimated-carousel';
 import { StyledGenderFilter } from '@/components/GenderPicker';
 import { StyledModal } from '@/components/StyledModal';
 
-export default function HomeScreen() {
+export default function Users() {
   const { api, userProfile } = useApi();
   const router = useRouter();
 
   const [loading, setLoading] = useState(false);
 
   const [visitors, setVisitors] = useState<string[]>([]);
-  const [eventPlaces, setEventPlaces] = useState<EventPlace[]>([]);
   const [page, setPage] = useState(0);
 
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
-  const [selectedEventPlace, setSelectedEventPlace] = useState<EventPlace | null>(null);
-  const [selectedEvent, setSelectedEvent] = useState<EventPlaceEvent | null>(null);
 
   const [isUserModalVisible, setIsUserModalVisible] = useState(false);
-  const [isEventPlaceModalVisible, setIsEventPlaceModalVisible] = useState(false);
-  const [isEventModalVisible, setIsEventModalVisible] = useState(false);
-  const [viewingEventPlaces, setViewingEventPlaces] = useState(false);
   const [lastUserFetchEmpty, setLastUserFetchEmpty] = useState(false);
 
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
   const [genderFilter, setGenderFilter] = useState<number | null>(null);
   const [ageRangeMin, setAgeRangeMin] = useState<number | null>(null);
   const [ageRangeMax, setAgeRangeMax] = useState<number | null>(null);
-
-  const screenWidth = Dimensions.get('window').width;
 
   // View event places button interpolation
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -101,16 +92,6 @@ export default function HomeScreen() {
     setLoading(false);
   };
 
-  const fetchEventPlaces = async () => {
-    if (eventPlaces.length === 0) {
-      setLoading(true);
-      const places = await api.queryEventPlaces();
-      if (places) {
-        setEventPlaces(places);
-      }
-      setLoading(false);
-    }
-  };
 
   const applyFilter = async () => {
     setLoading(true);
@@ -129,23 +110,6 @@ export default function HomeScreen() {
     setIsUserModalVisible(true);
   };
 
-  const handleEventPlaceClick = (place: EventPlace) => {
-    setSelectedEventPlace(place);
-    setIsEventPlaceModalVisible(true);
-  };
-
-  const handleEventClick = (event: EventPlaceEvent) => {
-    setSelectedEvent(event);
-    setIsEventModalVisible(true);
-  };
-
-  const toggleView = () => {
-    setViewingEventPlaces(!viewingEventPlaces);
-    if (!viewingEventPlaces) {
-      fetchEventPlaces();
-    }
-  };
-
   if (loading)
     return (
       <CenterAligned>
@@ -161,8 +125,6 @@ export default function HomeScreen() {
       </CenterAligned>
     );
   }
-
-  console.log(JSON.stringify(eventPlaces, null, 2));
 
   const renderVisitor = ({ item }: { item: string }) => {
     var visitor = api.getUserUnstable(item);
@@ -194,18 +156,6 @@ export default function HomeScreen() {
     );
   };
 
-  const renderEventPlace = ({ item }: { item: EventPlace }) => (
-    <TouchableOpacity key={item.name} style={styles.card} onPress={() => handleEventPlaceClick(item)}>
-      <Image source={{ uri: item.imageUrls[0] }} style={styles.profilePicture} />
-      <ThemedText type='subtitle' style={{ marginTop: 3 }}>{item.name}</ThemedText>
-      {item.ageRequirement && (
-        <View style={{ flexDirection: 'row', alignItems: 'center', borderRadius: 5, borderColor: 'white', borderWidth: 1, paddingRight: 3, paddingLeft: 3, marginTop: 5 }}>
-          <ThemedText>+{item.ageRequirement}</ThemedText>
-        </View>
-      )}
-      <ThemedText>{item.priceRangeBegin}€ - {item.priceRangeEnd}€</ThemedText>
-    </TouchableOpacity>
-  );
 
   return (
     <HorizontallyAligned>
@@ -217,7 +167,7 @@ export default function HomeScreen() {
         width: '100%',
         height: buttonHeight,
       }}>
-        <TouchableOpacity onPress={toggleView} style={{
+        <TouchableOpacity onPress={() => router.push("/places")} style={{
           width: '100%',
           height: '100%',
         }}>
@@ -228,46 +178,29 @@ export default function HomeScreen() {
             left: 10,
             textTransform: 'uppercase'
           }}>
-            {viewingEventPlaces ? 'Ver Usuarios' : 'Ver Lugares de Eventos'}
+            Ver Lugares de Eventos
           </ThemedText>
         </TouchableOpacity>
       </Animated.View>
 
-      {
-        viewingEventPlaces ? (
-          <Animated.ScrollView
-            onScroll={Animated.event(
-              [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-              { useNativeDriver: false }
-            )}
-            contentContainerStyle={{ paddingBottom: 50 }}
-            scrollEventThrottle={16}
-          >
-            <CenterAligned>
-              {eventPlaces.map((value, _1, _2) => renderEventPlace({ item: value }))}
-            </CenterAligned>
-          </Animated.ScrollView>
-        ) : (
-          <Animated.ScrollView
-            onScroll={Animated.event(
-              [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-              { useNativeDriver: false }
-            )}
-            scrollEventThrottle={16}
-            contentContainerStyle={{ paddingBottom: 50 }}
-          >
-            <ThemedText type='title' style={{ alignSelf: 'flex-start', marginTop: 10 }}>Usuarios que tambien van a {userProfile.eventStatus.location?.name}</ThemedText>
+      <Animated.ScrollView
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false }
+        )}
+        scrollEventThrottle={16}
+        contentContainerStyle={{ paddingBottom: 50 }}
+      >
+        <ThemedText type='title' style={{ alignSelf: 'flex-start', marginTop: 10 }}>Usuarios que tambien van a {userProfile.eventStatus.location?.name}</ThemedText>
 
-            <View style={{ flexDirection: 'row', justifyContent: 'center', width: '100%', marginTop: 10, marginBottom: 10 }}>
-              <BtnPrimary title='Filtrar usuarios' onClick={() => setIsFilterModalVisible(true)} />
-            </View>
+        <View style={{ flexDirection: 'row', justifyContent: 'center', width: '100%', marginTop: 10, marginBottom: 10 }}>
+          <BtnPrimary title='Filtrar usuarios' onClick={() => setIsFilterModalVisible(true)} />
+        </View>
 
-            <CenterAligned>
-              {visitors.map((value, _1, _2) => renderVisitor({ item: value }))}
-            </CenterAligned>
-          </Animated.ScrollView>
-        )
-      }
+        <CenterAligned>
+          {visitors.map((value, _1, _2) => renderVisitor({ item: value }))}
+        </CenterAligned>
+      </Animated.ScrollView>
 
       {/* Filter modal */}
       <StyledModal isModalVisible={isFilterModalVisible} setIsModalVisible={setIsFilterModalVisible} includeButton={false}>
@@ -358,92 +291,11 @@ export default function HomeScreen() {
           </StyledModal>
         )
       }
-
-      {/* Event place modal */}
-      {
-        selectedEventPlace && (
-          isEventModalVisible && selectedEvent != null ? (
-            <StyledModal isModalVisible={isEventModalVisible} setIsModalVisible={setIsEventModalVisible} >
-              <ScrollView>
-                <View style={{ flexDirection: 'row', alignItems: 'flex-start', }}>
-                  <Image source={{ uri: selectedEvent.image }} style={{ height: 200, width: 120, flex: 1, borderRadius: 8, marginRight: 5 }} />
-                  <View style={{ flex: 2 }}>
-                    <ThemedText type="title">{selectedEvent.name}</ThemedText>
-                    <ThemedText style={{ marginTop: 5 }}>{selectedEvent.description}</ThemedText>
-                  </View>
-                </View>
-
-                <View style={styles.offersContainer}>
-                  <ThemedText type="title">Ofertas:</ThemedText>
-
-                  {selectedEvent.offers.map((offer, index) => (
-                    <View key={index} style={styles.offer}>
-                      <ThemedText type="subtitle">{offer.name}</ThemedText>
-
-                      {offer.price && <ThemedText>{offer.price}€</ThemedText>}
-
-                      {offer.description && <ThemedText>{offer.description}</ThemedText>}
-                    </View>
-                  ))}
-                </View>
-              </ScrollView>
-            </StyledModal>
-          ) : (
-            <StyledModal isModalVisible={isEventPlaceModalVisible} setIsModalVisible={setIsEventPlaceModalVisible}>
-              <ScrollView>
-                <CenterAligned>
-                  <Carousel
-                    loop
-                    width={screenWidth * 0.9}
-                    height={200}
-                    autoPlay={true}
-                    data={selectedEventPlace.imageUrls}
-                    renderItem={({ item }) => <Image source={{ uri: item }} style={{ width: '100%', height: 200 }} />}
-                  />
-                </CenterAligned>
-
-                <ThemedText type="title">{selectedEventPlace.name}</ThemedText>
-
-                {selectedEventPlace.ageRequirement && (
-                  <View style={{ alignSelf: 'flex-start', borderRadius: 5, borderColor: 'white', borderWidth: 1, paddingRight: 3, paddingLeft: 3, marginTop: 5 }}>
-                    <ThemedText>+{selectedEventPlace.ageRequirement}</ThemedText>
-                  </View>
-                )}
-
-                <ThemedText style={{ marginTop: 5 }}>{selectedEventPlace.priceRangeBegin}€ - {selectedEventPlace.priceRangeEnd}€</ThemedText>
-
-                <ThemedText style={{ marginTop: 5 }}>{selectedEventPlace.description}</ThemedText>
-
-                {
-                  selectedEventPlace.events.length > 0 &&
-                  <View style={{ marginTop: 10 }}>
-                    <ThemedText type="title">Eventos:</ThemedText>
-
-                    {selectedEventPlace.events.map((event, index) => (
-                      <View key={index} style={{ marginTop: 10, padding: 10, borderRadius: 5, borderWidth: 0.7, borderColor: '#ffffff7f' }}>
-                        <TouchableOpacity onPress={() => handleEventClick(event)} style={{ flex: 1, flexDirection: 'row', minHeight: 100 }}>
-                          <Image source={{ uri: event.image }} style={{ flex: 1, width: '100%', height: '100%', borderRadius: 5, marginRight: 8 }} />
-                          <View style={{ flex: 3 }}>
-                            <ThemedText type="subtitle">{event.name}</ThemedText>
-                            <ThemedText>{event.description}</ThemedText>
-                            <ThemedText>{event.offers.length} ofertas</ThemedText>
-                          </View>
-                        </TouchableOpacity>
-                      </View>
-                    ))}
-                  </View>
-                }
-              </ScrollView>
-            </StyledModal>
-          )
-        )
-      }
-
     </HorizontallyAligned >
   );
 }
 
-const styles = StyleSheet.create({
+export const styles = StyleSheet.create({
   card: {
     backgroundColor: 'black',
     padding: 10,
@@ -498,22 +350,6 @@ const styles = StyleSheet.create({
   closeButtonText: {
     color: 'white',
   },
-  offersContainer: {
-    marginTop: 20,
-  },
-  offer: {
-    marginTop: 10,
-    padding: 10,
-    borderRadius: 5,
-    borderWidth: 0.7,
-    borderColor: '#ffffff7f',
-  },
-  offerImage: {
-    width: '100%',
-    height: 200,
-    borderRadius: 5,
-    marginTop: 10,
-  },
   invitedUsersContainer: {
     marginTop: 20,
   },
@@ -566,12 +402,6 @@ const styles = StyleSheet.create({
     bottom: 10,
     left: 10,
     textTransform: 'uppercase',
-  },
-  eventPlacesContainer: {
-    width: '100%',
-    height: '100%',
-    alignItems: 'center',
-    marginTop: 20,
   },
   visitorsContainer: {
     width: '100%',

@@ -30,6 +30,12 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="places"
+        options={{
+          href: null
+        }}
+      />
+      <Tabs.Screen
         name="calendar"
         options={{
           title: 'Calendario',

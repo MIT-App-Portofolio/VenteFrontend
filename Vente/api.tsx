@@ -259,6 +259,61 @@ export class Api {
     }
   }
 
+  public async googleShouldRegister(id: string) {
+    try {
+      var shouldRegister = await this.axios!.get('/api/account/google_should_register?id=' + id);
+      console.log('Should register: ' + shouldRegister.data);
+      return [true, shouldRegister.data];
+    } catch (e) {
+      console.log('google should register: ' + e);
+      return [false, null];
+    }
+  }
+
+  public async googleRegister(id: string, userName: string, gender: number, birthDate: Date): Promise<[boolean, string | null]> {
+    try {
+      const response = await this.axios!.post('/api/account/register_google', {
+        id,
+        gender,
+        birthDate,
+        userName,
+      });
+
+      const token = response.data;
+      await AsyncStorage.setItem('authToken', token);
+    } catch (e) {
+      console.log('google register: ' + e);
+      return [false, this.translateRegisterError(e)];
+    }
+
+    if (await this.getUserInfo() != AuthResult.Authenticated) {
+      return [false, "Ha sucedido un error desconocido"];
+    }
+
+    return [true, null];
+  }
+
+  public async googleLogin(id: string): Promise<[boolean, string | null]> {
+    try {
+      const response = await this.axios!.post('/api/account/login_google?id=' + id);
+
+      const token = response.data;
+      await AsyncStorage.setItem('authToken', token);
+    } catch (e) {
+      if (e.response && e.response.status == 400) {
+        return [false, "Correo o contraseña incorrecta."];
+      }
+
+      return [false, "Error al contactar con servidores de Vente."];
+    }
+
+    if (await this.getUserInfo() != AuthResult.Authenticated) {
+      return [false, "Ha sucedido un error desconocido"];
+    }
+
+    return [true, null];
+  }
+
   public async createAccount(username: string, email: string, password: string, gender: number, birthDate: Date): Promise<[boolean, string | null]> {
     const registerData = {
       email: email,
@@ -275,18 +330,7 @@ export class Api {
     } catch (e) {
       console.log('register: ' + e);
 
-      var errorMessage = "Ha sucedido un error desconocido";
-      if (e.response) {
-        e.response.data.forEach(element => {
-          if (element.code == 'DuplicateUserName') {
-            errorMessage = "Ya hay alguien con este nombre de usuario";
-          } else if (element.code == 'DuplicateEmail') {
-            errorMessage = "Ya hay alguien con este email";
-          }
-        });
-      }
-
-      return [false, errorMessage];
+      return [false, this.translateRegisterError(e)];
     }
 
     if (await this.getUserInfo() != AuthResult.Authenticated) {
@@ -405,6 +449,20 @@ export class Api {
       console.log('query event places: ' + e);
       return null;
     }
+  }
+
+  private translateRegisterError(e: any) {
+    var errorMessage = "Ha sucedido un error desconocido";
+    if (e.response) {
+      e.response.data.forEach(element => {
+        if (element.code == 'DuplicateUserName') {
+          errorMessage = "Ya hay alguien con este nombre de usuario";
+        } else if (element.code == 'DuplicateEmail') {
+          errorMessage = "Ya hay alguien con este email";
+        }
+      });
+    }
+    return errorMessage;
   }
 
   private async axios_instance(url: string) {

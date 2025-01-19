@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, Text } from 'react-native';
+import { TouchableOpacity, Text, Image } from 'react-native';
 
 type ButtonProps = {
   title: string;
@@ -33,4 +33,18 @@ export function BtnSecondary({ title, onClick, disabled }: ButtonProps) {
     </TouchableOpacity>
   );
 }
-;
+
+export function GoogleButton({ title, onClick, disabled }: ButtonProps) {
+  return (
+    <TouchableOpacity onPress={onClick} style={{
+      backgroundColor: 'white',
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 10,
+      borderRadius: 5,
+    }} disabled={disabled}>
+      <Image source={require('../assets/images/google-logo.png')} style={{ width: 20, height: 20, marginRight: 5 }} />
+      <Text style={{ color: 'black', alignSelf: 'center', textTransform: 'uppercase' }}>{title}</Text>
+    </TouchableOpacity>
+  );
+}

@@ -1,13 +1,15 @@
 import { EventPlace, EventPlaceEvent, useApi } from "@/api";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from 'expo-router';
-import { Animated, Dimensions, TouchableOpacity, View, Image, ScrollView, StyleSheet } from "react-native";
+import { Animated, Dimensions, TouchableOpacity, View, Image, ScrollView, StyleSheet, Linking } from "react-native";
 import { HorizontallyAligned } from "@/components/HorizontallyAligned";
 import { ThemedText } from "@/components/ThemedText";
 import { CenterAligned } from "@/components/CenterAligned";
 import { StyledModal } from "@/components/StyledModal";
 import Carousel from "react-native-reanimated-carousel";
 import { styles as usersPageStyles } from '.';
+import { BtnPrimary } from "@/components/Buttons";
+import { BiggerMarginItem } from "@/components/MarginItem";
 
 export default function Places() {
   const { api, userProfile } = useApi();
@@ -52,7 +54,7 @@ export default function Places() {
       setSelectedEventPlace(item);
       setIsEventPlaceModalVisible(true);
     }}>
-      <Image source={{ uri: item.imageUrls[0] }} style={styles.profilePicture} />
+      <Image source={{ uri: item.imageUrls.length > 0 ? item.imageUrls[0] : undefined }} style={styles.profilePicture} />
       <ThemedText type='subtitle' style={{ marginTop: 3 }}>{item.name}</ThemedText>
       {item.ageRequirement && (
         <View style={{ flexDirection: 'row', alignItems: 'center', borderRadius: 5, borderColor: 'white', borderWidth: 1, paddingRight: 3, paddingLeft: 3, marginTop: 5 }}>
@@ -183,6 +185,14 @@ export default function Places() {
                       </View>
                     ))}
                   </View>
+                }
+
+                {
+                  selectedEventPlace.googleMapsLink && (
+                    <View style={{ marginTop: 20 }}>
+                      <BtnPrimary title="Abrir en mapas" onClick={() => { Linking.openURL(selectedEventPlace.googleMapsLink!) }} />
+                    </View>
+                  )
                 }
               </ScrollView>
             </StyledModal>

@@ -39,6 +39,7 @@ export type EventPlace = {
   priceRangeBegin: number,
   priceRangeEnd: number,
   ageRequirement?: number,
+  googleMapsLink?: string,
   events: EventPlaceEvent[]
 }
 

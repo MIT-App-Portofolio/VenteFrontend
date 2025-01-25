@@ -11,6 +11,7 @@ import { ApiProvider, AuthResult, useApi } from '../api';
 import { DarkTheme, ThemeProvider } from '@react-navigation/native';
 import { RedirectProvider } from '@/context/RedirectContext';
 import { Inter_400Regular, Inter_700Bold, useFonts } from '@expo-google-fonts/inter';
+import InviteScreen from './invite';
 
 export default function RootLayout() {
   return (
@@ -24,7 +25,7 @@ export default function RootLayout() {
 
 function Inner() {
   const [loadingAuthStatus, setLoading] = useState(true);
-  const { api } = useApi();
+  const { api, inviteStatus } = useApi();
   const [isAuthenticated, setAuthenticated] = useState(false);
   const [unkownError, setUnkownError] = useState(false);
   const [fontsLoaded] = useFonts({
@@ -71,6 +72,14 @@ function Inner() {
         <Auth onLogin={() => setAuthenticated(true)} />
       </CenterAligned>
     );
+  }
+
+  if (inviteStatus?.invited) {
+    return (
+      <CenterAligned>
+        <InviteScreen />
+      </CenterAligned>
+    )
   }
 
   return (

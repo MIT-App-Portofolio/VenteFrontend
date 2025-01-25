@@ -4,6 +4,7 @@ import { BtnPrimary } from "./Buttons";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { MarginItem } from "./MarginItem";
 import { StyledModal } from "./StyledModal";
+import { dateDisplay, dateTimeDisplay } from "@/dateDisplay";
 
 
 export type StyledDatePickerProps = {
@@ -19,7 +20,7 @@ export function StyledDatePicker({ date, setDate, title }: StyledDatePickerProps
   if (ios) {
     return (
       <MarginItem>
-        <BtnPrimary title={date ? date.toLocaleDateString("es") : title} onClick={() => setShowDatePicker(true)}></BtnPrimary>
+        <BtnPrimary title={date ? dateDisplay(date) : title} onClick={() => setShowDatePicker(true)}></BtnPrimary>
 
         {showDatePicker &&
           <StyledModal isModalVisible={showDatePicker} setIsModalVisible={setShowDatePicker}>
@@ -43,7 +44,7 @@ export function StyledDatePicker({ date, setDate, title }: StyledDatePickerProps
 
   return (
     <MarginItem>
-      <BtnPrimary title={date ? date.toLocaleDateString("es") : title} onClick={() => setShowDatePicker(true)}></BtnPrimary>
+      <BtnPrimary title={date ? dateDisplay(date) : title} onClick={() => setShowDatePicker(true)}></BtnPrimary>
 
       {showDatePicker && (
         <DateTimePicker
@@ -77,7 +78,7 @@ export function StyledDateTimePicker({ date, setDate, title, setIsDirty }: Style
   if (ios) {
     return (
       <MarginItem>
-        <BtnPrimary title={date ? date.toLocaleString("es") : title} onClick={() => setShowDatePicker(true)}></BtnPrimary>
+        <BtnPrimary title={date ? dateTimeDisplay(date) : title} onClick={() => setShowDatePicker(true)}></BtnPrimary>
 
         {showDatePicker &&
           <StyledModal isModalVisible={showDatePicker} setIsModalVisible={(visible) => {
@@ -109,7 +110,7 @@ export function StyledDateTimePicker({ date, setDate, title, setIsDirty }: Style
 
   return (
     <MarginItem>
-      <BtnPrimary title={date ? date.toLocaleDateString("es") : title} onClick={() => setShowDatePicker(true)}></BtnPrimary>
+      <BtnPrimary title={date ? dateTimeDisplay(date) : title} onClick={() => setShowDatePicker(true)}></BtnPrimary>
 
       {showDatePicker && (
         <DateTimePicker

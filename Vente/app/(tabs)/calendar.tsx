@@ -9,9 +9,10 @@ import { FullScreenLoading } from '@/components/FullScreenLoading';
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { StyledDateTimePicker } from "@/components/StyledDatePicker";
 import { StyledLocationPicker } from "@/components/StyledLocationPicker";
+import { dateTimeDisplay } from "@/dateDisplay";
 
 export default function Calendar() {
-  const { api, userProfile } = useApi();
+  const { api, userProfile, groupStatus } = useApi();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -67,6 +68,7 @@ export default function Calendar() {
     const success = await api.inviteUser(inviteUsername);
     if (success) {
       setInviteUsername('');
+      setError(null);
     } else {
       setError("No se pudo invitar al usuario.");
       setIsModalVisible(false);
@@ -97,16 +99,16 @@ export default function Calendar() {
 
         flexDirection: 'row',
         justifyContent: 'flex-start',
-        alignItems: 'flex-end',
+        alignItems: 'center',
 
         borderRadius: 25,
         borderColor: 'white',
         borderWidth: 1
       }}>
-        <ThemedText>@{item}</ThemedText>
+        <ThemedText style={{ marginRight: 2 }}>@{item}</ThemedText>
 
         <TouchableOpacity onPress={() => kickUser(item)}>
-          <IconSymbol name="cross" color='white' size={15} />
+          <IconSymbol name='xmark' color='white' size={15} />
         </TouchableOpacity>
       </View>
     );
@@ -119,14 +121,18 @@ export default function Calendar() {
   return (
     <CenterAligned>
       <MarginItem>
-        {userProfile?.eventStatus.active && <ThemedText type="title">Cambia tu evento.</ThemedText>}
+        {userProfile?.eventStatus.active && <ThemedText type="title">Tu evento.</ThemedText>}
         {!userProfile?.eventStatus.active && <ThemedText type="title">Registrate en un evento.</ThemedText>}
       </MarginItem>
 
       <View style={{ width: '80%' }}>
-        <StyledLocationPicker locations={api.locations!} location={selectedLocation} setLocation={setSelectedLocation} setIsDirty={setIsDirty} />
 
-        <StyledDateTimePicker title="Escoge una fecha" date={date} setIsDirty={setIsDirty} setDate={setDate} />
+        <MarginItem>
+          {!userProfile?.eventStatus.active && <StyledLocationPicker locations={api.locations!} location={selectedLocation} setLocation={setSelectedLocation} setIsDirty={setIsDirty} />}
+          {!userProfile?.eventStatus.active && <StyledDateTimePicker title="Escoge una fecha" date={date} setIsDirty={setIsDirty} setDate={setDate} />}
+
+          {userProfile?.eventStatus.active && <ThemedText type="subtitle" style={{ textAlign: 'center' }}>{userProfile.eventStatus.location?.name} - {dateTimeDisplay(userProfile.eventStatus.time!)}</ThemedText>}
+        </MarginItem>
 
         <Modal
           visible={isModalVisible}
@@ -145,10 +151,20 @@ export default function Calendar() {
               borderRadius: 10,
               width: '80%',
             }}>
-              <ThemedText type="subtitle">Invitados</ThemedText>
+              {groupStatus?.members.length! > 0 && <ThemedText type="subtitle">Invitados</ThemedText>}
 
               <FlatList
-                data={userProfile?.eventStatus.with}
+                data={groupStatus?.members.filter(member => member != userProfile?.userName)}
+                renderItem={renderInvited}
+                horizontal
+                style={{ marginBottom: 10 }}
+                keyExtractor={(_, index) => index.toString()}
+              />
+
+              {groupStatus?.awaitingInvite.length! > 0 && <ThemedText type="subtitle">Esperando confirmación</ThemedText>}
+
+              <FlatList
+                data={groupStatus?.awaitingInvite}
                 renderItem={renderInvited}
                 horizontal
                 style={{ marginBottom: 10 }}
@@ -160,6 +176,7 @@ export default function Calendar() {
                 onChangeText={setInviteUsername}
                 placeholder="Nombre de usuario"
                 placeholderTextColor="gray"
+                autoCapitalize="none"
                 style={{
                   padding: 10,
                   borderColor: 'white',
@@ -186,7 +203,6 @@ export default function Calendar() {
         <BiggerMarginItem>
           {error && <ErrorText>{error}</ErrorText>}
 
-          {userProfile?.eventStatus.active && <BtnPrimary title="Actualizar" onClick={onSubmit} disabled={!isDirty} />}
           {!userProfile?.eventStatus.active && <BtnPrimary title="Registrarte" onClick={onSubmit} disabled={!isDirty} />}
 
           {

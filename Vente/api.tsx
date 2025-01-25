@@ -1,5 +1,5 @@
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
-import axios, { AxiosInstance } from 'axios';
+import axios, { AxiosError, AxiosInstance } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FullScreenLoading } from './components/FullScreenLoading';
 import { Platform } from 'react-native';
@@ -8,6 +8,16 @@ export enum AuthResult {
   UnkownError,
   Authenticated,
   Unauthenticated
+}
+
+export type InviteStatus = {
+  invited: boolean,
+  invitors: Profile[] | null,
+}
+
+export type GroupStatus = {
+  members: string[],
+  awaitingInvite: string[],
 }
 
 export type Profile = {
@@ -57,7 +67,13 @@ export type EventPlaceOffer = {
   price?: number,
 }
 
-const ApiContext = createContext<{ api: Api, userProfile: Profile | null, userPfp: string | null } | null>(null);
+const ApiContext = createContext<{
+  api: Api,
+  userProfile: Profile | null,
+  userPfp: string | null,
+  inviteStatus: InviteStatus | null
+  groupStatus: GroupStatus | null
+} | null>(null);
 
 export const useApi = () => {
   const context = useContext(ApiContext);
@@ -71,10 +87,12 @@ export const ApiProvider = ({ children }: { children: ReactNode }) => {
   const [api, setApiInstance] = useState<Api | null>(null);
   const [userProfile, setUserProfile] = useState<Profile | null>(null);
   const [userPfp, setUserPfp] = useState<string | null>(null);
+  const [inviteStatus, setInviteStatus] = useState<InviteStatus | null>(null);
+  const [groupStatus, setGroupStatus] = useState<GroupStatus | null>(null);
 
   useEffect(() => {
     const initializeApi = async () => {
-      const instance = new Api(setUserProfile, setUserPfp);
+      const instance = new Api(setUserProfile, setUserPfp, setInviteStatus, setGroupStatus);
       var url = "";
 
       if (__DEV__) {
@@ -108,7 +126,7 @@ export const ApiProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <ApiContext.Provider value={{ api, userProfile, userPfp }}>
+    <ApiContext.Provider value={{ api, userProfile, userPfp, inviteStatus, groupStatus }}>
       {children}
     </ApiContext.Provider>
   );
@@ -123,14 +141,22 @@ export class Api {
   private username: string | null;
 
   private setUserProfile: React.Dispatch<React.SetStateAction<Profile | null>>;
+  private setInviteStatus: React.Dispatch<React.SetStateAction<InviteStatus | null>>;
   private setUserPfp: React.Dispatch<React.SetStateAction<string | null>>;
+  private setGroupStatus: React.Dispatch<React.SetStateAction<GroupStatus | null>>;
 
-  constructor(setUserProfile: React.Dispatch<React.SetStateAction<Profile | null>>, setUserPfp: React.Dispatch<React.SetStateAction<string | null>>) {
+  constructor(
+    setUserProfile: React.Dispatch<React.SetStateAction<Profile | null>>,
+    setUserPfp: React.Dispatch<React.SetStateAction<string | null>>,
+    setInviteStatus: React.Dispatch<React.SetStateAction<InviteStatus | null>>,
+    setGroupStatus: React.Dispatch<React.SetStateAction<GroupStatus | null>>) {
     this.locations = null;
     this.axios = null;
     this.username = null;
     this.setUserProfile = setUserProfile;
     this.setUserPfp = setUserPfp;
+    this.setInviteStatus = setInviteStatus;
+    this.setGroupStatus = setGroupStatus
   }
 
   public async init(url: string) {
@@ -176,9 +202,12 @@ export class Api {
       this.setUserProfile(profile);
 
       await this.fetchUserPfp();
+      await this.getGroupStatus();
+      await this.getInviteStatus();
+
       return AuthResult.Authenticated;
     } catch (e) {
-      console.log('profile info: ' + e);
+      console.log('user info: ' + e);
       if (e.response && e.response.status === 401) {
         return AuthResult.Unauthenticated;
       }
@@ -380,6 +409,45 @@ export class Api {
       return false;
     }
     return await this.getUserInfo() == AuthResult.Authenticated;
+  }
+
+  public async getInviteStatus() {
+    try {
+      const response = await this.axios!.get('/api/invite_status');
+      this.setInviteStatus(response.data);
+    }
+    catch (e) {
+      console.log('invite status: ' + e);
+    }
+  }
+
+  public async acceptInvite() {
+    try {
+      await this.axios!.post('/api/accept_invite');
+    } catch (e) {
+      console.log('accept invite: ' + e);
+      return false;
+    }
+    return await this.getUserInfo() == AuthResult.Authenticated;
+  }
+
+  public async declineInvite() {
+    try {
+      await this.axios!.post('/api/decline_invite');
+    } catch (e) {
+      console.log('decline invite: ' + e);
+      return false;
+    }
+    return await this.getUserInfo() == AuthResult.Authenticated;
+  }
+
+  public async getGroupStatus() {
+    try {
+      const response = await this.axios!.get('/api/group_status');
+      this.setGroupStatus(response.data);
+    } catch (e) {
+      console.log('group status: ' + e);
+    }
   }
 
   public async registerEvent(location: EventLocation, date: Date) {

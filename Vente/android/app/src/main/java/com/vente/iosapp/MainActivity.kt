@@ -1,4 +1,4 @@
-package com.anonymous.Vente
+package com.vente.iosapp
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

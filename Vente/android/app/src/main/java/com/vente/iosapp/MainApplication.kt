@@ -1,4 +1,4 @@
-package com.anonymous.Vente
+package com.vente.iosapp
 
 import android.app.Application
 import android.content.res.Configuration

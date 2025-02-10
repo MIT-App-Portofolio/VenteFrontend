@@ -9,6 +9,10 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "entitlements": {
+        "aps-environment": "development"
+      },
       "infoPlist": {
         "CFBundleURLTypes": [
           {
@@ -19,15 +23,15 @@
           }
         ]
       },
-      "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.Vente"
+      "supportsTablet": false,
+      "bundleIdentifier": "com.vente.iosapp"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.anonymous.Vente"
+      "package": "com.vente.iosapp"
     },
     "web": {
       "bundler": "metro",
@@ -50,10 +54,20 @@
         {
           "iosUrlScheme": "com.googleusercontent.apps.504803014413-k3b72t4tnsbinalp2ks8f4028rt87qbf"
         }
+      ],
+      "@react-native-firebase/app",
+      "@react-native-firebase/messaging",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
       ]
-    ],
-    "experiments": {
-      "typedRoutes": true
-    }
+    ]
+  },
+  "experiments": {
+    "typedRoutes": true
   }
 }

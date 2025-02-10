@@ -1,5 +1,5 @@
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
-import axios, { AxiosError, AxiosInstance } from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FullScreenLoading } from './components/FullScreenLoading';
 import { Platform } from 'react-native';
@@ -394,6 +394,17 @@ export class Api {
     }
 
     return [true, null];
+  }
+
+  public async sendNotificationToken(token: string) {
+    try {
+      await this.axios!.post('/api/account/set_notification_key?key=' + token);
+    } catch (e) {
+      console.log('send notification token: ' + e);
+      return false;
+    }
+
+    return true;
   }
 
   public async updateProfile(profile: Profile) {

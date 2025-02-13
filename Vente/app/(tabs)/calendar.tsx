@@ -122,7 +122,7 @@ export default function Calendar() {
     <CenterAligned>
       <MarginItem>
         {userProfile?.eventStatus.active && <ThemedText type="title">Tu evento.</ThemedText>}
-        {!userProfile?.eventStatus.active && <ThemedText type="title">Registrate en un evento.</ThemedText>}
+        {!userProfile?.eventStatus.active && <ThemedText type="title">Regístrate en un evento.</ThemedText>}
       </MarginItem>
 
       <View style={{ width: '80%' }}>

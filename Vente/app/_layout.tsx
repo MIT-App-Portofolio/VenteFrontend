@@ -30,7 +30,7 @@ function Inner() {
   const [loadingAuthStatus, setLoading] = useState(true);
   const { api, inviteStatus } = useApi();
   const [isAuthenticated, setAuthenticated] = useState(false);
-  const [unkownError, setUnkownError] = useState(false);
+  const [unknownError, setUnknownError] = useState(false);
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
     Inter_700Bold
@@ -70,12 +70,12 @@ function Inner() {
 
       var ok = await api.getLocations();
       if (!ok) {
-        setUnkownError(true);
+        setUnknownError(true);
       }
 
       var auth = await api.getUserInfo();
-      if (auth == AuthResult.UnkownError) {
-        setUnkownError(true);
+      if (auth == AuthResult.UnknownError) {
+        setUnknownError(true);
       } else {
         setAuthenticated(auth == AuthResult.Authenticated);
       }
@@ -85,7 +85,7 @@ function Inner() {
     inner();
   }, []);
 
-  if (unkownError) {
+  if (unknownError) {
     return (
       <CenterAligned>
         <ErrorText>No fue posible contactar con los servidores de Vente. Reinicie la app.</ErrorText>

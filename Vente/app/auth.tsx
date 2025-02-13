@@ -106,7 +106,7 @@ const Auth: React.FC<AuthPageProps> = ({ onLogin }) => {
           </MarginItem>
         </View>)}
       {(currentPage == "login" || currentPage == 'register') && (
-        <BtnSecondary title='Ir atras' onClick={() => setCurrentPage('main')}></BtnSecondary>
+        <BtnSecondary title='Ir atrás' onClick={() => setCurrentPage('main')}></BtnSecondary>
       )}
       {(currentPage == "register") && (
         <Register onLogin={onLogin}></Register>
@@ -131,7 +131,7 @@ const Login: React.FC<AuthPageProps> = ({ onLogin }) => {
   const { api } = useApi();
 
   const schema = yup.object().shape({
-    email: yup.string().required('El correo es obligatorio').email('Dirreccion invalida'),
+    email: yup.string().required('El correo es obligatorio').email('Dirección invalida'),
     password: ProperPassword(),
   });
 
@@ -214,7 +214,7 @@ const Register: React.FC<AuthPageProps> = ({ onLogin }) => {
 
   const schema = yup.object().shape({
     username: yup.string().required('El nombre de usuario es obligatorio'),
-    email: yup.string().required('El correo es obligatorio').email('Dirreccion invalida'),
+    email: yup.string().required('El correo es obligatorio').email('Dirección invalida'),
     password: ProperPassword(),
     gender: yup.number().required('El género es obligatorio').oneOf([0, 1], 'Género inválido'),
   });

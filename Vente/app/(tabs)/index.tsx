@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Image, StyleSheet, TouchableOpacity, ScrollView, Linking, Dimensions, TextInput, Animated } from 'react-native';
+import { View, Image, StyleSheet, TouchableOpacity, ScrollView, Linking, TextInput, Animated } from 'react-native';
 import { MarginItem } from '@/components/MarginItem';
 import { ThemedText } from '@/components/ThemedText';
 import { BtnPrimary, BtnSecondary } from '@/components/Buttons';
@@ -120,7 +120,7 @@ export default function Users() {
   if (!userProfile?.eventStatus.active) {
     return (
       <CenterAligned>
-        <ThemedText>No estas registrado en ningun evento.</ThemedText>
+        <ThemedText>No estas registrado en ningún evento.</ThemedText>
         <BtnPrimary title='Ir a calendario' onClick={() => router.push('/calendar')}></BtnPrimary>
       </CenterAligned>
     );
@@ -191,7 +191,7 @@ export default function Users() {
         scrollEventThrottle={16}
         contentContainerStyle={{ paddingBottom: 50 }}
       >
-        <ThemedText type='title' style={{ alignSelf: 'flex-start', marginTop: 10 }}>Usuarios que tambien van a {userProfile.eventStatus.location?.name}</ThemedText>
+        <ThemedText type='title' style={{ alignSelf: 'flex-start', marginTop: 10 }}>Usuarios que también van a {userProfile.eventStatus.location?.name}</ThemedText>
 
         <View style={{ flexDirection: 'row', justifyContent: 'center', width: '100%', marginTop: 10, marginBottom: 10 }}>
           <BtnPrimary title='Filtrar usuarios' onClick={() => setIsFilterModalVisible(true)} />

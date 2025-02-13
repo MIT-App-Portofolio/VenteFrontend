@@ -5,7 +5,7 @@ import { FullScreenLoading } from './components/FullScreenLoading';
 import { Platform } from 'react-native';
 
 export enum AuthResult {
-  UnkownError,
+  UnknownError,
   Authenticated,
   Unauthenticated
 }
@@ -212,7 +212,7 @@ export class Api {
         return AuthResult.Unauthenticated;
       }
     }
-    return AuthResult.UnkownError;
+    return AuthResult.UnknownError;
   }
 
   public async fetchUserPfp() {

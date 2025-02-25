@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 
 import Auth from './auth';
+import * as Notifications from 'expo-notifications';
 import { StatusBar } from 'expo-status-bar';
 import { ErrorText } from '@/components/ThemedText';
 import { CenterAligned } from '@/components/CenterAligned';
@@ -13,7 +14,7 @@ import { RedirectProvider } from '@/context/RedirectContext';
 import { Inter_400Regular, Inter_700Bold, useFonts } from '@expo-google-fonts/inter';
 import messaging from '@react-native-firebase/messaging';
 import InviteScreen from './invite';
-import { AppState } from 'react-native';
+import { AppState, Platform } from 'react-native';
 
 export default function RootLayout() {
 
@@ -40,7 +41,15 @@ function Inner() {
   // Notification setup
   useEffect(() => {
     const inner = async () => {
-      await messaging().requestPermission();
+      if (Platform.OS == 'ios') {
+        await messaging().requestPermission();
+      } else {
+        const { status } = await Notifications.getPermissionsAsync();
+        if (status !== 'granted') {
+          await Notifications.requestPermissionsAsync();
+        }
+      }
+
       messaging().onTokenRefresh(async (token) => {
         await api.sendNotificationToken(token);
       });

@@ -1,4 +1,4 @@
-package com.vente.iosapp
+package com.vente.venteapp
 
 import android.app.Application
 import android.content.res.Configuration

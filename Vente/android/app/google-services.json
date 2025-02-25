@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "757017785117",
+    "project_id": "vente-43d0b",
+    "storage_bucket": "vente-43d0b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:757017785117:android:b61602439f37f0245c27f4",
+        "android_client_info": {
+          "package_name": "com.vente.venteapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBrPYt3Dx4401UsTwKCh_3ncGVkiMzRXoY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

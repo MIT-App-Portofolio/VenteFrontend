@@ -27,11 +27,12 @@
       "bundleIdentifier": "com.vente.iosapp"
     },
     "android": {
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.vente.iosapp"
+      "package": "com.vente.venteapp"
     },
     "web": {
       "bundler": "metro",

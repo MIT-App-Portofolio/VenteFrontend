@@ -1,6 +1,6 @@
 // LoginPage.tsx
 import { useState } from 'react';
-import { Text, View, Dimensions } from 'react-native';
+import { Text, View, Dimensions, Platform } from 'react-native';
 import { MarginItem, BiggerMarginItem } from '@/components/MarginItem';
 import { StyledTextInput, StyledEmailInput, StyledPasswordInput } from '@/components/StyledInput';
 import { ErrorText } from '@/components/ThemedText';
@@ -20,19 +20,28 @@ type AuthPageProps = {
   onLogin: () => void;
 };
 
-GoogleSignin.configure({
-  webClientId: '504803014413-k3b72t4tnsbinalp2ks8f4028rt87qbf.apps.googleusercontent.com',
-  iosClientId: '504803014413-k3b72t4tnsbinalp2ks8f4028rt87qbf.apps.googleusercontent.com',
-  // iosClientId: 'com.googleusercontent.apps.504803014413-k3b72t4tnsbinalp2ks8f4028rt87qbf',
-  // scopes: [], // what API you want to access on behalf of the user, default is email and profile
-  // offlineAccess: false, // if you want to access Google API on behalf of the user FROM YOUR SERVER
-  // hostedDomain: 'venteapp.es', // specifies a hosted domain restriction
-  // forceCodeForRefreshToken: false, // [Android] related to `serverAuthCode`, read the docs link below *.
-  // accountName: '', // [Android] specifies an account name on the device that should be used
-  // googleServicePlistPath: '', // [iOS] if you renamed your GoogleService-Info file, new name here, e.g. "GoogleService-Info-Staging"
-  // openIdRealm: '', // [iOS] The OpenID2 realm of the home web server. This allows Google to include the user's OpenID Identifier in the OpenID Connect ID token.
-  // profileImageSize: 120, // [iOS] The desired height (and width) of the profile image. Defaults to 120px
-});
+if (Platform.OS == 'android') {
+  GoogleSignin.configure({
+    // This points to an actual web application oauth entry, but an android one still needs to exist with proper signing key
+    webClientId: '504803014413-nhv61u03k494e7c54pu7558235s6iaee.apps.googleusercontent.com',
+    // androidClientId: '504803014413-b3gv875cvmr8lmk1h8ifdb29uutp6t2g.apps.googleusercontent.com'
+  });
+} else {
+  GoogleSignin.configure({
+    webClientId: '504803014413-k3b72t4tnsbinalp2ks8f4028rt87qbf.apps.googleusercontent.com',
+    iosClientId: '504803014413-k3b72t4tnsbinalp2ks8f4028rt87qbf.apps.googleusercontent.com',
+    // iosClientId: 'com.googleusercontent.apps.504803014413-k3b72t4tnsbinalp2ks8f4028rt87qbf',
+    // scopes: [], // what API you want to access on behalf of the user, default is email and profile
+    // offlineAccess: false, // if you want to access Google API on behalf of the user FROM YOUR SERVER
+    // hostedDomain: 'venteapp.es', // specifies a hosted domain restriction
+    // forceCodeForRefreshToken: false, // [Android] related to `serverAuthCode`, read the docs link below *.
+    // accountName: '', // [Android] specifies an account name on the device that should be used
+    // googleServicePlistPath: '', // [iOS] if you renamed your GoogleService-Info file, new name here, e.g. "GoogleService-Info-Staging"
+    // openIdRealm: '', // [iOS] The OpenID2 realm of the home web server. This allows Google to include the user's OpenID Identifier in the OpenID Connect ID token.
+    // profileImageSize: 120, // [iOS] The desired height (and width) of the profile image. Defaults to 120px
+  });
+}
+
 
 const Auth: React.FC<AuthPageProps> = ({ onLogin }) => {
   const [currentPage, setCurrentPage] = useState("main");

@@ -10,7 +10,6 @@ import { CenterAligned } from '@/components/CenterAligned';
 import { FullScreenLoading } from '@/components/FullScreenLoading';
 import { ApiProvider, AuthResult, useApi } from '../api';
 import { DarkTheme, ThemeProvider } from '@react-navigation/native';
-import { RedirectProvider } from '@/context/RedirectContext';
 import { Inter_400Regular, Inter_700Bold, useFonts } from '@expo-google-fonts/inter';
 import messaging from '@react-native-firebase/messaging';
 import InviteScreen from './invite';
@@ -20,9 +19,7 @@ export default function RootLayout() {
 
   return (
     <ApiProvider>
-      <RedirectProvider>
-        <Inner></Inner>
-      </RedirectProvider>
+      <Inner></Inner>
     </ApiProvider>
   )
 }

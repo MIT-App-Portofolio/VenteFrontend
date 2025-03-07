@@ -9,11 +9,11 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { Controller, useForm } from 'react-hook-form';
 import { useApi } from '@/api';
-import { useRedirect } from '@/context/RedirectContext';
 import { StyledGenderPicker } from '@/components/GenderPicker';
 import { StyledDatePicker } from '@/components/StyledDatePicker';
 import { FullScreenLoading } from '@/components/FullScreenLoading';
 import { GoogleSignin, isSuccessResponse } from '@react-native-google-signin/google-signin';
+import { redirectStore } from '@/redirect_storage';
 
 // Define the type for the props that LoginPage will accept
 type AuthPageProps = {
@@ -219,7 +219,6 @@ const Register: React.FC<AuthPageProps> = ({ onLogin }) => {
   const [error, setError] = useState<string | null>(null);
   const [birthDate, setBirthDate] = useState<Date | null>(null);
   const { api } = useApi();
-  const { setRedirectTo } = useRedirect()!;
 
   const schema = yup.object().shape({
     username: yup.string().required('El nombre de usuario es obligatorio'),
@@ -256,7 +255,7 @@ const Register: React.FC<AuthPageProps> = ({ onLogin }) => {
     setError(error);
     if (ok) {
       onLogin();
-      setRedirectTo('/profile');
+      redirectStore.setPendingRedirect('profile');
     }
     setLoading(false);
   };
@@ -339,7 +338,6 @@ const GoogleRegister: React.FC<GoogleRegisterProps> = ({ onLogin, id }) => {
   const [error, setError] = useState<string | null>(null);
   const [birthDate, setBirthDate] = useState<Date | null>(null);
   const { api } = useApi();
-  const { setRedirectTo } = useRedirect()!;
 
   const schema = yup.object().shape({
     username: yup.string().required('El nombre de usuario es obligatorio'),
@@ -372,7 +370,7 @@ const GoogleRegister: React.FC<GoogleRegisterProps> = ({ onLogin, id }) => {
     setError(error);
     if (ok) {
       onLogin();
-      setRedirectTo('/profile');
+      redirectStore.setPendingRedirect('profile');
     }
     setLoading(false);
   };

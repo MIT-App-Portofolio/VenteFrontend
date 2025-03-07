@@ -6,13 +6,20 @@ import { BtnPrimary, BtnSecondary } from '@/components/Buttons';
 import { HorizontallyAligned } from '@/components/HorizontallyAligned';
 import { CenterAligned } from '@/components/CenterAligned';
 import { useApi } from '@/api';
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { Profile } from '@/api';
 import { FontAwesome } from '@expo/vector-icons';
 import { StyledGenderFilter } from '@/components/GenderPicker';
 import { StyledModal } from '@/components/StyledModal';
+import { redirectStore } from '@/redirect_storage';
 
 export default function Users() {
+  var pendingRedirect = redirectStore.getPendingRedirect();
+  if (pendingRedirect) {
+    // expo-router is a clusterfuck. i don't know how you're supposed to handle but this is the most painless way, as there's no way to not make index.tsx the default
+    return <Redirect href={pendingRedirect} />
+  }
+
   const { api, userProfile } = useApi();
   const router = useRouter();
 

@@ -56,17 +56,24 @@ export function StyledLocationPicker({ locations, location, setLocation, setIsDi
 
   return (
     <MarginItem>
-      <Picker selectedValue={location}
-        onValueChange={(itemValue, _) => {
-          setIsDirty(true);
-          setLocation(itemValue!);
-        }}
-        style={{ color: 'white', marginBottom: 20, backgroundColor: 'black' }}
-      >
-        {locations.map(location => (
-          <Picker.Item key={location.id} label={location.name} value={location.id} />
-        ))}
-      </Picker>
+      {showPicker ?
+        <Picker selectedValue={location}
+          onValueChange={(itemValue, _) => {
+            setIsDirty(true);
+            setLocation(itemValue!);
+          }}
+          style={{ color: 'white', marginBottom: 20, backgroundColor: 'black' }}
+        >
+          {locations.map(location => (
+            <Picker.Item key={location.id} label={location.name} value={location.id} />
+          ))}
+        </Picker> :
+        <BtnPrimary title='Selecciona un lugar' onClick={() => {
+          // Android is different. No not-selected value unless hardcoded. which is pointless. clicking the choose loc button selects default location and allows usr to change.
+          setLocation(0);
+          setShowPicker(true);
+        }}></BtnPrimary>
+      }
     </MarginItem>
   );
 }

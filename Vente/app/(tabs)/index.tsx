@@ -82,7 +82,6 @@ export default function Users() {
       return;
     }
 
-    setLoading(true);
     const newVisitors = await api.queryVisitors(page, genderFilter, ageRangeMin, ageRangeMax);
 
     if (!newVisitors || newVisitors.length === 0) {
@@ -95,10 +94,22 @@ export default function Users() {
         await api.fetchPfp(visitor);
       });
     }
-
-    setLoading(false);
   };
 
+  const handleScroll = (event: any) => {
+    Animated.event(
+      [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+      { useNativeDriver: false }
+    )(event);
+
+    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+    const paddingToBottom = 20;
+
+    if (layoutMeasurement.height + contentOffset.y >=
+      contentSize.height - paddingToBottom && !loading) {
+      setPage(page + 1);
+    }
+  };
 
   const applyFilter = async () => {
     setLoading(true);
@@ -191,10 +202,7 @@ export default function Users() {
       </Animated.View>
 
       <Animated.ScrollView
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: false }
-        )}
+        onScroll={handleScroll}
         scrollEventThrottle={16}
         contentContainerStyle={{ paddingBottom: 50 }}
       >

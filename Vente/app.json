@@ -1,13 +1,17 @@
 {
   "expo": {
     "name": "Vente",
-    "slug": "Vente",
+    "slug": "vente",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#000000",
+      "resizeMode": "contain"
+    },
     "ios": {
       "googleServicesFile": "./GoogleService-Info.plist",
       "entitlements": {
@@ -17,8 +21,7 @@
         "CFBundleURLTypes": [
           {
             "CFBundleURLSchemes": [
-              "com.googleusercontent.apps.504803014413-k3b72t4tnsbinalp2ks8f4028rt87qbf",
-              "504803014413-k3b72t4tnsbinalp2ks8f4028rt87qbf.apps.googleusercontent.com"
+              "com.googleusercontent.apps.504803014413-k3b72t4tnsbinalp2ks8f4028rt87qbf"
             ]
           }
         ]
@@ -69,7 +72,16 @@
           }
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "53e57260-b3e2-4a3a-859f-4886e72ad0b5"
+      }
+    },
+    "owner": "segfault0x23"
   },
   "experiments": {
     "typedRoutes": true

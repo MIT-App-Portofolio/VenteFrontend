@@ -44,6 +44,7 @@ if (Platform.OS == 'android') {
 
 
 const Auth: React.FC<AuthPageProps> = ({ onLogin }) => {
+  const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState("main");
   const [googleId, setGoogleId] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
@@ -51,6 +52,7 @@ const Auth: React.FC<AuthPageProps> = ({ onLogin }) => {
   const { api } = useApi();
 
   const googleSignIn = async () => {
+    setLoading(true);
     try {
       await GoogleSignin.hasPlayServices();
       const response = await GoogleSignin.signIn();
@@ -89,7 +91,12 @@ const Auth: React.FC<AuthPageProps> = ({ onLogin }) => {
       console.log(e);
       setError('Error al iniciar sesión con Google');
     }
+    setLoading(false);
   };
+
+  if (loading) {
+    return <FullScreenLoading></FullScreenLoading>;
+  }
 
   return (
     <View>

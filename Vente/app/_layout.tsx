@@ -13,13 +13,15 @@ import { DarkTheme, ThemeProvider } from '@react-navigation/native';
 import { Inter_400Regular, Inter_700Bold, useFonts } from '@expo-google-fonts/inter';
 import messaging from '@react-native-firebase/messaging';
 import InviteScreen from './invite';
-import { AppState, Platform } from 'react-native';
+import { AppState, Platform, View } from 'react-native';
 
 export default function RootLayout() {
 
   return (
     <ApiProvider>
-      <Inner></Inner>
+      <View style={{ flex: 1, backgroundColor: 'black' }}>
+        <Inner></Inner>
+      </View>
     </ApiProvider>
   )
 }
@@ -110,6 +112,7 @@ function Inner() {
           await api.sendNotificationToken(await messaging().getToken());
           setAuthenticated(true)
         }} />
+        <StatusBar translucent backgroundColor="transparent" style='light' />
       </CenterAligned>
     );
   }
@@ -128,7 +131,7 @@ function Inner() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
-      <StatusBar style="light" />
+      <StatusBar translucent backgroundColor="transparent" style='light' />
     </ThemeProvider>
   );
 }

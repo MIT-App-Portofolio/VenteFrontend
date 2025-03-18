@@ -52,6 +52,10 @@ export default function Profile() {
 
   const onPressSend = async (data: any) => {
     setLoading(true);
+    if (data.igHandle) {
+      data.igHandle = data.igHandle.replace(/^@/, '');
+    }
+
     if (!await api.updateProfile(data)) {
       setError("Ha sucedido un error desconocido");
     } else {

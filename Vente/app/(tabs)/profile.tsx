@@ -101,9 +101,9 @@ export default function Profile() {
   }
 
   return (
-    <ScrollView>
+    <ScrollView contentContainerStyle={{ paddingBottom: 90, paddingTop: 60 }}>
       <CenterAligned>
-        <View style={{ width: '80%', marginBottom: 30 }}>
+        <View style={{ width: '80%' }}>
           <View style={{ marginBottom: 20, alignItems: 'center', width: '100%' }}>
             <ThemedText type="title">@{userProfile?.userName as string}</ThemedText>
           </View>

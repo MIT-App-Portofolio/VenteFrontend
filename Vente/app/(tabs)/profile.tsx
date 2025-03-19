@@ -10,6 +10,7 @@ import { BtnPrimary, BtnSecondary } from '@/components/Buttons';
 import { CenterAligned } from '@/components/CenterAligned';
 import { FullScreenLoading } from '@/components/FullScreenLoading';
 import React, { useEffect, useState } from "react";
+import CropPicker from 'react-native-image-crop-picker';
 import * as ImagePicker from 'expo-image-picker';
 import { ImageManipulator, manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { StyledGenderPicker } from "@/components/GenderPicker";
@@ -75,48 +76,55 @@ export default function Profile() {
       return;
     }
 
-    let result = null;
+    let manipulatedImage = null;
 
     if (Platform.OS == 'android') {
-      result = await ImagePicker.launchImageLibraryAsync({
+      const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [1, 1],
-        quality: 1,
+        quality: 0.8,
       });
+
+      if (!result.canceled) {
+        const localUri = result.assets[0].uri;
+
+        let manipulator = ImageManipulator.manipulate(localUri);
+
+        manipulatedImage = await (await manipulator.renderAsync()).saveAsync(
+          { compress: 0.8, format: SaveFormat.JPEG }
+        );
+      }
     } else {
-      result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        quality: 1,
-      });
-    }
-
-    if (!result.canceled) {
-      const localUri = result.assets[0].uri;
-
-      let manipulator = ImageManipulator.manipulate(localUri);
-
-      const w = result.assets[0].width;
-      const h = result.assets[0].height;
-      // iOS has this weird bug where the image cropper just straight up does not work for high res files. Until they fix it iOS users have no option to manually crop.
-      if (Platform.OS == 'ios' && w != h) {
-        const min_size = Math.min(w, h);
-
-        // Fit the largest possible square and downize to 450x450 so that it stays within 3mb limit
-        manipulator = manipulator
-          .crop({
-            height: min_size,
-            width: min_size,
-            originX: (w - min_size) / 2,
-            originY: (h - min_size) / 2,
-          })
-          .resize({ width: 850, height: 850 });
+      let result = null;
+      try {
+        result = await CropPicker.openPicker({
+          width: 500,
+          height: 500,
+          compressImageQuality: 0.8,
+          mediaType: 'photo',
+          cropping: true
+        });
+      } catch {
+        setLoading(false);
+        return;
       }
 
-      const manipulatedImage = await (await manipulator.renderAsync()).saveAsync(
-        { compress: 0.9, format: SaveFormat.JPEG }
-      );
+      if (result.sourceURL) {
+        let manipulator = ImageManipulator.manipulate(result.sourceURL).crop({
+          width: result.width,
+          height: result.height,
+          originX: result.cropRect!.x,
+          originY: result.cropRect!.y,
+        });
 
+        manipulatedImage = await (await manipulator.renderAsync()).saveAsync(
+          { compress: 0.8, format: SaveFormat.JPEG }
+        );
+      }
+    }
+
+    if (manipulatedImage) {
       const success = await api.updateProfilePicture(manipulatedImage.uri);
       if (success) {
         setError(null);

@@ -275,7 +275,6 @@ export class Api {
       return true;
     } catch (e) {
       console.log('update pfp: ' + e);
-      console.log(e.response.data);
       return false;
     }
   }

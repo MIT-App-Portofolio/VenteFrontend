@@ -112,11 +112,11 @@ export default function Profile() {
 
       if (result.sourceURL) {
         let manipulator = ImageManipulator.manipulate(result.sourceURL).crop({
-          width: result.width,
-          height: result.height,
+          width: result.cropRect!.width,
+          height: result.cropRect!.height,
           originX: result.cropRect!.x,
           originY: result.cropRect!.y,
-        });
+        }).resize({ width: 600, height: 600 });
 
         manipulatedImage = await (await manipulator.renderAsync()).saveAsync(
           { compress: 0.8, format: SaveFormat.JPEG }

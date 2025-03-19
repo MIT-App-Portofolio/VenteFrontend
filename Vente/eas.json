@@ -5,6 +5,7 @@
   },
   "build": {
     "internal": {
+      "autoIncrement": true,
       "android": {
         "buildType": "app-bundle",
         "distribution": "internal"

@@ -143,17 +143,17 @@ PODS:
   - hermes-engine (0.76.5):
     - hermes-engine/Pre-built (= 0.76.5)
   - hermes-engine/Pre-built (0.76.5)
-  - libwebp (1.3.2):
-    - libwebp/demux (= 1.3.2)
-    - libwebp/mux (= 1.3.2)
-    - libwebp/sharpyuv (= 1.3.2)
-    - libwebp/webp (= 1.3.2)
-  - libwebp/demux (1.3.2):
+  - libwebp (1.5.0):
+    - libwebp/demux (= 1.5.0)
+    - libwebp/mux (= 1.5.0)
+    - libwebp/sharpyuv (= 1.5.0)
+    - libwebp/webp (= 1.5.0)
+  - libwebp/demux (1.5.0):
     - libwebp/webp
-  - libwebp/mux (1.3.2):
+  - libwebp/mux (1.5.0):
     - libwebp/demux
-  - libwebp/sharpyuv (1.3.2)
-  - libwebp/webp (1.3.2):
+  - libwebp/sharpyuv (1.5.0)
+  - libwebp/webp (1.5.0):
     - libwebp/sharpyuv
   - nanopb (3.30910.0):
     - nanopb/decode (= 3.30910.0)
@@ -1792,6 +1792,10 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - RNFastImage (8.6.3):
+    - React-Core
+    - SDWebImage (~> 5.11.1)
+    - SDWebImageWebPCoder (~> 0.8.4)
   - RNFBApp (21.7.2):
     - Firebase/CoreOnly (= 11.7.0)
     - React-Core
@@ -1975,10 +1979,12 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - SDWebImage/Core (5.20.0)
-  - SDWebImageWebPCoder (0.14.6):
+  - SDWebImage (5.11.1):
+    - SDWebImage/Core (= 5.11.1)
+  - SDWebImage/Core (5.11.1)
+  - SDWebImageWebPCoder (0.8.5):
     - libwebp (~> 1.0)
-    - SDWebImage/Core (~> 5.17)
+    - SDWebImage/Core (~> 5.10)
   - SocketRocket (0.7.1)
   - Yoga (0.0.0)
 
@@ -2072,6 +2078,7 @@ DEPENDENCIES:
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
   - "RNCPicker (from `../node_modules/@react-native-picker/picker`)"
   - "RNDateTimePicker (from `../node_modules/@react-native-community/datetimepicker`)"
+  - RNFastImage (from `../node_modules/react-native-fast-image`)
   - "RNFBApp (from `../node_modules/@react-native-firebase/app`)"
   - "RNFBMessaging (from `../node_modules/@react-native-firebase/messaging`)"
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
@@ -2277,6 +2284,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-picker/picker"
   RNDateTimePicker:
     :path: "../node_modules/@react-native-community/datetimepicker"
+  RNFastImage:
+    :path: "../node_modules/react-native-fast-image"
   RNFBApp:
     :path: "../node_modules/@react-native-firebase/app"
   RNFBMessaging:
@@ -2332,7 +2341,7 @@ SPEC CHECKSUMS:
   GTMAppAuth: f69bd07d68cd3b766125f7e072c45d7340dea0de
   GTMSessionFetcher: 5aea5ba6bd522a239e236100971f10cb71b96ab6
   hermes-engine: 06a9c6900587420b90accc394199527c64259db4
-  libwebp: 1786c9f4ff8a279e4dac1e8f385004d5fc253009
+  libwebp: 02b23773aedb6ff1fd38cec7a77b81414c6842a8
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   RCT-Folly: 84578c8756030547307e4572ab1947de1685c599
@@ -2395,14 +2404,15 @@ SPEC CHECKSUMS:
   RNCAsyncStorage: 3680202bf29b6c69f81a9707b45450111a307db4
   RNCPicker: 5d3866a625683cec4ba77771330f4383ad376940
   RNDateTimePicker: dd58d8235c3d12d349c043c2d9bcedcbb513f106
+  RNFastImage: 462a183c4b0b6b26fdfd639e1ed6ba37536c3b87
   RNFBApp: 6baf2f471f69a21a8266dc6016b9442d9bba244d
   RNFBMessaging: e39925dbc6dc8944251b1775d447098e205dd6cf
   RNGestureHandler: 1e33ee267aaf61bbab6089d32df3b38c3024e3dd
   RNGoogleSignin: 06532ae046ddafacd53ebb75e8c76d2e98fb3d16
   RNReanimated: fb3896d9010787799eb5748e50fd59746a503001
   RNScreens: 369b1219578f2d43ff7d69783dbe4a703404ecb3
-  SDWebImage: 73c6079366fea25fa4bb9640d5fb58f0893facd8
-  SDWebImageWebPCoder: e38c0a70396191361d60c092933e22c20d5b1380
+  SDWebImage: a7f831e1a65eb5e285e3fb046a23fcfbf08e696d
+  SDWebImageWebPCoder: 908b83b6adda48effe7667cd2b7f78c897e5111d
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: 7548e4449365bf0ef60db4aefe58abff37fcabec
 

@@ -12,6 +12,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import { StyledGenderFilter } from '@/components/GenderPicker';
 import { StyledModal } from '@/components/StyledModal';
 import { redirectStore } from '@/redirect_storage';
+import FastImage from 'react-native-fast-image';
 
 export default function Users() {
   var pendingRedirect = redirectStore.getPendingRedirect();
@@ -156,7 +157,12 @@ export default function Users() {
 
     return (
       <TouchableOpacity key={visitor.userName} style={styles.card} onPress={() => handleProfileClick(visitor!)}>
-        <Image source={{ uri: pfpUrl }} style={styles.profilePicture} />
+        {
+          visitor.userName == userProfile.userName ?
+            <Image source={{ uri: pfpUrl }} style={styles.profilePicture} />
+            :
+            <FastImage source={{ uri: pfpUrl }} style={styles.profilePicture} />
+        }
         <View style={{ alignItems: 'flex-start', flexDirection: 'column' }}>
           <ThemedText type="subtitle" style={{ marginTop: 5 }}>{displayName}</ThemedText>
           <ThemedText>{visitor.years} años</ThemedText>
@@ -259,7 +265,12 @@ export default function Users() {
         (
           <StyledModal isModalVisible={isUserModalVisible} setIsModalVisible={setIsUserModalVisible}>
             <ScrollView style={styles.modalContent}>
-              <Image source={{ uri: api.getPfpUnstable(selectedProfile.userName) }} style={styles.modalProfilePicture} />
+              {
+                selectedProfile.userName == userProfile.userName ?
+                  <Image source={{ uri: api.getPfpUnstable(selectedProfile.userName) }} style={styles.modalProfilePicture} />
+                  :
+                  <FastImage source={{ uri: api.getPfpUnstable(selectedProfile.userName) }} style={styles.modalProfilePicture} />
+              }
 
               <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
                 {
@@ -296,7 +307,12 @@ export default function Users() {
 
                   return (
                     <View key={username} style={styles.invitedUserCard}>
-                      <Image source={{ uri: api.getPfpUnstable(username) }} style={styles.invitedUserProfilePicture} />
+                      {
+                        username == userProfile.userName ?
+                          <Image source={{ uri: api.getPfpUnstable(username) }} style={styles.invitedUserProfilePicture} />
+                          :
+                          <FastImage source={{ uri: api.getPfpUnstable(username) }} style={styles.invitedUserProfilePicture} />
+                      }
                       <ThemedText>{user.name || `@${user.userName}`}</ThemedText>
                     </View>
                   );

@@ -6,7 +6,8 @@ import { BiggerMarginItem, MarginItem } from "@/components/MarginItem";
 import { ThemedText } from "@/components/ThemedText";
 import { dateTimeDisplay } from "@/dateDisplay";
 import { useEffect, useState } from "react";
-import { View, Image } from "react-native";
+import { View } from "react-native";
+import FastImage from "react-native-fast-image";
 
 export default function InviteScreen() {
   const { api, inviteStatus } = useApi();
@@ -56,7 +57,7 @@ export default function InviteScreen() {
         </MarginItem>
 
         <MarginItem>
-          <Image source={{ uri: api.getPfpUnstable(invitor.userName) }} style={{ width: 200, height: 200, borderRadius: 15 }} />
+          <FastImage source={{ uri: api.getPfpUnstable(invitor.userName) }} style={{ width: 200, height: 200, borderRadius: 15 }} />
         </MarginItem>
 
         <MarginItem>

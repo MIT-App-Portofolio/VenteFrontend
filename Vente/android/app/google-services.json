@@ -12,7 +12,12 @@
           "package_name": "com.vente.venteapp"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "757017785117-n3s8ol1tr8doejvit36spae458pe0m39.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBrPYt3Dx4401UsTwKCh_3ncGVkiMzRXoY"
@@ -20,7 +25,20 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "757017785117-n3s8ol1tr8doejvit36spae458pe0m39.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "757017785117-sbtglss49pbeu3km2dds6qp5c30ae1t9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.vente.iosapp",
+                "app_store_id": "6741685925"
+              }
+            }
+          ]
         }
       }
     }

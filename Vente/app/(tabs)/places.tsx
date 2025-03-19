@@ -9,7 +9,7 @@ import { StyledModal } from "@/components/StyledModal";
 import Carousel from "react-native-reanimated-carousel";
 import { styles as usersPageStyles } from '.';
 import { BtnPrimary } from "@/components/Buttons";
-import { BiggerMarginItem } from "@/components/MarginItem";
+import FastImage from "react-native-fast-image";
 
 export default function Places() {
   const { api, userProfile } = useApi();
@@ -54,7 +54,7 @@ export default function Places() {
       setSelectedEventPlace(item);
       setIsEventPlaceModalVisible(true);
     }}>
-      <Image source={{ uri: item.imageUrls.length > 0 ? item.imageUrls[0] : undefined }} style={styles.profilePicture} />
+      <FastImage source={{ uri: item.imageUrls.length > 0 ? item.imageUrls[0] : undefined }} style={styles.profilePicture} />
       <ThemedText type='subtitle' style={{ marginTop: 3 }}>{item.name}</ThemedText>
       {item.ageRequirement && (
         <View style={{ flexDirection: 'row', alignItems: 'center', borderRadius: 5, borderColor: 'white', borderWidth: 1, paddingRight: 3, paddingLeft: 3, marginTop: 5 }}>
@@ -116,7 +116,7 @@ export default function Places() {
             <StyledModal isModalVisible={isEventModalVisible} setIsModalVisible={setIsEventModalVisible} >
               <ScrollView>
                 <View style={{ flexDirection: 'row', alignItems: 'flex-start', }}>
-                  <Image source={{ uri: selectedEvent.image }} style={{ height: 200, width: 120, flex: 1, borderRadius: 8, marginRight: 5 }} />
+                  <FastImage source={{ uri: selectedEvent.image }} style={{ height: 200, width: 120, flex: 1, borderRadius: 8, marginRight: 5 }} />
                   <View style={{ flex: 2 }}>
                     <ThemedText type="title">{selectedEvent.name}</ThemedText>
                     <ThemedText style={{ marginTop: 5 }}>{selectedEvent.description}</ThemedText>
@@ -175,7 +175,7 @@ export default function Places() {
                           setSelectedEvent(event);
                           setIsEventModalVisible(true);
                         }} style={{ flex: 1, flexDirection: 'row', minHeight: 100 }}>
-                          <Image source={{ uri: event.image }} style={{ flex: 1, width: '100%', height: '100%', borderRadius: 5, marginRight: 8 }} />
+                          <FastImage source={{ uri: event.image }} style={{ flex: 1, width: '100%', height: '100%', borderRadius: 5, marginRight: 8 }} />
                           <View style={{ flex: 3 }}>
                             <ThemedText type="subtitle">{event.name}</ThemedText>
                             <ThemedText>{event.description}</ThemedText>

@@ -1,4 +1,4 @@
-import { View, Image, ScrollView } from "react-native";
+import { View, ScrollView } from "react-native";
 import { useApi } from "@/api";
 import * as yup from 'yup';
 import { Controller, useForm } from "react-hook-form";
@@ -13,6 +13,7 @@ import React, { useEffect, useState } from "react";
 import * as ImagePicker from 'expo-image-picker';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { StyledGenderPicker } from "@/components/GenderPicker";
+import FastImage from "react-native-fast-image";
 
 export default function Profile() {
   const { api, userPfp, userProfile } = useApi();
@@ -113,7 +114,7 @@ export default function Profile() {
           </View>
 
           <MarginItem>
-            {userPfp && <Image source={{ uri: userPfp }} style={{ width: '100%', height: undefined, aspectRatio: 1, borderRadius: 5 }} />}
+            {userPfp && <FastImage source={{ uri: userPfp }} style={{ width: '100%', height: undefined, aspectRatio: 1, borderRadius: 5 }} />}
 
             <BtnSecondary title="Cambiar foto de perfil" onClick={pickImage} />
           </MarginItem>

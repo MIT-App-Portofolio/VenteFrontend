@@ -1,4 +1,4 @@
-import { View, ScrollView } from "react-native";
+import { View, ScrollView, Platform } from "react-native";
 import { useApi } from "@/api";
 import * as yup from 'yup';
 import { Controller, useForm } from "react-hook-form";
@@ -11,7 +11,7 @@ import { CenterAligned } from '@/components/CenterAligned';
 import { FullScreenLoading } from '@/components/FullScreenLoading';
 import React, { useEffect, useState } from "react";
 import * as ImagePicker from 'expo-image-picker';
-import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
+import { ImageManipulator, manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { StyledGenderPicker } from "@/components/GenderPicker";
 import FastImage from "react-native-fast-image";
 
@@ -75,20 +75,46 @@ export default function Profile() {
       return;
     }
 
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
+    let result = null;
+
+    if (Platform.OS == 'android') {
+      result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 1,
+      });
+    } else {
+      result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 1,
+      });
+    }
 
     if (!result.canceled) {
       const localUri = result.assets[0].uri;
 
-      const manipulatedImage = await manipulateAsync(
-        localUri,
-        [],
-        { compress: 1, format: SaveFormat.JPEG }
+      let manipulator = ImageManipulator.manipulate(localUri);
+
+      const w = result.assets[0].width;
+      const h = result.assets[0].height;
+      // iOS has this weird bug where the image cropper just straight up does not work for high res files. Until they fix it iOS users have no option to manually crop.
+      if (Platform.OS == 'ios' && w != h) {
+        const min_size = Math.min(w, h);
+
+        // Fit the largest possible square and downize to 450x450 so that it stays within 3mb limit
+        manipulator = manipulator
+          .crop({
+            height: min_size,
+            width: min_size,
+            originX: (w - min_size) / 2,
+            originY: (h - min_size) / 2,
+          })
+          .resize({ width: 850, height: 850 });
+      }
+
+      const manipulatedImage = await (await manipulator.renderAsync()).saveAsync(
+        { compress: 0.9, format: SaveFormat.JPEG }
       );
 
       const success = await api.updateProfilePicture(manipulatedImage.uri);

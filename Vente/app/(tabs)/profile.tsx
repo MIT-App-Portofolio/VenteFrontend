@@ -1,4 +1,4 @@
-import { View, ScrollView, Platform } from "react-native";
+import { View, ScrollView, Platform, KeyboardAvoidingView } from "react-native";
 import { useApi } from "@/api";
 import * as yup from 'yup';
 import { Controller, useForm } from "react-hook-form";
@@ -140,60 +140,64 @@ export default function Profile() {
   }
 
   return (
-    <ScrollView contentContainerStyle={{ paddingBottom: 90, paddingTop: 60 }} showsHorizontalScrollIndicator={false} showsVerticalScrollIndicator={false}>
-      <CenterAligned>
-        <View style={{ width: '80%' }}>
-          <View style={{ marginBottom: 20, alignItems: 'center', width: '100%' }}>
-            <ThemedText type="title">@{userProfile?.userName as string}</ThemedText>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView contentContainerStyle={{ paddingBottom: 90, paddingTop: 60 }} showsHorizontalScrollIndicator={false} showsVerticalScrollIndicator={false}>
+        <CenterAligned>
+          <View style={{ width: '80%' }}>
+            <View style={{ marginBottom: 20, alignItems: 'center', width: '100%' }}>
+              <ThemedText type="title">@{userProfile?.userName as string}</ThemedText>
+            </View>
+
+            <MarginItem>
+              {userPfp && <FastImage source={{ uri: userPfp }} style={{ width: '100%', height: undefined, aspectRatio: 1, borderRadius: 5 }} />}
+
+              <BtnSecondary title="Cambiar foto de perfil" onClick={pickImage} />
+            </MarginItem>
+
+            <StyledGenderPicker gender={watch("gender")} control={control} errorsGender={errors.gender} />
+
+            <MarginItem>
+              <Controller
+                control={control}
+                render={({ field: { onChange, value } }) => (
+                  <StyledTextInput title='Nombre' placeholder='' value={value || ''} setValue={onChange} autoCapitalize='none' />
+                )}
+                name="name"
+              />
+              {errors.name && <ErrorText>{errors.name.message}</ErrorText>}
+            </MarginItem>
+
+            <MarginItem>
+              <Controller
+                control={control}
+                render={({ field: { onChange, value } }) => (
+                  <StyledTextInput title='Descripción' placeholder='' value={value || ''} setValue={onChange} autoCapitalize='none' />
+                )}
+                name="description"
+              />
+              {errors.description && <ErrorText>{errors.description.message}</ErrorText>}
+            </MarginItem>
+
+            <MarginItem>
+              <Controller
+                control={control}
+                render={({ field: { onChange, value } }) => (
+                  <StyledTextInput title='Instagram' placeholder='' value={value || ''} setValue={onChange} autoCapitalize='none' />
+                )}
+                name="igHandle"
+              />
+              {errors.igHandle && <ErrorText>{errors.igHandle.message}</ErrorText>}
+            </MarginItem>
+
+            <BiggerMarginItem>
+              {error && <ErrorText>{error}</ErrorText>}
+              <BtnPrimary title="Guardar cambios" onClick={handleSubmit(onPressSend)} disabled={!isDirty} />
+            </BiggerMarginItem>
           </View>
-
-          <MarginItem>
-            {userPfp && <FastImage source={{ uri: userPfp }} style={{ width: '100%', height: undefined, aspectRatio: 1, borderRadius: 5 }} />}
-
-            <BtnSecondary title="Cambiar foto de perfil" onClick={pickImage} />
-          </MarginItem>
-
-          <StyledGenderPicker gender={watch("gender")} control={control} errorsGender={errors.gender} />
-
-          <MarginItem>
-            <Controller
-              control={control}
-              render={({ field: { onChange, value } }) => (
-                <StyledTextInput title='Nombre' placeholder='' value={value || ''} setValue={onChange} autoCapitalize='none' />
-              )}
-              name="name"
-            />
-            {errors.name && <ErrorText>{errors.name.message}</ErrorText>}
-          </MarginItem>
-
-          <MarginItem>
-            <Controller
-              control={control}
-              render={({ field: { onChange, value } }) => (
-                <StyledTextInput title='Descripción' placeholder='' value={value || ''} setValue={onChange} autoCapitalize='none' />
-              )}
-              name="description"
-            />
-            {errors.description && <ErrorText>{errors.description.message}</ErrorText>}
-          </MarginItem>
-
-          <MarginItem>
-            <Controller
-              control={control}
-              render={({ field: { onChange, value } }) => (
-                <StyledTextInput title='Instagram' placeholder='' value={value || ''} setValue={onChange} autoCapitalize='none' />
-              )}
-              name="igHandle"
-            />
-            {errors.igHandle && <ErrorText>{errors.igHandle.message}</ErrorText>}
-          </MarginItem>
-
-          <BiggerMarginItem>
-            {error && <ErrorText>{error}</ErrorText>}
-            <BtnPrimary title="Guardar cambios" onClick={handleSubmit(onPressSend)} disabled={!isDirty} />
-          </BiggerMarginItem>
-        </View>
-      </CenterAligned>
-    </ScrollView>
+        </CenterAligned>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

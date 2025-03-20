@@ -102,6 +102,8 @@ export default function Places() {
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
           { useNativeDriver: false }
         )}
+        showsHorizontalScrollIndicator={false}
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 50 }}
         scrollEventThrottle={16}
       >

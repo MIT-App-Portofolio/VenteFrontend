@@ -203,6 +203,8 @@ export default function Users() {
       <Animated.ScrollView
         onScroll={handleScroll}
         scrollEventThrottle={16}
+        showsHorizontalScrollIndicator={false}
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 50 }}
       >
         <ThemedText type='title' style={{ alignSelf: 'flex-start', marginTop: 10 }}>Usuarios que también van a {userProfile.eventStatus.location?.name}</ThemedText>

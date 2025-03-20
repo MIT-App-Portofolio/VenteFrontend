@@ -140,7 +140,7 @@ export default function Profile() {
   }
 
   return (
-    <ScrollView contentContainerStyle={{ paddingBottom: 90, paddingTop: 60 }}>
+    <ScrollView contentContainerStyle={{ paddingBottom: 90, paddingTop: 60 }} showsHorizontalScrollIndicator={false} showsVerticalScrollIndicator={false}>
       <CenterAligned>
         <View style={{ width: '80%' }}>
           <View style={{ marginBottom: 20, alignItems: 'center', width: '100%' }}>

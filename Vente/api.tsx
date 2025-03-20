@@ -220,6 +220,8 @@ export class Api {
       const response = await this.axios!.get('/api/access_pfp?userName=' + this.username);
       const imageUrl = response.data;
 
+      this.pfpDb[this.username!] = imageUrl;
+
       this.setUserPfp(imageUrl);
     } catch (e) {
       console.log('set pfp: ' + e);

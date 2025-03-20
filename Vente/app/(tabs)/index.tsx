@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, Image, StyleSheet, TouchableOpacity, ScrollView, Linking, TextInput, Animated } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { View, Image, StyleSheet, TouchableOpacity, ScrollView, Linking, TextInput, Animated, RefreshControl } from 'react-native';
 import { MarginItem } from '@/components/MarginItem';
 import { ThemedText } from '@/components/ThemedText';
 import { BtnPrimary, BtnSecondary } from '@/components/Buttons';
@@ -38,6 +38,8 @@ export default function Users() {
   const [genderFilter, setGenderFilter] = useState<number | null>(null);
   const [ageRangeMin, setAgeRangeMin] = useState<number | null>(null);
   const [ageRangeMax, setAgeRangeMax] = useState<number | null>(null);
+
+  const [refreshing, setRefreshing] = useState(false);
 
   // View event places button interpolation
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -91,9 +93,19 @@ export default function Users() {
 
     if (newVisitors) {
       await Promise.all(newVisitors.map(visitor => api.fetchPfp(visitor)));
-      setVisitors(prevVisitors => [...prevVisitors, ...newVisitors]);
+      if (overrideLastFetch) {
+        setVisitors(newVisitors);
+      } else {
+        setVisitors(prevVisitors => [...prevVisitors, ...newVisitors]);
+      }
     }
   };
+
+  const refresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchVisitors(true);
+    setRefreshing(false);
+  }, []);
 
   const handleScroll = (event: any) => {
     Animated.event(
@@ -205,6 +217,7 @@ export default function Users() {
         scrollEventThrottle={16}
         showsHorizontalScrollIndicator={false}
         showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
         contentContainerStyle={{ paddingBottom: 50 }}
       >
         <ThemedText type='title' style={{ alignSelf: 'flex-start', marginTop: 10 }}>Usuarios que también van a {userProfile.eventStatus.location?.name}</ThemedText>

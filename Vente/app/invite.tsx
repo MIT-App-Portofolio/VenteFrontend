@@ -5,7 +5,7 @@ import { FullScreenLoading } from "@/components/FullScreenLoading";
 import { BiggerMarginItem, MarginItem } from "@/components/MarginItem";
 import { ThemedText } from "@/components/ThemedText";
 import { dateTimeDisplay } from "@/dateDisplay";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { View } from "react-native";
 import FastImage from "react-native-fast-image";
 
@@ -21,16 +21,19 @@ export default function InviteScreen() {
     );
   }
 
-  useEffect(() => {
-    const inner = async () => {
-      inviteStatus.invitors?.forEach(async (invitor) => {
-        await api.fetchPfp(invitor.userName);
-      });
-    };
-    inner();
-  }, [inviteStatus]);
-
   const invitor = inviteStatus.invitors![0];
+
+  const [invitorPfp, setInvitorPfp] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    api.fetchPfp(invitor.userName).then((result) => {
+      if (isMounted) setInvitorPfp(result);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [invitor.userName]);
 
   const acceptInvite = async () => {
     setLoading(true);
@@ -56,9 +59,12 @@ export default function InviteScreen() {
           <ThemedText type="subtitle" style={{ textAlign: 'center' }}>Fuiste invitado por {invitor.name ?? "@" + invitor.userName} {otherUsersLength > 0 ? "y " + otherUsersLength + " mas" : ""}</ThemedText>
         </MarginItem>
 
-        <MarginItem>
-          <FastImage source={{ uri: api.getPfpUnstable(invitor.userName) }} style={{ width: 200, height: 200, borderRadius: 15 }} />
-        </MarginItem>
+        {
+          invitorPfp &&
+          <MarginItem>
+            <FastImage source={{ uri: invitorPfp }} style={{ width: 200, height: 200, borderRadius: 15 }} />
+          </MarginItem>
+        }
 
         <MarginItem>
           <ThemedText style={{ textAlign: 'center' }}>{invitor.eventStatus.location?.name} - {dateTimeDisplay(invitor.eventStatus.time!)}</ThemedText>

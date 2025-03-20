@@ -90,10 +90,8 @@ export default function Users() {
     }
 
     if (newVisitors) {
+      await Promise.all(newVisitors.map(visitor => api.fetchPfp(visitor)));
       setVisitors(prevVisitors => [...prevVisitors, ...newVisitors]);
-      newVisitors.forEach(async visitor => {
-        await api.fetchPfp(visitor);
-      });
     }
   };
 

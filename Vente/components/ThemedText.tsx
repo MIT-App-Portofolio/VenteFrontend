@@ -1,3 +1,4 @@
+import ReadMoreText from '@amuizz/read-more-text';
 import React from 'react';
 import { StyleSheet, Text } from 'react-native';
 import { TextProps } from 'react-native/Libraries/Text/Text';
@@ -47,6 +48,35 @@ export function ThemedText({
         style,
       ]}
       {...rest} />
+  );
+}
+
+export function ViewMoreThemedText({
+  style, maxLines, children
+}: ThemedTextProps & { maxLines: number, children: string }) {
+  const styles = StyleSheet.create({
+    default: {
+      fontSize: 16,
+      lineHeight: 24,
+    },
+  });
+
+  return (
+    <ReadMoreText
+      numberOfLines={maxLines}
+      readMoreText='Ver mas'
+      readLessText='Ver menos'
+      readMoreStyle={{ color: "#007AFF" }}
+      readLessStyle={{ color: "#007AFF" }}
+
+      style={[
+        { color: 'white', fontFamily: 'Inter_400Regular' },
+        styles.default,
+        style,
+      ]}
+    >
+      {children}
+    </ReadMoreText>
   );
 }
 

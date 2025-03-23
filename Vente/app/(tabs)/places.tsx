@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from 'expo-router';
 import { Animated, Dimensions, TouchableOpacity, View, Image, ScrollView, StyleSheet, Linking } from "react-native";
 import { HorizontallyAligned } from "@/components/HorizontallyAligned";
-import { ThemedText } from "@/components/ThemedText";
+import { ThemedText, ViewMoreThemedText } from "@/components/ThemedText";
 import { CenterAligned } from "@/components/CenterAligned";
 import { StyledModal } from "@/components/StyledModal";
 import Carousel from "react-native-reanimated-carousel";
@@ -117,11 +117,14 @@ export default function Places() {
           isEventModalVisible && selectedEvent != null ? (
             <StyledModal isModalVisible={isEventModalVisible} setIsModalVisible={setIsEventModalVisible} >
               <ScrollView>
-                <View style={{ flexDirection: 'row', alignItems: 'flex-start', }}>
-                  <FastImage source={{ uri: selectedEvent.image }} style={{ height: 200, width: 120, flex: 1, borderRadius: 8, marginRight: 5 }} />
+                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 4 }}>
+                  <WidthFillingImage url={selectedEvent.image} />
                   <View style={{ flex: 2 }}>
                     <ThemedText type="title">{selectedEvent.name}</ThemedText>
-                    <ThemedText style={{ marginTop: 5 }}>{selectedEvent.description}</ThemedText>
+                    <ViewMoreThemedText style={{ marginTop: 5 }} maxLines={6}>
+                      {selectedEvent.description}
+                    </ViewMoreThemedText>
+                    <ThemedText ></ThemedText>
                   </View>
                 </View>
 
@@ -164,7 +167,9 @@ export default function Places() {
 
                 <ThemedText style={{ marginTop: 5 }}>{selectedEventPlace.priceRangeBegin}€ - {selectedEventPlace.priceRangeEnd}€</ThemedText>
 
-                <ThemedText style={{ marginTop: 5 }}>{selectedEventPlace.description}</ThemedText>
+                <ViewMoreThemedText style={{ marginTop: 5 }} maxLines={3}>
+                  {selectedEventPlace.description}
+                </ViewMoreThemedText>
 
                 {
                   selectedEventPlace.events.length > 0 &&
@@ -172,16 +177,17 @@ export default function Places() {
                     <ThemedText type="title">Eventos:</ThemedText>
 
                     {selectedEventPlace.events.map((event, index) => (
-                      <View key={index} style={{ marginTop: 10, padding: 10, borderRadius: 5, borderWidth: 0.7, borderColor: '#ffffff7f' }}>
+                      <View key={index} style={{ marginTop: 10, padding: 10, borderRadius: 5, borderWidth: 0.7, borderColor: '#ffffff7f', height: 150 }}>
                         <TouchableOpacity onPress={() => {
                           setSelectedEvent(event);
                           setIsEventModalVisible(true);
-                        }} style={{ flex: 1, flexDirection: 'row', minHeight: 100 }}>
-                          <FastImage source={{ uri: event.image }} style={{ flex: 1, width: '100%', height: '100%', borderRadius: 5, marginRight: 8 }} />
+                        }} style={{ flex: 1, flexDirection: 'row', gap: 4 }}>
+                          <WidthFillingImage url={event.image} />
+
                           <View style={{ flex: 3 }}>
                             <ThemedText type="subtitle">{event.name}</ThemedText>
-                            <ThemedText>{event.description}</ThemedText>
-                            <ThemedText>{event.offers.length} ofertas</ThemedText>
+                            <ThemedText style={{ flex: 1 }} numberOfLines={15} ellipsizeMode="tail">{event.description}</ThemedText>
+                            <ThemedText>{event.offers.length} {event.offers.length == 1 ? "oferta" : "ofertas"}</ThemedText>
                           </View>
                         </TouchableOpacity>
                       </View>
@@ -197,12 +203,34 @@ export default function Places() {
                   )
                 }
               </ScrollView>
-            </StyledModal>
+            </StyledModal >
           )
         )
       }
-    </HorizontallyAligned>
+    </HorizontallyAligned >
   );
+}
+
+type WidthFillingImageProps = {
+  url?: string
+};
+
+function WidthFillingImage({ url }: WidthFillingImageProps) {
+  const [imageAspectRatio, setImageAspectRatio] = useState(1);
+
+  return (<View style={{ flex: 1 }}>
+    <FastImage
+      source={{ uri: url }}
+      style={{
+        borderRadius: 8,
+        width: '100%',
+        aspectRatio: imageAspectRatio,
+      }}
+      onLoad={(e) =>
+        setImageAspectRatio(e.nativeEvent.width / e.nativeEvent.height)
+      }
+    />
+  </View>);
 }
 
 const styles = StyleSheet.create({

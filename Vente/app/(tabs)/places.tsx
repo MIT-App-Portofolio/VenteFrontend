@@ -127,19 +127,22 @@ export default function Places() {
                   </View>
                 </View>
 
-                <View style={styles.offersContainer}>
-                  <ThemedText type="title">Ofertas:</ThemedText>
+                {selectedEvent.offers.length > 0 &&
+                  <View style={styles.offersContainer}>
+                    <ThemedText type="title">Ofertas</ThemedText>
 
-                  {selectedEvent.offers.map((offer, index) => (
-                    <View key={index} style={styles.offer}>
-                      <ThemedText type="subtitle">{offer.name}</ThemedText>
+                    {selectedEvent.offers.map((offer, index) => (
+                      <View key={index} style={styles.offer}>
+                        <ThemedText type="subtitle">{offer.name}</ThemedText>
 
-                      {offer.price && <ThemedText>{offer.price}€</ThemedText>}
+                        {offer.price && <ThemedText>{offer.price}€</ThemedText>}
 
-                      {offer.description && <ThemedText>{offer.description}</ThemedText>}
-                    </View>
-                  ))}
-                </View>
+                        {offer.description && <ThemedText>{offer.description}</ThemedText>}
+                      </View>
+                    ))}
+                  </View>
+                }
+
               </ScrollView>
             </StyledModal>
           ) : (
@@ -176,7 +179,7 @@ export default function Places() {
                     <ThemedText type="title">Eventos</ThemedText>
 
                     {selectedEventPlace.events.map((event, index) => (
-                      <View style={{ marginTop: 10 }}>
+                      <View style={{ marginTop: 10 }} key={index}>
                         <ThemedText type="subtitle">{dateOnlyDisplay(new Date(event.time))}</ThemedText>
 
                         <View key={index} style={{ marginTop: 10, padding: 10, borderRadius: 5, borderWidth: 0.7, borderColor: '#ffffff7f', height: 150 }}>

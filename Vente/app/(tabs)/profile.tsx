@@ -141,7 +141,7 @@ export default function Profile() {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={{ paddingBottom: 90, paddingTop: 60 }} showsHorizontalScrollIndicator={false} showsVerticalScrollIndicator={false}>
         <CenterAligned>

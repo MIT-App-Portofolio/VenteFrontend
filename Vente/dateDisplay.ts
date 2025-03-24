@@ -14,6 +14,20 @@ export function dateTimeDisplay(date: Date): string {
   return `${formattedDate.charAt(0).toUpperCase()}${formattedDate.slice(1)} a las ${formattedTime}`;
 }
 
+export function dateOnlyDisplay(date: Date): string {
+  const options: Intl.DateTimeFormatOptions = {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  };
+
+  date = new Date(date);
+
+  const formattedDate = date.toLocaleDateString('es-ES', options);
+
+  return `${formattedDate.charAt(0).toUpperCase()}${formattedDate.slice(1)}`;
+}
+
 export function dateTimeShortDisplay(date: Date): string {
   const dd: string = String(date.getDate()).padStart(2, '0');
   const mm: string = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based

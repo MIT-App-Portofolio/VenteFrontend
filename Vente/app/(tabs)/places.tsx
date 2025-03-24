@@ -10,6 +10,7 @@ import Carousel from "react-native-reanimated-carousel";
 import { styles as usersPageStyles } from '.';
 import { BtnPrimary } from "@/components/Buttons";
 import FastImage from "react-native-fast-image";
+import { dateOnlyDisplay } from "@/dateDisplay";
 
 export default function Places() {
   const { api, userProfile } = useApi();
@@ -119,10 +120,10 @@ export default function Places() {
                   <WidthFillingImage url={selectedEvent.image} />
                   <View style={{ flex: 2 }}>
                     <ThemedText type="title">{selectedEvent.name}</ThemedText>
+                    <ThemedText type="subtitle">{dateOnlyDisplay(new Date(selectedEvent.time))}</ThemedText>
                     <ViewMoreThemedText style={{ marginTop: 5 }} maxLines={6}>
                       {selectedEvent.description}
                     </ViewMoreThemedText>
-                    <ThemedText ></ThemedText>
                   </View>
                 </View>
 
@@ -172,22 +173,26 @@ export default function Places() {
                 {
                   selectedEventPlace.events.length > 0 &&
                   <View style={{ marginTop: 10 }}>
-                    <ThemedText type="title">Eventos:</ThemedText>
+                    <ThemedText type="title">Eventos</ThemedText>
 
                     {selectedEventPlace.events.map((event, index) => (
-                      <View key={index} style={{ marginTop: 10, padding: 10, borderRadius: 5, borderWidth: 0.7, borderColor: '#ffffff7f', height: 150 }}>
-                        <TouchableOpacity onPress={() => {
-                          setSelectedEvent(event);
-                          setIsEventModalVisible(true);
-                        }} style={{ flex: 1, flexDirection: 'row', gap: 4 }}>
-                          <WidthFillingImage url={event.image} />
+                      <View style={{ marginTop: 10 }}>
+                        <ThemedText type="subtitle">{dateOnlyDisplay(new Date(event.time))}</ThemedText>
 
-                          <View style={{ flex: 3 }}>
-                            <ThemedText type="subtitle">{event.name}</ThemedText>
-                            <ThemedText style={{ flex: 1 }} numberOfLines={15} ellipsizeMode="tail">{event.description}</ThemedText>
-                            <ThemedText>{event.offers.length} {event.offers.length == 1 ? "oferta" : "ofertas"}</ThemedText>
-                          </View>
-                        </TouchableOpacity>
+                        <View key={index} style={{ marginTop: 10, padding: 10, borderRadius: 5, borderWidth: 0.7, borderColor: '#ffffff7f', height: 150 }}>
+                          <TouchableOpacity onPress={() => {
+                            setSelectedEvent(event);
+                            setIsEventModalVisible(true);
+                          }} style={{ flex: 1, flexDirection: 'row', gap: 4 }}>
+                            <WidthFillingImage url={event.image} />
+
+                            <View style={{ flex: 3 }}>
+                              <ThemedText type="subtitle">{event.name}</ThemedText>
+                              <ThemedText style={{ flex: 1 }} numberOfLines={15} ellipsizeMode="tail">{event.description}</ThemedText>
+                              <ThemedText>{event.offers.length} {event.offers.length == 1 ? "oferta" : "ofertas"}</ThemedText>
+                            </View>
+                          </TouchableOpacity>
+                        </View>
                       </View>
                     ))}
                   </View>

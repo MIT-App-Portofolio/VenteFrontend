@@ -36,14 +36,12 @@ export default function Places() {
 
   useEffect(() => {
     const f = async () => {
-      if (eventPlaces.length === 0) {
-        setLoading(true);
-        const places = await api.queryEventPlaces();
-        if (places) {
-          setEventPlaces(places);
-        }
-        setLoading(false);
+      setLoading(true);
+      const places = await api.queryEventPlaces();
+      if (places) {
+        setEventPlaces(places);
       }
+      setLoading(false);
     };
     f()
   }, [userProfile?.eventStatus]);

@@ -8,11 +8,12 @@ import { CenterAligned } from '@/components/CenterAligned';
 import { useApi } from '@/api';
 import { Redirect, useRouter } from 'expo-router';
 import { Profile } from '@/api';
-import { FontAwesome } from '@expo/vector-icons';
+import { Feather, FontAwesome } from '@expo/vector-icons';
 import { StyledGenderFilter } from '@/components/GenderPicker';
 import { StyledModal } from '@/components/StyledModal';
 import { redirectStore } from '@/redirect_storage';
 import FastImage from 'react-native-fast-image';
+import { dateTimeShortDisplay } from '@/dateDisplay';
 
 export default function Users() {
   var pendingRedirect = redirectStore.getPendingRedirect();
@@ -170,16 +171,31 @@ export default function Users() {
         <FastImage source={{ uri: pfpUrl }} style={styles.profilePicture} />
         <View style={{ alignItems: 'flex-start', flexDirection: 'column' }}>
           <ThemedText type="subtitle" style={{ marginTop: 5 }}>{displayName}</ThemedText>
-          <ThemedText>{visitor.years} años</ThemedText>
+          <View style={{
+            flexDirection: 'row',
+            gap: 2,
+            alignItems: 'center',
+          }}>
+            <Feather name='calendar' size={16} color='white' />
+            <ThemedText>{dateTimeShortDisplay(new Date(visitor.eventStatus.time!))}</ThemedText>
+          </View>
 
-          {
-            visitor.igHandle && (
-              <View style={styles.igContainer}>
-                <FontAwesome name="instagram" size={16} color="gray" />
-                <ThemedText type='link' style={{ marginLeft: 2 }}>{visitor.igHandle}</ThemedText>
-              </View>
-            )
-          }
+          <View style={{
+            flexDirection: 'row',
+            gap: 5,
+            alignItems: 'center'
+          }}>
+            <ThemedText>{visitor.years} años</ThemedText>
+
+            {
+              visitor.igHandle && (
+                <View style={styles.igContainer}>
+                  <FontAwesome name="instagram" size={16} color="white" />
+                  <ThemedText type='link' style={{ marginLeft: 2 }}>{visitor.igHandle}</ThemedText>
+                </View>
+              )
+            }
+          </View>
         </View >
       </TouchableOpacity >
     );
@@ -275,16 +291,29 @@ export default function Users() {
             <ScrollView style={styles.modalContent}>
               <FastImage source={{ uri: api.getPfpUnstable(selectedProfile.userName) }} style={styles.modalProfilePicture} />
 
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
+              <View style={{ flexDirection: 'column', alignItems: 'flex-start', marginTop: 10 }}>
                 {
                   selectedProfile.name &&
                   <ThemedText style={{ marginRight: 10 }} type="title">{selectedProfile.name}</ThemedText>
                 }
 
-                <ThemedText>@{selectedProfile.userName}</ThemedText>
+                <ThemedText style={{ color: 'gray' }}>@{selectedProfile.userName}</ThemedText>
               </View>
 
-              <ThemedText style={{ marginTop: 10 }}>{selectedProfile.years} años</ThemedText>
+              <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8 }}>
+                <ThemedText style={{ marginTop: 10 }}>{selectedProfile.years} años</ThemedText>
+
+                <View style={{
+                  flexDirection: 'row',
+                  gap: 2,
+                  alignItems: 'center',
+                }}>
+                  <Feather name='calendar' size={16} color='white' />
+                  <ThemedText>{dateTimeShortDisplay(new Date(selectedProfile.eventStatus.time!))}</ThemedText>
+                </View>
+              </View>
+
+              <ThemedText style={{ marginTop: 5 }}>{selectedProfile.description}</ThemedText>
 
               {selectedProfile.igHandle && (
                 <View style={styles.modalIgContainer}>
@@ -294,8 +323,6 @@ export default function Users() {
                   </ThemedText>
                 </View>
               )}
-
-              <ThemedText>{selectedProfile.description}</ThemedText>
 
               {selectedProfile.eventStatus.with && selectedProfile.eventStatus.with.length > 0 && (
                 <ThemedText style={{ marginTop: 10 }}>Va con:</ThemedText>

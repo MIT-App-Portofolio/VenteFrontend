@@ -117,7 +117,7 @@ export default function Places() {
             <StyledModal isModalVisible={isEventModalVisible} setIsModalVisible={setIsEventModalVisible} >
               <ScrollView>
                 <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 4 }}>
-                  <WidthFillingImage url={selectedEvent.image} />
+                  <WidthFillingImage url={selectedEvent.image} maxHeight={250} />
                   <View style={{ flex: 2 }}>
                     <ThemedText type="title">{selectedEvent.name}</ThemedText>
                     <ThemedText type="subtitle">{dateOnlyDisplay(new Date(selectedEvent.time))}</ThemedText>
@@ -186,8 +186,8 @@ export default function Places() {
                           <TouchableOpacity onPress={() => {
                             setSelectedEvent(event);
                             setIsEventModalVisible(true);
-                          }} style={{ flex: 1, flexDirection: 'row', gap: 4 }}>
-                            <WidthFillingImage url={event.image} />
+                          }} style={{ flex: 1, flexDirection: 'row', gap: 3 }}>
+                            <WidthFillingImage url={event.image} maxHeight={130} />
 
                             <View style={{ flex: 3 }}>
                               <ThemedText type="subtitle">{event.name}</ThemedText>
@@ -218,10 +218,11 @@ export default function Places() {
 }
 
 type WidthFillingImageProps = {
-  url?: string
+  url?: string,
+  maxHeight: number
 };
 
-function WidthFillingImage({ url }: WidthFillingImageProps) {
+function WidthFillingImage({ url, maxHeight }: WidthFillingImageProps) {
   const [imageAspectRatio, setImageAspectRatio] = useState(1);
 
   return (<View style={{ flex: 1 }}>
@@ -230,6 +231,7 @@ function WidthFillingImage({ url }: WidthFillingImageProps) {
       style={{
         borderRadius: 8,
         width: '100%',
+        maxHeight: maxHeight,
         aspectRatio: imageAspectRatio,
       }}
       onLoad={(e) =>

@@ -38,5 +38,5 @@ export function dateTimeShortDisplay(date: Date): string {
 }
 
 export function dateDisplay(date: Date): string {
-  return date.toLocaleString("es");
+  return date.toLocaleDateString("es");
 }

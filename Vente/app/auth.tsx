@@ -4,7 +4,7 @@ import { Text, View, Dimensions, Platform } from 'react-native';
 import { MarginItem, BiggerMarginItem } from '@/components/MarginItem';
 import { StyledTextInput, StyledEmailInput, StyledPasswordInput } from '@/components/StyledInput';
 import { ErrorText } from '@/components/ThemedText';
-import { BtnSecondary, BtnPrimary, GoogleButton, AppleButton } from '@/components/Buttons';
+import { BtnSecondary, BtnPrimary, GoogleButton } from '@/components/Buttons';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { Controller, useForm } from 'react-hook-form';
@@ -13,7 +13,7 @@ import { StyledGenderPicker } from '@/components/GenderPicker';
 import { StyledDatePicker } from '@/components/StyledDatePicker';
 import { FullScreenLoading } from '@/components/FullScreenLoading';
 import { GoogleSignin, isSuccessResponse } from '@react-native-google-signin/google-signin';
-import * as AppleAuthentication from '@invertase/react-native-apple-authentication';
+import { appleAuth, AppleButton } from '@invertase/react-native-apple-authentication';
 import { redirectStore } from '@/redirect_storage';
 
 // Define the type for the props that LoginPage will accept
@@ -106,16 +106,16 @@ const Auth: React.FC<AuthPageProps> = ({ onLogin }) => {
   const appleSignIn = async () => {
     setLoading(true);
     try {
-      if (!AppleAuthentication.appleAuth.isSupported) {
+      if (!appleAuth.isSupported) {
         setError('Iniciar session con apple no esta disponible en este dispositivo.');
         setLoading(false);
         return;
       }
 
-      const appleCredential = await AppleAuthentication.appleAuth.performRequest({
-        requestedOperation: AppleAuthentication.appleAuth.Operation.LOGIN,
+      const appleCredential = await appleAuth.performRequest({
+        requestedOperation: appleAuth.Operation.LOGIN,
         requestedScopes: [
-          AppleAuthentication.appleAuth.Scope.EMAIL,
+          appleAuth.Scope.EMAIL,
         ],
       });
 
@@ -180,7 +180,11 @@ const Auth: React.FC<AuthPageProps> = ({ onLogin }) => {
           <MarginItem>
             <GoogleButton title='Continua con google' onClick={googleSignIn} />
             {Platform.OS == 'ios' && (
-              <AppleButton title='Continua con apple' onClick={appleSignIn} />
+              <AppleButton buttonStyle={AppleButton.Style.WHITE} buttonType={AppleButton.Type.CONTINUE} style={{
+                marginTop: 5,
+                width: '100%',
+                height: 40,
+              }} onPress={appleSignIn} />
             )}
           </MarginItem>
         </View>)}

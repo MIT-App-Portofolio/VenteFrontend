@@ -21,6 +21,7 @@
         ]
       },
       "infoPlist": {
+        "CFBundleDevelopmentRegion": "es",
         "CFBundleURLTypes": [
           {
             "CFBundleURLSchemes": [

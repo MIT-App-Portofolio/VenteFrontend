@@ -179,7 +179,9 @@ const Auth: React.FC<AuthPageProps> = ({ onLogin }) => {
 
           <MarginItem>
             <GoogleButton title='Continua con google' onClick={googleSignIn} />
-            <AppleButton title='Continua con apple' onClick={appleSignIn} />
+            {Platform.OS == 'ios' && (
+              <AppleButton title='Continua con apple' onClick={appleSignIn} />
+            )}
           </MarginItem>
         </View>)}
       {(currentPage == "login" || currentPage == 'register') && (

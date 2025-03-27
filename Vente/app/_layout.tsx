@@ -109,7 +109,9 @@ function Inner() {
     return (
       <CenterAligned>
         <Auth onLogin={async () => {
-          await api.sendNotificationToken(await messaging().getToken());
+          if (await messaging().hasPermission()) {
+            await api.sendNotificationToken(await messaging().getToken());
+          }
           setAuthenticated(true)
         }} />
         <StatusBar translucent backgroundColor="transparent" style='light' />

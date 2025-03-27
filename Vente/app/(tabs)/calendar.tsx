@@ -187,8 +187,11 @@ export default function Calendar() {
                   marginBottom: 10,
                 }}
               />
-              <BtnPrimary title="Invitar" onClick={inviteUser} disabled={inviteUsername ? false : true} />
-              <BtnSecondary title="Cancelar" onClick={() => setIsModalVisible(false)} />
+
+              <View style={{ flexDirection: 'column', gap: 5 }}>
+                <BtnPrimary title="Invitar" onClick={inviteUser} disabled={inviteUsername ? false : true} />
+                <BtnSecondary title="Cancelar" onClick={() => setIsModalVisible(false)} />
+              </View>
             </View>
           </View>
         </Modal>

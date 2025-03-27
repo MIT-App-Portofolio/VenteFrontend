@@ -5,7 +5,7 @@ import { FullScreenLoading } from "@/components/FullScreenLoading";
 import { BiggerMarginItem, MarginItem } from "@/components/MarginItem";
 import { ThemedText } from "@/components/ThemedText";
 import { dateTimeDisplay } from "@/dateDisplay";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { View } from "react-native";
 import FastImage from "react-native-fast-image";
 

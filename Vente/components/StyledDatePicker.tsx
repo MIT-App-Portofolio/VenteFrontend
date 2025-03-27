@@ -5,15 +5,19 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { MarginItem } from "./MarginItem";
 import { StyledModal } from "./StyledModal";
 import { dateDisplay, dateTimeDisplay } from "@/dateDisplay";
+import { CenterAligned } from "./CenterAligned";
 
 
 export type StyledDatePickerProps = {
   date: Date | null;
   title: string;
+  futureOnly?: boolean;
+  pastOnly?: boolean;
+  setIsDirty?: (dirty: boolean) => void;
   setDate: (date: Date) => void;
 };
 
-export function StyledDatePicker({ date, setDate, title }: StyledDatePickerProps) {
+export function StyledDatePicker({ date, setDate, title, setIsDirty, futureOnly, pastOnly }: StyledDatePickerProps) {
   const ios = Platform.OS === 'ios';
   const [showDatePicker, setShowDatePicker] = useState(false);
 
@@ -23,19 +27,28 @@ export function StyledDatePicker({ date, setDate, title }: StyledDatePickerProps
         <BtnPrimary title={date ? dateDisplay(date) : title} onClick={() => setShowDatePicker(true)}></BtnPrimary>
 
         {showDatePicker &&
-          <StyledModal isModalVisible={showDatePicker} setIsModalVisible={setShowDatePicker}>
-            <DateTimePicker
-              themeVariant='dark'
-              style={{ width: 450 }}
-              value={date ?? new Date()}
-              onChange={(_, selectedDate) => {
-                if (selectedDate) {
-                  setDate(selectedDate);
-                }
-              }}
-              mode="date"
-              display="spinner"
-            />
+          <StyledModal isModalVisible={showDatePicker} setIsModalVisible={(visible) => {
+            if (!visible && date != null && setIsDirty) {
+              setIsDirty(true);
+            }
+            setShowDatePicker(visible);
+          }}>
+            <CenterAligned>
+              <DateTimePicker
+                themeVariant='dark'
+                minimumDate={futureOnly === true ? new Date() : undefined}
+                maximumDate={pastOnly === true ? new Date() : undefined}
+                style={{ width: 450 }}
+                value={date ?? new Date()}
+                onChange={(_, selectedDate) => {
+                  if (selectedDate) {
+                    setDate(selectedDate);
+                  }
+                }}
+                mode="date"
+                display="inline"
+              />
+            </CenterAligned>
           </StyledModal>
         }
       </MarginItem>
@@ -49,6 +62,8 @@ export function StyledDatePicker({ date, setDate, title }: StyledDatePickerProps
       {showDatePicker && (
         <DateTimePicker
           value={date ?? new Date()}
+          minimumDate={futureOnly === true ? new Date() : undefined}
+          maximumDate={pastOnly === true ? new Date() : undefined}
           onChange={(_, selectedDate) => {
             setShowDatePicker(false);
             if (selectedDate) {
@@ -90,8 +105,6 @@ export function StyledDateTimePicker({ date, setDate, title, setIsDirty }: Style
           }
           }>
             <DateTimePicker
-              themeVariant='dark'
-              minimumDate={new Date()}
               style={{ width: 450 }}
               value={date ?? new Date()}
               onChange={(_, selectedDate) => {
@@ -99,8 +112,8 @@ export function StyledDateTimePicker({ date, setDate, title, setIsDirty }: Style
                   setDate(selectedDate);
                 }
               }}
-              mode="datetime"
-              display="spinner"
+              mode="date"
+              display="calendar"
             />
           </StyledModal>
         }

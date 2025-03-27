@@ -13,7 +13,7 @@ import { StyledGenderFilter } from '@/components/GenderPicker';
 import { StyledModal } from '@/components/StyledModal';
 import { redirectStore } from '@/redirect_storage';
 import FastImage from 'react-native-fast-image';
-import { dateTimeShortDisplay } from '@/dateDisplay';
+import { dateShortDisplay } from '@/dateDisplay';
 
 export default function Users() {
   const router = useRouter();
@@ -183,7 +183,7 @@ export default function Users() {
             alignItems: 'center',
           }}>
             <Feather name='calendar' size={16} color='white' />
-            <ThemedText>{dateTimeShortDisplay(new Date(visitor.eventStatus.time!))}</ThemedText>
+            <ThemedText>{dateShortDisplay(new Date(visitor.eventStatus.time!))}</ThemedText>
           </View>
 
           <View style={{
@@ -237,7 +237,7 @@ export default function Users() {
         onScroll={handleScroll}
         scrollEventThrottle={16}
         showsHorizontalScrollIndicator={false}
-        // horizontal={false}
+        horizontal={false}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
         contentContainerStyle={{ paddingBottom: 50 }}
@@ -315,7 +315,7 @@ export default function Users() {
                   alignItems: 'center',
                 }}>
                   <Feather name='calendar' size={16} color='white' />
-                  <ThemedText>{dateTimeShortDisplay(new Date(selectedProfile.eventStatus.time!))}</ThemedText>
+                  <ThemedText>{dateShortDisplay(new Date(selectedProfile.eventStatus.time!))}</ThemedText>
                 </View>
               </View>
 

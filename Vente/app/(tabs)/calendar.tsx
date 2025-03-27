@@ -7,9 +7,9 @@ import { BtnPrimary, BtnSecondary } from '@/components/Buttons';
 import { CenterAligned } from '@/components/CenterAligned';
 import { FullScreenLoading } from '@/components/FullScreenLoading';
 import { IconSymbol } from "@/components/ui/IconSymbol";
-import { StyledDateTimePicker } from "@/components/StyledDatePicker";
+import { StyledDatePicker, StyledDateTimePicker } from "@/components/StyledDatePicker";
 import { StyledLocationPicker } from "@/components/StyledLocationPicker";
-import { dateTimeDisplay } from "@/dateDisplay";
+import { dateDisplay, dateTimeDisplay } from "@/dateDisplay";
 
 export default function Calendar() {
   const { api, userProfile, groupStatus } = useApi();
@@ -129,9 +129,9 @@ export default function Calendar() {
 
         <MarginItem>
           {!userProfile?.eventStatus.active && <StyledLocationPicker locations={api.locations!} location={selectedLocation} setLocation={setSelectedLocation} setIsDirty={setIsDirty} />}
-          {!userProfile?.eventStatus.active && <StyledDateTimePicker title="Escoge una fecha" date={date} setIsDirty={setIsDirty} setDate={setDate} />}
+          {!userProfile?.eventStatus.active && <StyledDatePicker title="Escoge una fecha" date={date} setIsDirty={setIsDirty} setDate={setDate} futureOnly />}
 
-          {userProfile?.eventStatus.active && <ThemedText type="subtitle" style={{ textAlign: 'center' }}>{userProfile.eventStatus.location?.name} - {dateTimeDisplay(userProfile.eventStatus.time!)}</ThemedText>}
+          {userProfile?.eventStatus.active && <ThemedText type="subtitle" style={{ textAlign: 'center' }}>{userProfile.eventStatus.location?.name} - {dateDisplay(userProfile.eventStatus.time!)}</ThemedText>}
         </MarginItem>
 
         <Modal

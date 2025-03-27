@@ -37,6 +37,13 @@ export function dateTimeShortDisplay(date: Date): string {
   return `${dd}/${mm} ${HH}:${MM}`;
 }
 
+export function dateShortDisplay(date: Date): string {
+  const dd: string = String(date.getDate()).padStart(2, '0');
+  const mm: string = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+
+  return `${dd}/${mm}`;
+}
+
 export function dateDisplay(date: Date): string {
   return date.toLocaleDateString("es");
 }

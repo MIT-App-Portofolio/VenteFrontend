@@ -2,6 +2,7 @@ export interface RedirectStore {
   pendingRedirect: string | null;
   setPendingRedirect(path: string): void;
   getPendingRedirect(): string | null;
+  resetPendingRedirect(): void;
 }
 
 export const redirectStore: RedirectStore = {
@@ -10,8 +11,9 @@ export const redirectStore: RedirectStore = {
     this.pendingRedirect = path;
   },
   getPendingRedirect(): string | null {
-    const redirect = this.pendingRedirect;
-    this.pendingRedirect = null; // Clear after getting
-    return redirect;
+    return this.pendingRedirect;
+  },
+  resetPendingRedirect() {
+    this.pendingRedirect = null;
   }
 };

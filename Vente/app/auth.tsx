@@ -4,7 +4,7 @@ import { Text, View, Dimensions, Platform } from 'react-native';
 import { MarginItem, BiggerMarginItem } from '@/components/MarginItem';
 import { StyledTextInput, StyledEmailInput, StyledPasswordInput } from '@/components/StyledInput';
 import { ErrorText } from '@/components/ThemedText';
-import { BtnSecondary, BtnPrimary, GoogleButton } from '@/components/Buttons';
+import { BtnSecondary, BtnPrimary, GoogleButton, AppleButton } from '@/components/Buttons';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { Controller, useForm } from 'react-hook-form';
@@ -13,6 +13,7 @@ import { StyledGenderPicker } from '@/components/GenderPicker';
 import { StyledDatePicker } from '@/components/StyledDatePicker';
 import { FullScreenLoading } from '@/components/FullScreenLoading';
 import { GoogleSignin, isSuccessResponse } from '@react-native-google-signin/google-signin';
+import * as AppleAuthentication from '@invertase/react-native-apple-authentication';
 import { redirectStore } from '@/redirect_storage';
 
 // Define the type for the props that LoginPage will accept
@@ -42,11 +43,13 @@ if (Platform.OS == 'android') {
   });
 }
 
+const profileUrl = 'profile';
 
 const Auth: React.FC<AuthPageProps> = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState("main");
   const [googleId, setGoogleId] = useState<string>("");
+  const [appleId, setAppleId] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
 
   const { api } = useApi();
@@ -58,12 +61,14 @@ const Auth: React.FC<AuthPageProps> = ({ onLogin }) => {
       const response = await GoogleSignin.signIn();
       if (!isSuccessResponse(response)) {
         setError('Error al iniciar sesión con Google');
+        setLoading(false);
         return;
       }
 
       var token = response.data.idToken;
 
       if (token == null) {
+        setLoading(false);
         setError('Error al iniciar sesión con Google');
         return;
       }
@@ -71,25 +76,80 @@ const Auth: React.FC<AuthPageProps> = ({ onLogin }) => {
       var [successful, shouldRegister] = await api.googleShouldRegister(token);
 
       if (!successful) {
+        setLoading(false);
         setError('Error al iniciar sesión con Google');
         return;
       }
 
       if (shouldRegister) {
+        setError(null);
         setGoogleId(token);
         setCurrentPage('googleRegister');
       } else {
         var [success, message] = await api.googleLogin(token);
 
         if (!success) {
+          setLoading(false);
           setError(message);
         } else {
+          setError(null);
           onLogin();
         }
       }
     } catch (e) {
       console.log(e);
       setError('Error al iniciar sesión con Google');
+    }
+    setLoading(false);
+  };
+
+  const appleSignIn = async () => {
+    setLoading(true);
+    try {
+      if (!AppleAuthentication.appleAuth.isSupported) {
+        setError('Iniciar session con apple no esta disponible en este dispositivo.');
+        setLoading(false);
+        return;
+      }
+
+      const appleCredential = await AppleAuthentication.appleAuth.performRequest({
+        requestedOperation: AppleAuthentication.appleAuth.Operation.LOGIN,
+        requestedScopes: [
+          AppleAuthentication.appleAuth.Scope.EMAIL,
+        ],
+      });
+
+      const { identityToken } = appleCredential;
+      if (!identityToken) {
+        setError('Error al iniciar sesión con Apple');
+        setLoading(false);
+        return;
+      }
+
+      const [successful, shouldRegister] = await api.appleShouldRegister(identityToken);
+      if (!successful) {
+        setError('Error al iniciar sesión con Apple');
+        setLoading(false);
+        return;
+      }
+
+      if (shouldRegister) {
+        setAppleId(identityToken);
+        setError(null);
+        setCurrentPage('appleRegister');
+      } else {
+        const [success, message] = await api.appleLogin(identityToken);
+        if (!success) {
+          setError(message);
+          setLoading(false);
+        } else {
+          setError(null);
+          onLogin();
+        }
+      }
+    } catch (e) {
+      console.log(e);
+      setError('Error al iniciar sesión con Apple');
     }
     setLoading(false);
   };
@@ -119,6 +179,7 @@ const Auth: React.FC<AuthPageProps> = ({ onLogin }) => {
 
           <MarginItem>
             <GoogleButton title='Continua con google' onClick={googleSignIn} />
+            <AppleButton title='Continua con apple' onClick={appleSignIn} />
           </MarginItem>
         </View>)}
       {(currentPage == "login" || currentPage == 'register') && (
@@ -132,6 +193,9 @@ const Auth: React.FC<AuthPageProps> = ({ onLogin }) => {
       )}
       {(currentPage == "googleRegister") && (
         <GoogleRegister id={googleId} onLogin={onLogin}></GoogleRegister>
+      )}
+      {(currentPage == "appleRegister") && (
+        <AppleRegister id={appleId} onLogin={onLogin}></AppleRegister>
       )}
       {error && <ErrorText>{error}</ErrorText>}
     </View>
@@ -262,7 +326,7 @@ const Register: React.FC<AuthPageProps> = ({ onLogin }) => {
     setError(error);
     if (ok) {
       onLogin();
-      redirectStore.setPendingRedirect('profile');
+      redirectStore.setPendingRedirect(profileUrl);
     }
     setLoading(false);
   };
@@ -335,12 +399,12 @@ const Register: React.FC<AuthPageProps> = ({ onLogin }) => {
   )
 };
 
-type GoogleRegisterProps = {
+type ThirdPartyRegisterProps = {
   onLogin: () => void;
   id: string;
 };
 
-const GoogleRegister: React.FC<GoogleRegisterProps> = ({ onLogin, id }) => {
+const GoogleRegister: React.FC<ThirdPartyRegisterProps> = ({ onLogin, id }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [birthDate, setBirthDate] = useState<Date | null>(null);
@@ -377,7 +441,7 @@ const GoogleRegister: React.FC<GoogleRegisterProps> = ({ onLogin, id }) => {
     setError(error);
     if (ok) {
       onLogin();
-      redirectStore.setPendingRedirect('profile');
+      redirectStore.setPendingRedirect(profileUrl);
     }
     setLoading(false);
   };
@@ -421,6 +485,86 @@ const GoogleRegister: React.FC<GoogleRegisterProps> = ({ onLogin, id }) => {
     </View>
   )
 }
+
+const AppleRegister: React.FC<ThirdPartyRegisterProps> = ({ onLogin, id }) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [birthDate, setBirthDate] = useState<Date | null>(null);
+  const { api } = useApi();
+
+  const schema = yup.object().shape({
+    username: yup.string().required('El nombre de usuario es obligatorio'),
+    gender: yup.number().required('El género es obligatorio').oneOf([0, 1], 'Género inválido'),
+  });
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    watch,
+  } = useForm({
+    resolver: yupResolver(schema),
+    defaultValues: {
+      username: '',
+      gender: 0,
+    },
+  });
+
+  const onPressSend = async (formData: any) => {
+    setLoading(true);
+
+    if (birthDate == null) {
+      setError('La fecha de nacimiento es obligatoria');
+      setLoading(false);
+      return;
+    }
+
+    const [ok, error] = await api.appleRegister(id, formData.username, formData.gender, birthDate!);
+    setError(error);
+    if (ok) {
+      onLogin();
+      redirectStore.setPendingRedirect(profileUrl);
+    }
+    setLoading(false);
+  };
+
+  if (loading) {
+    return <FullScreenLoading />;
+  }
+
+  return (
+    <View style={{ width: viewWidth }}>
+      <View>
+        <MarginItem>
+          <Controller
+            control={control}
+            rules={{ required: true }}
+            render={({ field: { onChange, value } }) => (
+              <StyledTextInput
+                title="Nombre de usuario"
+                placeholder=""
+                value={value}
+                setValue={onChange}
+                autoCapitalize="none"
+              />
+            )}
+            name="username"
+          />
+          {errors.username && <ErrorText>{errors.username.message}</ErrorText>}
+        </MarginItem>
+
+        <StyledGenderPicker gender={watch('gender')} control={control} errorsGender={errors.gender} />
+
+        <StyledDatePicker date={birthDate} setDate={setBirthDate} title="Fecha de nacimiento" />
+
+        <BiggerMarginItem>
+          {error && <ErrorText>{error}</ErrorText>}
+          <BtnPrimary title="Crea tu cuenta" onClick={handleSubmit(onPressSend)} />
+        </BiggerMarginItem>
+      </View>
+    </View>
+  );
+};
 
 function ProperPassword() {
   return yup.string()

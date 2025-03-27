@@ -6,7 +6,7 @@ import { BtnPrimary, BtnSecondary } from '@/components/Buttons';
 import { HorizontallyAligned } from '@/components/HorizontallyAligned';
 import { CenterAligned } from '@/components/CenterAligned';
 import { useApi } from '@/api';
-import { Redirect, useRouter } from 'expo-router';
+import { Redirect, useRootNavigationState, useRouter } from 'expo-router';
 import { Profile } from '@/api';
 import { Feather, FontAwesome } from '@expo/vector-icons';
 import { StyledGenderFilter } from '@/components/GenderPicker';
@@ -16,14 +16,9 @@ import FastImage from 'react-native-fast-image';
 import { dateTimeShortDisplay } from '@/dateDisplay';
 
 export default function Users() {
-  var pendingRedirect = redirectStore.getPendingRedirect();
-  if (pendingRedirect) {
-    // expo-router is a clusterfuck. i don't know how you're supposed to handle but this is the most painless way, as there's no way to not make index.tsx the default
-    return <Redirect href={pendingRedirect} />
-  }
+  const router = useRouter();
 
   const { api, userProfile } = useApi();
-  const router = useRouter();
 
   const [loading, setLoading] = useState(false);
 
@@ -42,15 +37,9 @@ export default function Users() {
 
   const [refreshing, setRefreshing] = useState(false);
 
-  // View event places button interpolation
   const scrollY = useRef(new Animated.Value(0)).current;
-  const buttonHeight = scrollY.interpolate({
-    inputRange: [0, 200],
-    outputRange: [160, 40],
-    extrapolate: 'clamp',
-  });
-
   const fetchedFirstTime = useRef(false);
+
   useEffect(() => {
     fetchedFirstTime.current = true;
     setLastUserFetchEmpty(false);
@@ -81,6 +70,12 @@ export default function Users() {
     });
   }, [visitors]);
 
+  const refresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchVisitors(true);
+    setRefreshing(false);
+  }, []);
+
   const fetchVisitors = async (overrideLastFetch?: boolean) => {
     if (!overrideLastFetch && lastUserFetchEmpty) {
       return;
@@ -101,12 +96,6 @@ export default function Users() {
       }
     }
   };
-
-  const refresh = useCallback(async () => {
-    setRefreshing(true);
-    await fetchVisitors(true);
-    setRefreshing(false);
-  }, []);
 
   const handleScroll = (event: any) => {
     Animated.event(
@@ -139,6 +128,23 @@ export default function Users() {
     setSelectedProfile(profile);
     setIsUserModalVisible(true);
   };
+
+  const pendingRedirect = redirectStore.getPendingRedirect();
+  const rootNavigationState = useRootNavigationState();
+  if (pendingRedirect) {
+    if (!rootNavigationState?.key) {
+      return null;
+    }
+
+    return <Redirect href={pendingRedirect} />
+  }
+
+  // View event places button interpolation
+  const buttonHeight = scrollY.interpolate({
+    inputRange: [0, 200],
+    outputRange: [160, 40],
+    extrapolate: 'clamp',
+  });
 
   if (loading)
     return (
@@ -200,7 +206,6 @@ export default function Users() {
       </TouchableOpacity >
     );
   };
-
 
   return (
     <HorizontallyAligned>

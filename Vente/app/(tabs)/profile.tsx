@@ -15,8 +15,12 @@ import * as ImagePicker from 'expo-image-picker';
 import { ImageManipulator, manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { StyledGenderPicker } from "@/components/GenderPicker";
 import FastImage from "react-native-fast-image";
+import { redirectStore } from "@/redirect_storage";
 
 export default function Profile() {
+  // another hack. too fucking bad
+  redirectStore.resetPendingRedirect();
+
   const { api, userPfp, userProfile } = useApi();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

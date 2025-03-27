@@ -48,3 +48,20 @@ export function GoogleButton({ title, onClick, disabled }: ButtonProps) {
     </TouchableOpacity>
   );
 }
+
+export function AppleButton({ title, onClick, disabled }: ButtonProps) {
+  return (
+    <TouchableOpacity onPress={onClick} style={{
+      backgroundColor: 'white',
+      flexDirection: 'row',
+      alignItems: 'center',
+      // hack, but it's only used in one place so who gaf
+      marginTop: 5,
+      padding: 10,
+      borderRadius: 5,
+    }} disabled={disabled}>
+      <Image source={require('../assets/images/apple-logo.png')} style={{ width: 20, height: 20, marginRight: 5 }} />
+      <Text style={{ color: 'black', alignSelf: 'center', textTransform: 'uppercase' }}>{title}</Text>
+    </TouchableOpacity>
+  );
+}

@@ -346,6 +346,61 @@ export class Api {
     return [true, null];
   }
 
+  public async appleShouldRegister(id: string) {
+    try {
+      var shouldRegister = await this.axios!.get('/api/account/apple_should_register?id=' + id);
+      console.log('Should register: ' + shouldRegister.data);
+      return [true, shouldRegister.data];
+    } catch (e) {
+      console.log('apple should register: ' + e);
+      return [false, null];
+    }
+  }
+
+  public async appleRegister(id: string, userName: string, gender: number, birthDate: Date): Promise<[boolean, string | null]> {
+    try {
+      const response = await this.axios!.post('/api/account/register_apple', {
+        id,
+        gender,
+        birthDate,
+        userName,
+      });
+
+      const token = response.data;
+      await AsyncStorage.setItem('authToken', token);
+    } catch (e) {
+      console.log('apple register: ' + e);
+      return [false, this.translateRegisterError(e)];
+    }
+
+    if (await this.getUserInfo() != AuthResult.Authenticated) {
+      return [false, "Ha sucedido un error desconocido"];
+    }
+
+    return [true, null];
+  }
+
+  public async appleLogin(id: string): Promise<[boolean, string | null]> {
+    try {
+      const response = await this.axios!.post('/api/account/login_apple?id=' + id);
+
+      const token = response.data;
+      await AsyncStorage.setItem('authToken', token);
+    } catch (e) {
+      if (e.response && e.response.status == 400) {
+        return [false, "Correo o contraseña incorrecta."];
+      }
+
+      return [false, "Error al contactar con servidores de Vente."];
+    }
+
+    if (await this.getUserInfo() != AuthResult.Authenticated) {
+      return [false, "Ha sucedido un error desconocido"];
+    }
+
+    return [true, null];
+  }
+
   public async createAccount(username: string, email: string, password: string, gender: number, birthDate: Date): Promise<[boolean, string | null]> {
     const registerData = {
       email: email,

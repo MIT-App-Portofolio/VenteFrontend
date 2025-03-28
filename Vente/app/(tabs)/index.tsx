@@ -15,6 +15,8 @@ import { redirectStore } from '@/redirect_storage';
 import FastImage from 'react-native-fast-image';
 import { dateShortDisplay } from '@/dateDisplay';
 
+const pfpSize = 250;
+
 export default function Users() {
   const router = useRouter();
 
@@ -176,7 +178,7 @@ export default function Users() {
       <TouchableOpacity key={visitor.userName} style={styles.card} onPress={() => handleProfileClick(visitor!)}>
         <FastImage source={{ uri: pfpUrl }} style={styles.profilePicture} />
         <View style={{ alignItems: 'flex-start', flexDirection: 'column' }}>
-          <ThemedText type="subtitle" style={{ marginTop: 5 }}>{displayName}</ThemedText>
+          <ThemedText type="subtitle" style={{ marginTop: 5, maxWidth: pfpSize * 0.9 }} ellipsizeMode='tail' numberOfLines={2}>{displayName}</ThemedText>
           <View style={{
             flexDirection: 'row',
             gap: 2,
@@ -197,7 +199,7 @@ export default function Users() {
               visitor.igHandle && (
                 <View style={styles.igContainer}>
                   <FontAwesome name="instagram" size={16} color="white" />
-                  <ThemedText type='link' style={{ marginLeft: 2 }}>{visitor.igHandle}</ThemedText>
+                  <ThemedText type='link' style={{ marginLeft: 2 }} ellipsizeMode='tail' numberOfLines={1}>{visitor.igHandle}</ThemedText>
                 </View>
               )
             }
@@ -324,7 +326,7 @@ export default function Users() {
               {selectedProfile.igHandle && (
                 <View style={styles.modalIgContainer}>
                   <FontAwesome name="instagram" size={16} color="white" />
-                  <ThemedText type="link" style={{ marginLeft: 3 }} onPress={() => Linking.openURL(`https://www.instagram.com/${selectedProfile.igHandle}`)}>
+                  <ThemedText type="link" style={{ marginLeft: 3 }} onPress={() => Linking.openURL(`https://www.instagram.com/${selectedProfile.igHandle}`)} numberOfLines={1} ellipsizeMode='tail'>
                     {selectedProfile.igHandle}
                   </ThemedText>
                 </View>
@@ -366,11 +368,12 @@ export const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   profilePicture: {
-    width: 250,
-    height: 250,
+    width: pfpSize,
+    height: pfpSize,
     borderRadius: 10,
   },
   igContainer: {
+    maxWidth: pfpSize * 0.5,
     flexDirection: 'row',
     alignItems: 'center',
   },

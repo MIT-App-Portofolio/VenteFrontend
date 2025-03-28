@@ -74,7 +74,7 @@ export default function Users() {
     setRefreshing(true);
     await fetchVisitors(true);
     setRefreshing(false);
-  }, []);
+  }, [genderFilter, ageRangeMin, ageRangeMax]);
 
   const fetchVisitors = async (overrideLastFetch?: boolean) => {
     if (!overrideLastFetch && lastUserFetchEmpty) {

@@ -36,7 +36,7 @@ export default function Profile() {
     return {
       name: userProfile?.name || '',
       description: userProfile?.description || '',
-      igHandle: userProfile?.igHandle,
+      igHandle: userProfile?.igHandle || '',
       gender: userProfile?.gender || 0,
     };
   };
@@ -109,7 +109,10 @@ export default function Profile() {
           mediaType: 'photo',
           cropping: true
         });
-      } catch {
+      } catch (e) {
+        if (e.code == 'E_CANNOT_SAVE_IMAGE' || e.code == 'E_NO_IMAGE_DATA_FOUND') {
+          setError('La imagen no se pudo acceder. Si esta en iCloud, descargue la imagen y vuelva a intentar.');
+        }
         setLoading(false);
         return;
       }

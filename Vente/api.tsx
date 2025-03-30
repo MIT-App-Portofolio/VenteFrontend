@@ -588,6 +588,26 @@ export class Api {
     }
   }
 
+  public async report(username: string) {
+    try {
+      await this.axios!.post('/api/safety/report?username=' + username);
+    } catch (e) {
+      console.log('report: ' + e);
+      return false;
+    }
+    return true;
+  }
+
+  public async block(username: string) {
+    try {
+      await this.axios!.post('/api/safety/block?username=' + username);
+    } catch (e) {
+      console.log('block: ' + e);
+      return false;
+    }
+    return true;
+  }
+
   private translateRegisterError(e: any) {
     var errorMessage = "Ha sucedido un error desconocido";
     if (e.response) {

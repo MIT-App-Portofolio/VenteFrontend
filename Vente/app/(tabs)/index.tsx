@@ -30,6 +30,10 @@ export default function Users() {
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
 
   const [isUserModalVisible, setIsUserModalVisible] = useState(false);
+  const [userFlagVisible, setUserFlagVisible] = useState(false);
+  const [userFlagLoading, setUserFlagLoading] = useState(false);
+  const [userFlagMessage, setUserFlagMessage] = useState<string | null>(null);
+
   const [lastUserFetchEmpty, setLastUserFetchEmpty] = useState(false);
 
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
@@ -40,10 +44,10 @@ export default function Users() {
   const [refreshing, setRefreshing] = useState(false);
 
   const scrollY = useRef(new Animated.Value(0)).current;
-  const fetchedFirstTime = useRef(false);
+  const preventFetchOnPageChange = useRef(false);
 
   useEffect(() => {
-    fetchedFirstTime.current = true;
+    preventFetchOnPageChange.current = true;
     setLastUserFetchEmpty(false);
     setPage(0);
     setVisitors([]);
@@ -51,10 +55,10 @@ export default function Users() {
   }, [userProfile?.eventStatus]);
 
   useEffect(() => {
-    if (!fetchedFirstTime.current) {
+    if (!preventFetchOnPageChange.current) {
       fetchVisitors();
     }
-    fetchedFirstTime.current = false;
+    preventFetchOnPageChange.current = false;
   }, [page]);
 
   useEffect(() => {
@@ -73,12 +77,17 @@ export default function Users() {
   }, [visitors]);
 
   const refresh = useCallback(async () => {
+    preventFetchOnPageChange.current = true;
     setRefreshing(true);
+    setLastUserFetchEmpty(false);
+    setVisitors([]);
+    setPage(0);
     await fetchVisitors(true);
     setRefreshing(false);
   }, [genderFilter, ageRangeMin, ageRangeMax]);
 
   const fetchVisitors = async (overrideLastFetch?: boolean) => {
+    setLoading(true);
     if (!overrideLastFetch && lastUserFetchEmpty) {
       return;
     }
@@ -91,12 +100,13 @@ export default function Users() {
 
     if (newVisitors) {
       await Promise.all(newVisitors.map(visitor => api.fetchPfp(visitor)));
-      if (overrideLastFetch) {
+      if (overrideLastFetch === true) {
         setVisitors(newVisitors);
       } else {
         setVisitors(prevVisitors => [...prevVisitors, ...newVisitors]);
       }
     }
+    setLoading(false);
   };
 
   const handleScroll = (event: any) => {
@@ -109,13 +119,13 @@ export default function Users() {
     const paddingToBottom = 20;
 
     if (layoutMeasurement.height + contentOffset.y >=
-      contentSize.height - paddingToBottom && !loading) {
+      contentSize.height - paddingToBottom && !loading && !lastUserFetchEmpty) {
       setPage(page + 1);
     }
   };
 
   const applyFilter = async () => {
-    setLoading(true);
+    preventFetchOnPageChange.current = true;
     setPage(0);
     setLastUserFetchEmpty(false);
     setVisitors([]);
@@ -123,7 +133,6 @@ export default function Users() {
     await fetchVisitors();
 
     setIsFilterModalVisible(false);
-    setLoading(false);
   };
 
   const handleProfileClick = (profile: Profile) => {
@@ -148,13 +157,6 @@ export default function Users() {
     extrapolate: 'clamp',
   });
 
-  if (loading)
-    return (
-      <CenterAligned>
-        <ThemedText style={styles.loadingText}>Cargando...</ThemedText>
-      </CenterAligned>
-    );
-
   if (!userProfile?.eventStatus.active) {
     return (
       <CenterAligned>
@@ -175,7 +177,7 @@ export default function Users() {
     const displayName = visitor.name || `@${visitor.userName}`;
 
     return (
-      <TouchableOpacity key={visitor.userName} style={styles.card} onPress={() => handleProfileClick(visitor!)}>
+      <TouchableOpacity style={styles.card} onPress={() => handleProfileClick(visitor!)}>
         <FastImage source={{ uri: pfpUrl }} style={styles.profilePicture} />
         <View style={{ alignItems: 'flex-start', flexDirection: 'column' }}>
           <ThemedText type="subtitle" style={{ marginTop: 5, maxWidth: pfpSize * 0.9 }} ellipsizeMode='tail' numberOfLines={2}>{displayName}</ThemedText>
@@ -207,6 +209,11 @@ export default function Users() {
         </View >
       </TouchableOpacity >
     );
+  };
+
+  const flagPress = () => {
+    setUserFlagMessage(null);
+    setUserFlagVisible(true);
   };
 
   return (
@@ -251,7 +258,13 @@ export default function Users() {
         </View>
 
         <CenterAligned>
-          {visitors.map((value, _1, _2) => renderVisitor({ item: value }))}
+          {visitors.map((value, _1, _2) => (
+            <React.Fragment key={value}>
+              {renderVisitor({ item: value })}
+            </React.Fragment>
+          ))}
+
+          {loading && <ThemedText>Cargando mas...</ThemedText>}
         </CenterAligned>
       </Animated.ScrollView>
 
@@ -295,67 +308,108 @@ export default function Users() {
       {
         selectedProfile &&
         (
-          <StyledModal isModalVisible={isUserModalVisible} setIsModalVisible={setIsUserModalVisible}>
-            <ScrollView style={styles.modalContent}>
-              <FastImage source={{ uri: api.getPfpUnstable(selectedProfile.userName) }} style={styles.modalProfilePicture} />
-
-              <View style={{ flexDirection: 'column', alignItems: 'flex-start', marginTop: 10 }}>
-                {
-                  selectedProfile.name &&
-                  <ThemedText style={{ marginRight: 10 }} type="title">{selectedProfile.name}</ThemedText>
-                }
-
-                <ThemedText style={{ color: 'gray' }}>@{selectedProfile.userName}</ThemedText>
-              </View>
-
-              <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8 }}>
-                <ThemedText style={{ marginTop: 10 }}>{selectedProfile.years} años</ThemedText>
-
-                <View style={{
-                  flexDirection: 'row',
-                  gap: 2,
-                  alignItems: 'center',
-                }}>
-                  <Feather name='calendar' size={16} color='white' />
-                  <ThemedText>{dateShortDisplay(new Date(selectedProfile.eventStatus.time!))}</ThemedText>
+          <StyledModal isModalVisible={isUserModalVisible} setIsModalVisible={setIsUserModalVisible} includeButton={!userFlagVisible} topRightElement={userFlagVisible ? undefined : {
+            icon: "flag",
+            onPress: flagPress,
+          }}>
+            {
+              userFlagVisible ? (
+                <View style={{ flex: 1, flexDirection: 'column', gap: 10 }}>
+                  {
+                    userFlagMessage ? (
+                      <ThemedText>{userFlagMessage}</ThemedText>
+                    ) : (
+                      <View style={{ flexDirection: 'column', gap: 5 }}>
+                        <BtnPrimary title='Reportar usuario' disabled={userFlagLoading} onClick={
+                          async () => {
+                            setUserFlagLoading(true);
+                            const success = await api.report(selectedProfile.userName);
+                            if (success) {
+                              setUserFlagMessage('Usuario reportado');
+                            } else {
+                              setUserFlagMessage('Algo fue mal...');
+                            }
+                            setUserFlagLoading(false);
+                          }} />
+                        <BtnPrimary title='Bloquear usuario' disabled={userFlagLoading} onClick={async () => {
+                          setUserFlagLoading(true);
+                          const success = await api.block(selectedProfile.userName);
+                          if (success) {
+                            setUserFlagMessage('Usuario bloqueado. Refresque la pagina de usuarios.');
+                          } else {
+                            setUserFlagMessage('Algo fue mal...');
+                          }
+                          setUserFlagLoading(false);
+                        }} />
+                      </View>
+                    )
+                  }
+                  <BtnSecondary title={userFlagMessage ? "Cerrar" : "Cancelar"} onClick={() => setUserFlagVisible(false)} />
                 </View>
-              </View>
+              ) : (
+                <ScrollView style={styles.modalContent}>
+                  <FastImage source={{ uri: api.getPfpUnstable(selectedProfile.userName) }} style={styles.modalProfilePicture} />
 
-              <ThemedText style={{ marginTop: 5 }}>{selectedProfile.description}</ThemedText>
+                  <View style={{ flexDirection: 'column', alignItems: 'flex-start', marginTop: 10 }}>
+                    {
+                      selectedProfile.name &&
+                      <ThemedText style={{ marginRight: 10 }} type="title">{selectedProfile.name}</ThemedText>
+                    }
 
-              {selectedProfile.igHandle && (
-                <View style={styles.modalIgContainer}>
-                  <FontAwesome name="instagram" size={16} color="white" />
-                  <ThemedText type="link" style={{ marginLeft: 3 }} onPress={() => Linking.openURL(`https://www.instagram.com/${selectedProfile.igHandle}`)} numberOfLines={1} ellipsizeMode='tail'>
-                    {selectedProfile.igHandle}
-                  </ThemedText>
-                </View>
-              )}
+                    <ThemedText style={{ color: 'gray' }}>@{selectedProfile.userName}</ThemedText>
+                  </View>
 
-              {selectedProfile.eventStatus.with && selectedProfile.eventStatus.with.length > 0 && (
-                <ThemedText style={{ marginTop: 10 }}>Va con:</ThemedText>
-              )}
+                  <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8 }}>
+                    <ThemedText style={{ marginTop: 10 }}>{selectedProfile.years} años</ThemedText>
 
-              {/* Render profiles of users that go with the selected profile */}
-              <View style={styles.invitedUsersContainer}>
-                {selectedProfile.eventStatus.with?.map((username) => {
-                  const user = api.getUserUnstable(username);
-
-                  if (!user) return null;
-
-                  return (
-                    <View key={username} style={styles.invitedUserCard}>
-                      <FastImage source={{ uri: api.getPfpUnstable(username) }} style={styles.invitedUserProfilePicture} />
-                      <ThemedText>{user.name || `@${user.userName}`}</ThemedText>
+                    <View style={{
+                      flexDirection: 'row',
+                      gap: 2,
+                      alignItems: 'center',
+                    }}>
+                      <Feather name='calendar' size={16} color='white' />
+                      <ThemedText>{dateShortDisplay(new Date(selectedProfile.eventStatus.time!))}</ThemedText>
                     </View>
-                  );
-                })}
-              </View>
-            </ScrollView>
+                  </View>
+
+                  <ThemedText style={{ marginTop: 5 }}>{selectedProfile.description}</ThemedText>
+
+                  {selectedProfile.igHandle && (
+                    <View style={styles.modalIgContainer}>
+                      <FontAwesome name="instagram" size={16} color="white" />
+                      <ThemedText type="link" style={{ marginLeft: 3 }} onPress={() => Linking.openURL(`https://www.instagram.com/${selectedProfile.igHandle}`)} numberOfLines={1} ellipsizeMode='tail'>
+                        {selectedProfile.igHandle}
+                      </ThemedText>
+                    </View>
+                  )}
+
+                  {selectedProfile.eventStatus.with && selectedProfile.eventStatus.with.length > 0 && (
+                    <ThemedText style={{ marginTop: 10 }}>Va con:</ThemedText>
+                  )}
+
+                  {/* Render profiles of users that go with the selected profile */}
+                  <View style={styles.invitedUsersContainer}>
+                    {selectedProfile.eventStatus.with?.map((username) => {
+                      const user = api.getUserUnstable(username);
+
+                      if (!user) return null;
+
+                      return (
+                        <View key={username} style={styles.invitedUserCard}>
+                          <FastImage source={{ uri: api.getPfpUnstable(username) }} style={styles.invitedUserProfilePicture} />
+                          <ThemedText>{user.name || `@${user.userName}`}</ThemedText>
+                        </View>
+                      );
+                    })}
+                    )
+                  </View>
+                </ScrollView>
+              )
+            }
           </StyledModal>
         )
       }
-    </HorizontallyAligned >
+    </HorizontallyAligned>
   );
 }
 

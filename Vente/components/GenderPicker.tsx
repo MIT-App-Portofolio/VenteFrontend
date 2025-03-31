@@ -17,10 +17,17 @@ export function StyledGenderPicker<T extends FieldValues>({ gender, control, err
   const ios = Platform.OS === 'ios';
   const [showPicker, setShowPicker] = useState(false);
 
+  let genderText = "Hombre";
+  if (gender == 1) {
+    genderText = "Mujer";
+  } else if (gender == 2) {
+    genderText = "No especificado";
+  }
+
   if (ios) {
     return (
       <MarginItem>
-        <BtnPrimary title={gender == 0 ? "Hombre" : "Mujer"} onClick={() => setShowPicker(true)} />
+        <BtnPrimary title={genderText} onClick={() => setShowPicker(true)} />
         {errorsGender && <ErrorText>{errorsGender.message}</ErrorText>}
         {showPicker &&
           <StyledModal isModalVisible={showPicker} setIsModalVisible={setShowPicker}>
@@ -38,6 +45,7 @@ export function StyledGenderPicker<T extends FieldValues>({ gender, control, err
                 >
                   <Picker.Item label="Hombre" value={"0"} />
                   <Picker.Item label="Mujer" value={"1"} />
+                  <Picker.Item label="No especificado" value={"2"} />
                 </Picker>
               )}
               name={"gender" as Path<T>}
@@ -64,6 +72,7 @@ export function StyledGenderPicker<T extends FieldValues>({ gender, control, err
           >
             <Picker.Item label="Hombre" value={0} />
             <Picker.Item label="Mujer" value={1} />
+            <Picker.Item label="No especificado" value={2} />
           </Picker>
         )}
         name={"gender" as Path<T>}

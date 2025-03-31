@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Text, View, Dimensions, Platform } from 'react-native';
 import { MarginItem, BiggerMarginItem } from '@/components/MarginItem';
 import { StyledTextInput, StyledEmailInput, StyledPasswordInput } from '@/components/StyledInput';
-import { ErrorText } from '@/components/ThemedText';
+import { ErrorText, ThemedText } from '@/components/ThemedText';
 import { BtnSecondary, BtnPrimary, GoogleButton } from '@/components/Buttons';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -15,6 +15,7 @@ import { FullScreenLoading } from '@/components/FullScreenLoading';
 import { GoogleSignin, isSuccessResponse } from '@react-native-google-signin/google-signin';
 import { appleAuth, AppleButton } from '@invertase/react-native-apple-authentication';
 import { redirectStore } from '@/redirect_storage';
+import { TosAccept } from '@/components/TosAccept';
 
 // Define the type for the props that LoginPage will accept
 type AuthPageProps = {
@@ -295,13 +296,14 @@ const Register: React.FC<AuthPageProps> = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [birthDate, setBirthDate] = useState<Date | null>(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const { api } = useApi();
 
   const schema = yup.object().shape({
     username: yup.string().required('El nombre de usuario es obligatorio'),
     email: yup.string().required('El correo es obligatorio').email('Dirección invalida'),
     password: ProperPassword(),
-    gender: yup.number().required('El género es obligatorio').oneOf([0, 1], 'Género inválido'),
+    gender: yup.number().required('El género es obligatorio').oneOf([0, 1, 2], 'Género inválido'),
   });
 
   const {
@@ -315,20 +317,20 @@ const Register: React.FC<AuthPageProps> = ({ onLogin }) => {
       email: '',
       username: '',
       password: '',
-      gender: 0,
+      gender: 2,
     },
   });
 
   const onPressSend = async (formData: any) => {
     setLoading(true);
 
-    if (birthDate == null) {
-      setError('La fecha de nacimiento es obligatoria');
+    if (!termsAccepted) {
       setLoading(false);
+      setError("Tiene que aceptar los términos y condiciones.");
       return;
     }
 
-    var [ok, error] = await api.createAccount(formData.username, formData.email, formData.password, formData.gender, birthDate!);
+    var [ok, error] = await api.createAccount(formData.username, formData.email, formData.password, formData.gender, birthDate);
     setError(error);
     if (ok) {
       onLogin();
@@ -346,6 +348,11 @@ const Register: React.FC<AuthPageProps> = ({ onLogin }) => {
       width: viewWidth
     }}>
       <View>
+        <View style={{ marginTop: 20, marginBottom: 10 }}>
+          <ThemedText type='title'>Crea tu cuenta</ThemedText>
+          <ThemedText>La fecha de nacimiento y genero son opcionales, pero no se podrán cambiar en el futuro.</ThemedText>
+        </View>
+
         <MarginItem>
           <Controller
             control={control}
@@ -388,9 +395,14 @@ const Register: React.FC<AuthPageProps> = ({ onLogin }) => {
           {errors.password && <ErrorText>{errors.password.message}</ErrorText>}
         </MarginItem>
 
-        <StyledGenderPicker gender={watch("gender")} control={control} errorsGender={errors.gender} />
+        <MarginItem>
+          <ThemedText>Genero</ThemedText>
+          <StyledGenderPicker gender={watch("gender")} control={control} errorsGender={errors.gender} />
+        </MarginItem>
 
         <StyledDatePicker date={birthDate} setDate={setBirthDate} title='Fecha de nacimiento' />
+
+        <TosAccept accepted={termsAccepted} setAccepted={setTermsAccepted} />
 
         <BiggerMarginItem>
           {(error) && (
@@ -414,11 +426,12 @@ const GoogleRegister: React.FC<ThirdPartyRegisterProps> = ({ onLogin, id }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [birthDate, setBirthDate] = useState<Date | null>(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const { api } = useApi();
 
   const schema = yup.object().shape({
     username: yup.string().required('El nombre de usuario es obligatorio'),
-    gender: yup.number().required('El género es obligatorio').oneOf([0, 1], 'Género inválido'),
+    gender: yup.number().required('El género es obligatorio').oneOf([0, 1, 2], 'Género inválido'),
   });
 
   const {
@@ -430,20 +443,20 @@ const GoogleRegister: React.FC<ThirdPartyRegisterProps> = ({ onLogin, id }) => {
     resolver: yupResolver(schema),
     defaultValues: {
       username: '',
-      gender: 0,
+      gender: 2,
     },
   });
 
   const onPressSend = async (formData: any) => {
     setLoading(true);
 
-    if (birthDate == null) {
-      setError('La fecha de nacimiento es obligatoria');
+    if (!termsAccepted) {
       setLoading(false);
+      setError("Tiene que aceptar los términos y condiciones.");
       return;
     }
 
-    var [ok, error] = await api.googleRegister(id, formData.username, formData.gender, birthDate!);
+    var [ok, error] = await api.googleRegister(id, formData.username, formData.gender, birthDate);
     setError(error);
     if (ok) {
       onLogin();
@@ -461,6 +474,11 @@ const GoogleRegister: React.FC<ThirdPartyRegisterProps> = ({ onLogin, id }) => {
       width: viewWidth
     }}>
       <View>
+        <View style={{ marginTop: 20, marginBottom: 10 }}>
+          <ThemedText type='title'>Crea tu cuenta</ThemedText>
+          <ThemedText>La fecha de nacimiento y genero son opcionales, pero no se podrán cambiar en el futuro.</ThemedText>
+        </View>
+
         <MarginItem>
           <Controller
             control={control}
@@ -475,9 +493,14 @@ const GoogleRegister: React.FC<ThirdPartyRegisterProps> = ({ onLogin, id }) => {
           {errors.username && <ErrorText>{errors.username.message}</ErrorText>}
         </MarginItem>
 
-        <StyledGenderPicker gender={watch("gender")} control={control} errorsGender={errors.gender} />
+        <MarginItem>
+          <ThemedText>Genero</ThemedText>
+          <StyledGenderPicker gender={watch("gender")} control={control} errorsGender={errors.gender} />
+        </MarginItem>
 
         <StyledDatePicker date={birthDate} setDate={setBirthDate} title='Fecha de nacimiento' />
+
+        <TosAccept accepted={termsAccepted} setAccepted={setTermsAccepted} />
 
         <BiggerMarginItem>
           {(error) && (
@@ -496,11 +519,12 @@ const AppleRegister: React.FC<ThirdPartyRegisterProps> = ({ onLogin, id }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [birthDate, setBirthDate] = useState<Date | null>(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const { api } = useApi();
 
   const schema = yup.object().shape({
     username: yup.string().required('El nombre de usuario es obligatorio'),
-    gender: yup.number().required('El género es obligatorio').oneOf([0, 1], 'Género inválido'),
+    gender: yup.number().required('El género es obligatorio').oneOf([0, 1, 2], 'Género inválido'),
   });
 
   const {
@@ -512,20 +536,20 @@ const AppleRegister: React.FC<ThirdPartyRegisterProps> = ({ onLogin, id }) => {
     resolver: yupResolver(schema),
     defaultValues: {
       username: '',
-      gender: 0,
+      gender: 2,
     },
   });
 
   const onPressSend = async (formData: any) => {
     setLoading(true);
 
-    if (birthDate == null) {
-      setError('La fecha de nacimiento es obligatoria');
+    if (!termsAccepted) {
       setLoading(false);
+      setError("Tiene que aceptar los términos y condiciones.");
       return;
     }
 
-    const [ok, error] = await api.appleRegister(id, formData.username, formData.gender, birthDate!);
+    const [ok, error] = await api.appleRegister(id, formData.username, formData.gender, birthDate);
     setError(error);
     if (ok) {
       onLogin();
@@ -541,6 +565,11 @@ const AppleRegister: React.FC<ThirdPartyRegisterProps> = ({ onLogin, id }) => {
   return (
     <View style={{ width: viewWidth }}>
       <View>
+        <View style={{ marginTop: 20, marginBottom: 10 }}>
+          <ThemedText type='title'>Crea tu cuenta</ThemedText>
+          <ThemedText>La fecha de nacimiento y genero son opcionales, pero no se podrán cambiar en el futuro.</ThemedText>
+        </View>
+
         <MarginItem>
           <Controller
             control={control}
@@ -559,9 +588,14 @@ const AppleRegister: React.FC<ThirdPartyRegisterProps> = ({ onLogin, id }) => {
           {errors.username && <ErrorText>{errors.username.message}</ErrorText>}
         </MarginItem>
 
-        <StyledGenderPicker gender={watch('gender')} control={control} errorsGender={errors.gender} />
+        <MarginItem>
+          <ThemedText>Genero</ThemedText>
+          <StyledGenderPicker gender={watch("gender")} control={control} errorsGender={errors.gender} />
+        </MarginItem>
 
         <StyledDatePicker date={birthDate} setDate={setBirthDate} title="Fecha de nacimiento" />
+
+        <TosAccept accepted={termsAccepted} setAccepted={setTermsAccepted} />
 
         <BiggerMarginItem>
           {error && <ErrorText>{error}</ErrorText>}

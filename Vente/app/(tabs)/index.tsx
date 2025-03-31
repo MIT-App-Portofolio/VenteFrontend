@@ -195,7 +195,9 @@ export default function Users() {
             gap: 5,
             alignItems: 'center'
           }}>
-            <ThemedText>{visitor.years} años</ThemedText>
+            {visitor.years &&
+              <ThemedText>{visitor.years} años</ThemedText>
+            }
 
             {
               visitor.igHandle && (
@@ -360,7 +362,9 @@ export default function Users() {
                   </View>
 
                   <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8 }}>
-                    <ThemedText style={{ marginTop: 10 }}>{selectedProfile.years} años</ThemedText>
+                    {selectedProfile.years &&
+                      <ThemedText style={{ marginTop: 10 }}>{selectedProfile.years} años</ThemedText>
+                    }
 
                     <View style={{
                       flexDirection: 'row',

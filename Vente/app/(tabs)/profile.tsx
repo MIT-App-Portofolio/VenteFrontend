@@ -29,7 +29,6 @@ export default function Profile() {
     name: yup.string(),
     description: yup.string(),
     igHandle: yup.string(),
-    gender: yup.number().required('El género es obligatorio').oneOf([0, 1], 'Género inválido'),
   });
 
   const getDefaultValues = () => {
@@ -37,7 +36,6 @@ export default function Profile() {
       name: userProfile?.name || '',
       description: userProfile?.description || '',
       igHandle: userProfile?.igHandle || '',
-      gender: userProfile?.gender || 0,
     };
   };
 
@@ -167,8 +165,6 @@ export default function Profile() {
 
               <BtnSecondary title="Cambiar foto de perfil" onClick={pickImage} />
             </MarginItem>
-
-            <StyledGenderPicker gender={watch("gender")} control={control} errorsGender={errors.gender} />
 
             <MarginItem>
               <Controller

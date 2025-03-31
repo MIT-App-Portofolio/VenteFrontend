@@ -23,7 +23,7 @@ export type GroupStatus = {
 export type Profile = {
   userName: string,
   gender: number,
-  years: number,
+  years?: number,
   name?: string,
   igHandle?: string,
   description?: string,
@@ -302,7 +302,7 @@ export class Api {
     }
   }
 
-  public async googleRegister(id: string, userName: string, gender: number, birthDate: Date): Promise<[boolean, string | null]> {
+  public async googleRegister(id: string, userName: string, gender: number, birthDate: Date | null): Promise<[boolean, string | null]> {
     try {
       const response = await this.axios!.post('/api/account/register_google', {
         id,
@@ -357,7 +357,7 @@ export class Api {
     }
   }
 
-  public async appleRegister(id: string, userName: string, gender: number, birthDate: Date): Promise<[boolean, string | null]> {
+  public async appleRegister(id: string, userName: string, gender: number, birthDate: Date | null): Promise<[boolean, string | null]> {
     try {
       const response = await this.axios!.post('/api/account/register_apple', {
         id,
@@ -401,13 +401,13 @@ export class Api {
     return [true, null];
   }
 
-  public async createAccount(username: string, email: string, password: string, gender: number, birthDate: Date): Promise<[boolean, string | null]> {
+  public async createAccount(username: string, email: string, password: string, gender: number, birthDate: Date | null): Promise<[boolean, string | null]> {
     const registerData = {
       email: email,
       userName: username,
       password: password,
       gender: gender,
-      birthDate: birthDate.toISOString()
+      birthDate: birthDate?.toISOString()
     };
 
     try {
@@ -470,7 +470,6 @@ export class Api {
         igHandle: profile.igHandle,
         name: profile.name,
         description: profile.description,
-        gender: profile.gender,
       });
     } catch (e) {
       console.log('update profile: ' + e);
@@ -602,7 +601,6 @@ export class Api {
     try {
       await this.axios!.post('/api/safety/block?username=' + username);
     } catch (e) {
-      console.log('block: ' + e);
       return false;
     }
     return true;
@@ -611,13 +609,19 @@ export class Api {
   private translateRegisterError(e: any) {
     var errorMessage = "Ha sucedido un error desconocido";
     if (e.response) {
-      e.response.data.forEach(element => {
-        if (element.code == 'DuplicateUserName') {
-          errorMessage = "Ya hay alguien con este nombre de usuario";
-        } else if (element.code == 'DuplicateEmail') {
-          errorMessage = "Ya hay alguien con este email";
-        }
-      });
+      if (e.response.data == "User must be at least 16 years old.") {
+        errorMessage = "Tiene que tener al menos 16 años";
+      } else {
+        try {
+          e.response.data.forEach(element => {
+            if (element.code == 'DuplicateUserName') {
+              errorMessage = "Ya hay alguien con este nombre de usuario";
+            } else if (element.code == 'DuplicateEmail') {
+              errorMessage = "Ya hay alguien con este email";
+            }
+          });
+        } catch { }
+      }
     }
     return errorMessage;
   }

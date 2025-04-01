@@ -310,7 +310,7 @@ export default function Users() {
       {
         selectedProfile &&
         (
-          <StyledModal isModalVisible={isUserModalVisible} setIsModalVisible={setIsUserModalVisible} includeButton={!userFlagVisible} topRightElement={userFlagVisible ? undefined : {
+          <StyledModal isModalVisible={isUserModalVisible} setIsModalVisible={setIsUserModalVisible} includeButton={!userFlagVisible} topRightElement={(userFlagVisible || selectedProfile.userName == userProfile.userName) ? undefined : {
             icon: "flag",
             onPress: flagPress,
           }}>

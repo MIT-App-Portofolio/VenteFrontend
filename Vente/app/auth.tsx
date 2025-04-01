@@ -1,6 +1,6 @@
 // LoginPage.tsx
 import { useState } from 'react';
-import { Text, View, Dimensions, Platform } from 'react-native';
+import { Text, View, Dimensions, Platform, ScrollView } from 'react-native';
 import { MarginItem, BiggerMarginItem } from '@/components/MarginItem';
 import { StyledTextInput, StyledEmailInput, StyledPasswordInput } from '@/components/StyledInput';
 import { ErrorText, ThemedText } from '@/components/ThemedText';
@@ -347,7 +347,7 @@ const Register: React.FC<AuthPageProps> = ({ onLogin }) => {
     <View style={{
       width: viewWidth
     }}>
-      <View>
+      <ScrollView>
         <View style={{ marginTop: 20, marginBottom: 10 }}>
           <ThemedText type='title'>Crea tu cuenta</ThemedText>
           <ThemedText>La fecha de nacimiento y genero son opcionales, pero no se podrán cambiar en el futuro.</ThemedText>
@@ -412,7 +412,7 @@ const Register: React.FC<AuthPageProps> = ({ onLogin }) => {
           )}
           <BtnPrimary title='Crea tu cuenta' onClick={handleSubmit(onPressSend)}></BtnPrimary>
         </BiggerMarginItem>
-      </View>
+      </ScrollView>
     </View>
   )
 };
@@ -473,7 +473,7 @@ const GoogleRegister: React.FC<ThirdPartyRegisterProps> = ({ onLogin, id }) => {
     <View style={{
       width: viewWidth
     }}>
-      <View>
+      <ScrollView>
         <View style={{ marginTop: 20, marginBottom: 10 }}>
           <ThemedText type='title'>Crea tu cuenta</ThemedText>
           <ThemedText>La fecha de nacimiento y genero son opcionales, pero no se podrán cambiar en el futuro.</ThemedText>
@@ -510,7 +510,7 @@ const GoogleRegister: React.FC<ThirdPartyRegisterProps> = ({ onLogin, id }) => {
           )}
           <BtnPrimary title='Crea tu cuenta' onClick={handleSubmit(onPressSend)}></BtnPrimary>
         </BiggerMarginItem>
-      </View>
+      </ScrollView>
     </View>
   )
 }
@@ -564,7 +564,7 @@ const AppleRegister: React.FC<ThirdPartyRegisterProps> = ({ onLogin, id }) => {
 
   return (
     <View style={{ width: viewWidth }}>
-      <View>
+      <ScrollView>
         <View style={{ marginTop: 20, marginBottom: 10 }}>
           <ThemedText type='title'>Crea tu cuenta</ThemedText>
           <ThemedText>La fecha de nacimiento y genero son opcionales, pero no se podrán cambiar en el futuro.</ThemedText>
@@ -601,7 +601,7 @@ const AppleRegister: React.FC<ThirdPartyRegisterProps> = ({ onLogin, id }) => {
           {error && <ErrorText>{error}</ErrorText>}
           <BtnPrimary title="Crea tu cuenta" onClick={handleSubmit(onPressSend)} />
         </BiggerMarginItem>
-      </View>
+      </ScrollView>
     </View>
   );
 };

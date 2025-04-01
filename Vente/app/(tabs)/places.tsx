@@ -7,7 +7,7 @@ import { ThemedText, ViewMoreThemedText } from "@/components/ThemedText";
 import { CenterAligned } from "@/components/CenterAligned";
 import { StyledModal } from "@/components/StyledModal";
 import Carousel from "react-native-reanimated-carousel";
-import { styles as usersPageStyles } from '.';
+import { pfpSize, styles as usersPageStyles } from '.';
 import { BtnPrimary } from "@/components/Buttons";
 import FastImage from "react-native-fast-image";
 import { dateOnlyDisplay } from "@/dateDisplay";
@@ -54,7 +54,7 @@ export default function Places() {
       setIsEventPlaceModalVisible(true);
     }}>
       <FastImage source={{ uri: item.imageUrls.length > 0 ? item.imageUrls[0] : undefined }} style={styles.profilePicture} />
-      <ThemedText type='subtitle' style={{ marginTop: 3 }}>{item.name}</ThemedText>
+      <ThemedText type='subtitle' style={{ marginTop: 3, maxWidth: pfpSize * 0.9 }} ellipsizeMode="tail" numberOfLines={1}>{item.name}</ThemedText>
       {item.ageRequirement && (
         <View style={{ flexDirection: 'row', alignItems: 'center', borderRadius: 5, borderColor: 'white', borderWidth: 1, paddingRight: 3, paddingLeft: 3, marginTop: 5 }}>
           <ThemedText>+{item.ageRequirement}</ThemedText>

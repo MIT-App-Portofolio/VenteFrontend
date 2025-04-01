@@ -15,7 +15,7 @@ import { redirectStore } from '@/redirect_storage';
 import FastImage from 'react-native-fast-image';
 import { dateShortDisplay } from '@/dateDisplay';
 
-const pfpSize = 250;
+export const pfpSize = 250;
 
 export default function Users() {
   const router = useRouter();

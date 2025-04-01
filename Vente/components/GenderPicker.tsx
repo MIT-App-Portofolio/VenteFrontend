@@ -38,7 +38,7 @@ export function StyledGenderPicker<T extends FieldValues>({ gender, control, err
               }}
               render={({ field: { onChange, value } }) => (
                 <Picker
-                  selectedValue={value}
+                  selectedValue={value.toString()}
                   onValueChange={onChange}
                   itemStyle={{ color: 'white' }}
                   style={{ color: 'white', marginBottom: 20, backgroundColor: 'black' }}

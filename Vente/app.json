@@ -21,6 +21,7 @@
         ]
       },
       "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Necesitamos acceso a su galería para que puedas subir una foto de perfil.",
         "CFBundleDevelopmentRegion": "es",
         "CFBundleURLTypes": [
           {

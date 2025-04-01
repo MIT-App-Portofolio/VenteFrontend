@@ -28,8 +28,9 @@ export function StyledDatePicker({ date, setDate, title, setIsDirty, futureOnly,
 
         {showDatePicker &&
           <StyledModal isModalVisible={showDatePicker} setIsModalVisible={(visible) => {
-            if (!visible && date != null && setIsDirty) {
-              setIsDirty(true);
+            if (setIsDirty) setIsDirty(true);
+            if (!visible && date == null) {
+              setDate(new Date());
             }
             setShowDatePicker(visible);
           }}>

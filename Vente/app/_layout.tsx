@@ -14,9 +14,9 @@ import { Inter_400Regular, Inter_700Bold, useFonts } from '@expo-google-fonts/in
 import messaging from '@react-native-firebase/messaging';
 import InviteScreen from './invite';
 import { AppState, Platform, View } from 'react-native';
+import emitter from '@/eventEmitter';
 
 export default function RootLayout() {
-
   return (
     <ApiProvider>
       <View style={{ flex: 1, backgroundColor: 'black' }}>
@@ -91,6 +91,7 @@ function Inner() {
       setLoading(false);
     };
     inner();
+    emitter.on('logout', inner);
   }, []);
 
   if (unknownError) {

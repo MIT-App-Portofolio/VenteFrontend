@@ -606,6 +606,15 @@ export class Api {
     return true;
   }
 
+  public async deleteAccount() {
+    try {
+      await this.axios!.post('/api/account/delete');
+    } catch (e) {
+      return false;
+    }
+    return true;
+  }
+
   private translateRegisterError(e: any) {
     var errorMessage = "Ha sucedido un error desconocido";
     if (e.response) {

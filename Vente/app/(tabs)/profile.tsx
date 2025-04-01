@@ -1,4 +1,4 @@
-import { View, ScrollView, Platform, KeyboardAvoidingView } from "react-native";
+import { View, ScrollView, Platform, KeyboardAvoidingView, TouchableOpacity, Dimensions } from "react-native";
 import { useApi } from "@/api";
 import * as yup from 'yup';
 import { Controller, useForm } from "react-hook-form";
@@ -16,6 +16,11 @@ import { ImageManipulator, manipulateAsync, SaveFormat } from 'expo-image-manipu
 import { StyledGenderPicker } from "@/components/GenderPicker";
 import FastImage from "react-native-fast-image";
 import { redirectStore } from "@/redirect_storage";
+import { Feather, Ionicons } from "@expo/vector-icons";
+import emitter from "@/eventEmitter";
+
+const { height } = Dimensions.get('window');
+const topBarPercentage = 0.13;
 
 export default function Profile() {
   // another hack. too fucking bad
@@ -24,6 +29,9 @@ export default function Profile() {
   const { api, userPfp, userProfile } = useApi();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [settingsScreen, setSettingsScreen] = useState(false);
+  const [deleteConfirmScreen, setDeleteConfirmScreen] = useState(false);
 
   const schema = yup.object().shape({
     name: yup.string(),
@@ -144,6 +152,18 @@ export default function Profile() {
     return <FullScreenLoading />
   }
 
+  if (deleteConfirmScreen) {
+    return (
+      <CenterAligned>
+        <ThemedText type="subtitle">Estas seguro de que quieres eliminar tu cuenta?</ThemedText>
+
+        <View style={{ flexDirection: 'column', gap: 8, width: '60%', marginTop: 15 }}>
+          <BtnPrimary title="Eliminar" onClick={async () => { await api.deleteAccount(); emitter.emit('logout'); }} />
+          <BtnSecondary title="Cancelar" onClick={() => { setDeleteConfirmScreen(false) }} />
+        </View>
+      </CenterAligned>);
+  }
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -154,55 +174,86 @@ export default function Profile() {
         showsVerticalScrollIndicator={false}
         horizontal={false}
       >
+        {!deleteConfirmScreen &&
+          <TouchableOpacity
+            style={{
+              position: 'absolute',
+              top: (height * topBarPercentage) / 2,
+              left: settingsScreen ? 20 : undefined,
+              right: settingsScreen ? undefined : 20,
+              zIndex: 1,
+            }}
+            onPress={() => {
+              setSettingsScreen(!settingsScreen);
+            }}
+          >
+            {!settingsScreen ?
+              <Feather name="settings" size={24} color='white' />
+              :
+              <Ionicons name="arrow-back" size={24} color='white' />
+            }
+          </TouchableOpacity>
+        }
+
         <CenterAligned>
           <View style={{ width: '80%' }}>
-            <View style={{ marginBottom: 20, alignItems: 'center', width: '100%' }}>
-              <ThemedText type="title">@{userProfile?.userName as string}</ThemedText>
-            </View>
+            {settingsScreen ?
+              (
+                <View style={{ marginTop: 15 }}>
+                  <BtnPrimary title='Eliminar cuenta' onClick={() => { setDeleteConfirmScreen(true); }} />
+                </View>
+              ) : (
+                <View>
+                  <View style={{ marginBottom: 20, alignItems: 'center', width: '100%' }}>
+                    <ThemedText type="title">@{userProfile?.userName as string}</ThemedText>
+                  </View>
 
-            <MarginItem>
-              {userPfp && <FastImage source={{ uri: userPfp }} style={{ width: '100%', height: undefined, aspectRatio: 1, borderRadius: 5 }} />}
+                  <MarginItem>
+                    {userPfp && <FastImage source={{ uri: userPfp }} style={{ width: '100%', height: undefined, aspectRatio: 1, borderRadius: 5 }} />}
 
-              <BtnSecondary title="Cambiar foto de perfil" onClick={pickImage} />
-            </MarginItem>
+                    <BtnSecondary title="Cambiar foto de perfil" onClick={pickImage} />
+                  </MarginItem>
 
-            <MarginItem>
-              <Controller
-                control={control}
-                render={({ field: { onChange, value } }) => (
-                  <StyledTextInput title='Nombre' placeholder='' value={value || ''} setValue={onChange} autoCapitalize='none' />
-                )}
-                name="name"
-              />
-              {errors.name && <ErrorText>{errors.name.message}</ErrorText>}
-            </MarginItem>
+                  <MarginItem>
+                    <Controller
+                      control={control}
+                      render={({ field: { onChange, value } }) => (
+                        <StyledTextInput title='Nombre' placeholder='' value={value || ''} setValue={onChange} autoCapitalize='none' />
+                      )}
+                      name="name"
+                    />
+                    {errors.name && <ErrorText>{errors.name.message}</ErrorText>}
+                  </MarginItem>
 
-            <MarginItem>
-              <Controller
-                control={control}
-                render={({ field: { onChange, value } }) => (
-                  <StyledTextInput title='Descripción' placeholder='' value={value || ''} setValue={onChange} autoCapitalize='none' />
-                )}
-                name="description"
-              />
-              {errors.description && <ErrorText>{errors.description.message}</ErrorText>}
-            </MarginItem>
+                  <MarginItem>
+                    <Controller
+                      control={control}
+                      render={({ field: { onChange, value } }) => (
+                        <StyledTextInput title='Descripción' placeholder='' value={value || ''} setValue={onChange} autoCapitalize='none' />
+                      )}
+                      name="description"
+                    />
+                    {errors.description && <ErrorText>{errors.description.message}</ErrorText>}
+                  </MarginItem>
 
-            <MarginItem>
-              <Controller
-                control={control}
-                render={({ field: { onChange, value } }) => (
-                  <StyledTextInput title='Instagram' placeholder='' value={value || ''} setValue={onChange} autoCapitalize='none' />
-                )}
-                name="igHandle"
-              />
-              {errors.igHandle && <ErrorText>{errors.igHandle.message}</ErrorText>}
-            </MarginItem>
+                  <MarginItem>
+                    <Controller
+                      control={control}
+                      render={({ field: { onChange, value } }) => (
+                        <StyledTextInput title='Instagram' placeholder='' value={value || ''} setValue={onChange} autoCapitalize='none' />
+                      )}
+                      name="igHandle"
+                    />
+                    {errors.igHandle && <ErrorText>{errors.igHandle.message}</ErrorText>}
+                  </MarginItem>
 
-            <BiggerMarginItem>
-              {error && <ErrorText>{error}</ErrorText>}
-              <BtnPrimary title="Guardar cambios" onClick={handleSubmit(onPressSend)} disabled={!isDirty} />
-            </BiggerMarginItem>
+                  <BiggerMarginItem>
+                    {error && <ErrorText>{error}</ErrorText>}
+                    <BtnPrimary title="Guardar cambios" onClick={handleSubmit(onPressSend)} disabled={!isDirty} />
+                  </BiggerMarginItem>
+                </View>
+              )
+            }
           </View>
         </CenterAligned>
       </ScrollView>

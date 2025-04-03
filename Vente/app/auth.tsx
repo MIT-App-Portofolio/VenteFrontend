@@ -1,6 +1,6 @@
 // LoginPage.tsx
 import { useState } from 'react';
-import { Text, View, Dimensions, Platform, ScrollView } from 'react-native';
+import { Text, View, Dimensions, Platform, ScrollView, KeyboardAvoidingView } from 'react-native';
 import { MarginItem, BiggerMarginItem } from '@/components/MarginItem';
 import { StyledTextInput, StyledEmailInput, StyledPasswordInput } from '@/components/StyledInput';
 import { ErrorText, ThemedText } from '@/components/ThemedText';
@@ -254,40 +254,51 @@ const Login: React.FC<AuthPageProps> = ({ onLogin }) => {
     <View style={{
       width: viewWidth
     }}>
-      <MarginItem>
-        <Controller
-          control={control}
-          rules={{
-            required: true,
-          }}
-          render={({ field: { onChange, value } }) => (
-            <StyledEmailInput value={value} setValue={onChange}></StyledEmailInput>
-          )}
-          name="email"
-        />
-        {errors.email && <ErrorText>{errors.email.message}</ErrorText>}
-      </MarginItem>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={{ paddingBottom: 50 }}
+          showsHorizontalScrollIndicator={false}
+          showsVerticalScrollIndicator={false}
+          horizontal={false}
+        >
+          <MarginItem>
+            <Controller
+              control={control}
+              rules={{
+                required: true,
+              }}
+              render={({ field: { onChange, value } }) => (
+                <StyledEmailInput value={value} setValue={onChange}></StyledEmailInput>
+              )}
+              name="email"
+            />
+            {errors.email && <ErrorText>{errors.email.message}</ErrorText>}
+          </MarginItem>
 
-      <MarginItem>
-        <Controller
-          control={control}
-          rules={{
-            required: true,
-          }}
-          render={({ field: { onChange, value } }) => (
-            <StyledPasswordInput title='Contraseña' value={value} setValue={onChange}></StyledPasswordInput>
-          )}
-          name="password"
-        />
-        {errors.password && <ErrorText>{errors.password.message}</ErrorText>}
-      </MarginItem>
+          <MarginItem>
+            <Controller
+              control={control}
+              rules={{
+                required: true,
+              }}
+              render={({ field: { onChange, value } }) => (
+                <StyledPasswordInput title='Contraseña' value={value} setValue={onChange}></StyledPasswordInput>
+              )}
+              name="password"
+            />
+            {errors.password && <ErrorText>{errors.password.message}</ErrorText>}
+          </MarginItem>
 
-      <BiggerMarginItem>
-        {(error) && (
-          <ErrorText>{errorMessage}</ErrorText>
-        )}
-        <BtnPrimary title='Iniciar session' onClick={handleSubmit(onPressSend)}></BtnPrimary>
-      </BiggerMarginItem>
+          <BiggerMarginItem>
+            {(error) && (
+              <ErrorText>{errorMessage}</ErrorText>
+            )}
+            <BtnPrimary title='Iniciar session' onClick={handleSubmit(onPressSend)}></BtnPrimary>
+          </BiggerMarginItem>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View >
   )
 };
@@ -347,72 +358,81 @@ const Register: React.FC<AuthPageProps> = ({ onLogin }) => {
     <View style={{
       width: viewWidth
     }}>
-      <ScrollView>
-        <View style={{ marginTop: 20, marginBottom: 10 }}>
-          <ThemedText type='title'>Crea tu cuenta</ThemedText>
-          <ThemedText>La fecha de nacimiento y genero son opcionales, pero no se podrán cambiar en el futuro.</ThemedText>
-        </View>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={{ paddingBottom: 50 }}
+          showsHorizontalScrollIndicator={false}
+          showsVerticalScrollIndicator={false}
+          horizontal={false}
+        >
+          <View style={{ marginTop: 20, marginBottom: 10 }}>
+            <ThemedText type='title'>Crea tu cuenta</ThemedText>
+            <ThemedText>La fecha de nacimiento y genero son opcionales, pero no se podrán cambiar en el futuro.</ThemedText>
+          </View>
 
-        <MarginItem>
-          <Controller
-            control={control}
-            rules={{
-              required: true,
-            }}
-            render={({ field: { onChange, value } }) => (
-              <StyledTextInput title='Nombre de usuario' placeholder='' value={value} setValue={onChange} autoCapitalize='none'></StyledTextInput>
+          <MarginItem>
+            <Controller
+              control={control}
+              rules={{
+                required: true,
+              }}
+              render={({ field: { onChange, value } }) => (
+                <StyledTextInput title='Nombre de usuario' placeholder='' value={value} setValue={onChange} autoCapitalize='none'></StyledTextInput>
+              )}
+              name="username"
+            />
+            {errors.username && <ErrorText>{errors.username.message}</ErrorText>}
+          </MarginItem>
+
+          <MarginItem>
+            <Controller
+              control={control}
+              rules={{
+                required: true,
+              }}
+              render={({ field: { onChange, value } }) => (
+                <StyledEmailInput value={value} setValue={onChange}></StyledEmailInput>
+              )}
+              name="email"
+            />
+            {errors.email && <ErrorText>{errors.email.message}</ErrorText>}
+          </MarginItem>
+
+          <MarginItem>
+            <Controller
+              control={control}
+              rules={{
+                required: true,
+              }}
+              render={({ field: { onChange, value } }) => (
+                <StyledPasswordInput title='Contraseña' value={value} setValue={onChange}></StyledPasswordInput>
+              )}
+              name="password"
+            />
+            {errors.password && <ErrorText>{errors.password.message}</ErrorText>}
+          </MarginItem>
+
+          <MarginItem>
+            <ThemedText>Genero</ThemedText>
+            <StyledGenderPicker gender={watch("gender")} control={control} errorsGender={errors.gender} />
+          </MarginItem>
+
+          <StyledDatePicker date={birthDate} setDate={setBirthDate} title='Fecha de nacimiento' />
+
+          <TosAccept accepted={termsAccepted} setAccepted={setTermsAccepted} />
+
+          <BiggerMarginItem>
+            {(error) && (
+              <ErrorText>
+                {error}
+              </ErrorText>
             )}
-            name="username"
-          />
-          {errors.username && <ErrorText>{errors.username.message}</ErrorText>}
-        </MarginItem>
-
-        <MarginItem>
-          <Controller
-            control={control}
-            rules={{
-              required: true,
-            }}
-            render={({ field: { onChange, value } }) => (
-              <StyledEmailInput value={value} setValue={onChange}></StyledEmailInput>
-            )}
-            name="email"
-          />
-          {errors.email && <ErrorText>{errors.email.message}</ErrorText>}
-        </MarginItem>
-
-        <MarginItem>
-          <Controller
-            control={control}
-            rules={{
-              required: true,
-            }}
-            render={({ field: { onChange, value } }) => (
-              <StyledPasswordInput title='Contraseña' value={value} setValue={onChange}></StyledPasswordInput>
-            )}
-            name="password"
-          />
-          {errors.password && <ErrorText>{errors.password.message}</ErrorText>}
-        </MarginItem>
-
-        <MarginItem>
-          <ThemedText>Genero</ThemedText>
-          <StyledGenderPicker gender={watch("gender")} control={control} errorsGender={errors.gender} />
-        </MarginItem>
-
-        <StyledDatePicker date={birthDate} setDate={setBirthDate} title='Fecha de nacimiento' />
-
-        <TosAccept accepted={termsAccepted} setAccepted={setTermsAccepted} />
-
-        <BiggerMarginItem>
-          {(error) && (
-            <ErrorText>
-              {error}
-            </ErrorText>
-          )}
-          <BtnPrimary title='Crea tu cuenta' onClick={handleSubmit(onPressSend)}></BtnPrimary>
-        </BiggerMarginItem>
-      </ScrollView>
+            <BtnPrimary title='Crea tu cuenta' onClick={handleSubmit(onPressSend)}></BtnPrimary>
+          </BiggerMarginItem>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   )
 };
@@ -473,44 +493,53 @@ const GoogleRegister: React.FC<ThirdPartyRegisterProps> = ({ onLogin, id }) => {
     <View style={{
       width: viewWidth
     }}>
-      <ScrollView>
-        <View style={{ marginTop: 20, marginBottom: 10 }}>
-          <ThemedText type='title'>Crea tu cuenta</ThemedText>
-          <ThemedText>La fecha de nacimiento y genero son opcionales, pero no se podrán cambiar en el futuro.</ThemedText>
-        </View>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={{ paddingBottom: 50 }}
+          showsHorizontalScrollIndicator={false}
+          showsVerticalScrollIndicator={false}
+          horizontal={false}
+        >
+          <View style={{ marginTop: 20, marginBottom: 10 }}>
+            <ThemedText type='title'>Crea tu cuenta</ThemedText>
+            <ThemedText>La fecha de nacimiento y genero son opcionales, pero no se podrán cambiar en el futuro.</ThemedText>
+          </View>
 
-        <MarginItem>
-          <Controller
-            control={control}
-            rules={{
-              required: true,
-            }}
-            render={({ field: { onChange, value } }) => (
-              <StyledTextInput title='Nombre de usuario' placeholder='' value={value} setValue={onChange} autoCapitalize='none'></StyledTextInput>
+          <MarginItem>
+            <Controller
+              control={control}
+              rules={{
+                required: true,
+              }}
+              render={({ field: { onChange, value } }) => (
+                <StyledTextInput title='Nombre de usuario' placeholder='' value={value} setValue={onChange} autoCapitalize='none'></StyledTextInput>
+              )}
+              name="username"
+            />
+            {errors.username && <ErrorText>{errors.username.message}</ErrorText>}
+          </MarginItem>
+
+          <MarginItem>
+            <ThemedText>Genero</ThemedText>
+            <StyledGenderPicker gender={watch("gender")} control={control} errorsGender={errors.gender} />
+          </MarginItem>
+
+          <StyledDatePicker date={birthDate} setDate={setBirthDate} title='Fecha de nacimiento' />
+
+          <TosAccept accepted={termsAccepted} setAccepted={setTermsAccepted} />
+
+          <BiggerMarginItem>
+            {(error) && (
+              <ErrorText>
+                {error}
+              </ErrorText>
             )}
-            name="username"
-          />
-          {errors.username && <ErrorText>{errors.username.message}</ErrorText>}
-        </MarginItem>
-
-        <MarginItem>
-          <ThemedText>Genero</ThemedText>
-          <StyledGenderPicker gender={watch("gender")} control={control} errorsGender={errors.gender} />
-        </MarginItem>
-
-        <StyledDatePicker date={birthDate} setDate={setBirthDate} title='Fecha de nacimiento' />
-
-        <TosAccept accepted={termsAccepted} setAccepted={setTermsAccepted} />
-
-        <BiggerMarginItem>
-          {(error) && (
-            <ErrorText>
-              {error}
-            </ErrorText>
-          )}
-          <BtnPrimary title='Crea tu cuenta' onClick={handleSubmit(onPressSend)}></BtnPrimary>
-        </BiggerMarginItem>
-      </ScrollView>
+            <BtnPrimary title='Crea tu cuenta' onClick={handleSubmit(onPressSend)}></BtnPrimary>
+          </BiggerMarginItem>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   )
 }
@@ -564,44 +593,53 @@ const AppleRegister: React.FC<ThirdPartyRegisterProps> = ({ onLogin, id }) => {
 
   return (
     <View style={{ width: viewWidth }}>
-      <ScrollView>
-        <View style={{ marginTop: 20, marginBottom: 10 }}>
-          <ThemedText type='title'>Crea tu cuenta</ThemedText>
-          <ThemedText>La fecha de nacimiento y genero son opcionales, pero no se podrán cambiar en el futuro.</ThemedText>
-        </View>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={{ paddingBottom: 50 }}
+          showsHorizontalScrollIndicator={false}
+          showsVerticalScrollIndicator={false}
+          horizontal={false}
+        >
+          <View style={{ marginTop: 20, marginBottom: 10 }}>
+            <ThemedText type='title'>Crea tu cuenta</ThemedText>
+            <ThemedText>La fecha de nacimiento y genero son opcionales, pero no se podrán cambiar en el futuro.</ThemedText>
+          </View>
 
-        <MarginItem>
-          <Controller
-            control={control}
-            rules={{ required: true }}
-            render={({ field: { onChange, value } }) => (
-              <StyledTextInput
-                title="Nombre de usuario"
-                placeholder=""
-                value={value}
-                setValue={onChange}
-                autoCapitalize="none"
-              />
-            )}
-            name="username"
-          />
-          {errors.username && <ErrorText>{errors.username.message}</ErrorText>}
-        </MarginItem>
+          <MarginItem>
+            <Controller
+              control={control}
+              rules={{ required: true }}
+              render={({ field: { onChange, value } }) => (
+                <StyledTextInput
+                  title="Nombre de usuario"
+                  placeholder=""
+                  value={value}
+                  setValue={onChange}
+                  autoCapitalize="none"
+                />
+              )}
+              name="username"
+            />
+            {errors.username && <ErrorText>{errors.username.message}</ErrorText>}
+          </MarginItem>
 
-        <MarginItem>
-          <ThemedText>Genero</ThemedText>
-          <StyledGenderPicker gender={watch("gender")} control={control} errorsGender={errors.gender} />
-        </MarginItem>
+          <MarginItem>
+            <ThemedText>Genero</ThemedText>
+            <StyledGenderPicker gender={watch("gender")} control={control} errorsGender={errors.gender} />
+          </MarginItem>
 
-        <StyledDatePicker date={birthDate} setDate={setBirthDate} title="Fecha de nacimiento" />
+          <StyledDatePicker date={birthDate} setDate={setBirthDate} title="Fecha de nacimiento" />
 
-        <TosAccept accepted={termsAccepted} setAccepted={setTermsAccepted} />
+          <TosAccept accepted={termsAccepted} setAccepted={setTermsAccepted} />
 
-        <BiggerMarginItem>
-          {error && <ErrorText>{error}</ErrorText>}
-          <BtnPrimary title="Crea tu cuenta" onClick={handleSubmit(onPressSend)} />
-        </BiggerMarginItem>
-      </ScrollView>
+          <BiggerMarginItem>
+            {error && <ErrorText>{error}</ErrorText>}
+            <BtnPrimary title="Crea tu cuenta" onClick={handleSubmit(onPressSend)} />
+          </BiggerMarginItem>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 };

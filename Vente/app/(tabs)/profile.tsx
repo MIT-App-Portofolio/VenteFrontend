@@ -34,9 +34,9 @@ export default function Profile() {
   const [deleteConfirmScreen, setDeleteConfirmScreen] = useState(false);
 
   const schema = yup.object().shape({
-    name: yup.string(),
-    description: yup.string(),
-    igHandle: yup.string(),
+    name: yup.string().max(35, "El nombre no puede ser mas largo de 35 caracteres"),
+    description: yup.string().max(200, "La descripción debe de contener menos de 200 caracteres."),
+    igHandle: yup.string().max(30, "Su instagram no puede contener mas de 30 caracteres."),
   });
 
   const getDefaultValues = () => {

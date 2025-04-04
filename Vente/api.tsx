@@ -627,8 +627,10 @@ export class Api {
               errorMessage = "Ya hay alguien con este nombre de usuario";
             } else if (element.code == 'DuplicateEmail') {
               errorMessage = "Ya hay alguien con este email";
+            } else if (element.code == 'InvalidUserName') {
+              errorMessage = "Nombre de usuario invalido";
             } else if (element.code == 'InvalidEmail') {
-              errorMessage = "Correo invalido.";
+              errorMessage = "Correo invalido";
             }
           });
         } catch { }

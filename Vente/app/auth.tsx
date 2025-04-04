@@ -311,7 +311,7 @@ const Register: React.FC<AuthPageProps> = ({ onLogin }) => {
   const { api } = useApi();
 
   const schema = yup.object().shape({
-    username: yup.string().required('El nombre de usuario es obligatorio'),
+    username: ProperUsername(),
     email: yup.string().required('El correo es obligatorio').email('Dirección invalida'),
     password: ProperPassword(),
     gender: yup.number().required('El género es obligatorio').oneOf([0, 1, 2], 'Género inválido'),
@@ -450,7 +450,7 @@ const GoogleRegister: React.FC<ThirdPartyRegisterProps> = ({ onLogin, id }) => {
   const { api } = useApi();
 
   const schema = yup.object().shape({
-    username: yup.string().required('El nombre de usuario es obligatorio'),
+    username: ProperUsername(),
     gender: yup.number().required('El género es obligatorio').oneOf([0, 1, 2], 'Género inválido'),
   });
 
@@ -552,7 +552,7 @@ const AppleRegister: React.FC<ThirdPartyRegisterProps> = ({ onLogin, id }) => {
   const { api } = useApi();
 
   const schema = yup.object().shape({
-    username: yup.string().required('El nombre de usuario es obligatorio'),
+    username: ProperUsername(),
     gender: yup.number().required('El género es obligatorio').oneOf([0, 1, 2], 'Género inválido'),
   });
 
@@ -651,6 +651,16 @@ function ProperPassword() {
     .matches(/\d/, 'La contraseña debe tener al menos un dígito (0-9).')
     .matches(/[A-Z]/, 'La contraseña debe tener al menos una letra mayúscula (A-Z).')
     .required('La contraseña es requerida.');
+}
+
+function ProperUsername() {
+  const usernameRegex = /^[a-zA-Z0-9\-._@+]+$/;
+
+  return yup.string()
+    .matches(usernameRegex, "El nombre de usuario solo puede contener letras, números y caracteres especiales.")
+    .min(3, "El nombre de usuario debe de contener mas de 3 letras.")
+    .max(20, "El nombre de usuario no puede contener mas de 20 letras.")
+    .required("El nombre de usuario es requerido.");
 }
 
 export default Auth;

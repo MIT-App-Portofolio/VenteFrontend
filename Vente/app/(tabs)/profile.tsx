@@ -32,6 +32,7 @@ export default function Profile() {
 
   const [settingsScreen, setSettingsScreen] = useState(false);
   const [deleteConfirmScreen, setDeleteConfirmScreen] = useState(false);
+  const [logoutConfirmScreen, setLogoutConfirmScreen] = useState(false);
 
   const schema = yup.object().shape({
     name: yup.string().max(35, "El nombre no puede ser mas largo de 35 caracteres"),
@@ -51,7 +52,6 @@ export default function Profile() {
     control,
     handleSubmit,
     formState: { errors, isDirty },
-    watch,
     reset
   } = useForm({
     resolver: yupResolver(schema),
@@ -164,6 +164,18 @@ export default function Profile() {
       </CenterAligned>);
   }
 
+  if (logoutConfirmScreen) {
+    return (
+      <CenterAligned>
+        <ThemedText type="subtitle">Estas seguro de que quieres cerrar sesión?</ThemedText>
+
+        <View style={{ flexDirection: 'column', gap: 8, width: '60%', marginTop: 15 }}>
+          <BtnPrimary title="Cerrar sesión" onClick={() => { api.logout(); emitter.emit('logout'); }} />
+          <BtnSecondary title="Cancelar" onClick={() => { setLogoutConfirmScreen(false) }} />
+        </View>
+      </CenterAligned>);
+  }
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -199,8 +211,9 @@ export default function Profile() {
           <View style={{ width: '80%' }}>
             {settingsScreen ?
               (
-                <View style={{ marginTop: 15 }}>
-                  <BtnPrimary title='Eliminar cuenta' onClick={() => { setDeleteConfirmScreen(true); }} />
+                <View style={{ marginTop: 15, flexDirection: 'column', gap: 5, paddingTop: 50 }}>
+                  <BtnPrimary title='Cerrar sesión' onClick={() => { setLogoutConfirmScreen(true); }} />
+                  <BtnSecondary title='Eliminar cuenta' onClick={() => { setDeleteConfirmScreen(true); }} />
                 </View>
               ) : (
                 <View>

@@ -615,6 +615,10 @@ export class Api {
     return true;
   }
 
+  public logout() {
+    AsyncStorage.removeItem('authToken');
+  }
+
   private translateRegisterError(e: any) {
     var errorMessage = "Ha sucedido un error desconocido";
     if (e.response) {

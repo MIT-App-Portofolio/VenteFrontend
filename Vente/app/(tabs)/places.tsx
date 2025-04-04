@@ -175,6 +175,14 @@ export default function Places() {
                 </ViewMoreThemedText>
 
                 {
+                  selectedEventPlace.googleMapsLink && (
+                    <View style={{ marginTop: 20 }}>
+                      <BtnPrimary title="Abrir en mapas" onClick={() => { Linking.openURL(selectedEventPlace.googleMapsLink!) }} />
+                    </View>
+                  )
+                }
+
+                {
                   selectedEventPlace.events.length > 0 &&
                   <View style={{ marginTop: 10 }}>
                     <ThemedText type="title">Eventos</ThemedText>
@@ -200,14 +208,6 @@ export default function Places() {
                       </View>
                     ))}
                   </View>
-                }
-
-                {
-                  selectedEventPlace.googleMapsLink && (
-                    <View style={{ marginTop: 20 }}>
-                      <BtnPrimary title="Abrir en mapas" onClick={() => { Linking.openURL(selectedEventPlace.googleMapsLink!) }} />
-                    </View>
-                  )
                 }
               </ScrollView>
             </StyledModal >

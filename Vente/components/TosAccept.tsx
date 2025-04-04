@@ -1,3 +1,4 @@
+import { Feather } from '@expo/vector-icons';
 import { Link } from '@react-navigation/native';
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Linking } from 'react-native';
@@ -19,8 +20,9 @@ const Checkbox: React.FC<CheckboxProps> = ({ checked, onPress }) => (
       width: 24, height: 24, borderWidth: 2, borderColor: 'white',
       borderRadius: 5,
       alignItems: 'center', justifyContent: 'center',
+      backgroundColor: checked ? 'white' : undefined
     }}>
-    {checked && <Text style={{ fontSize: 16, color: 'blue' }}>✔</Text>}
+    {checked && <Feather name='check' color='black' size={20} />}
   </TouchableOpacity>
 );
 

@@ -15,31 +15,31 @@ export type StyledLocationPickerProps = {
 
 export function StyledLocationPicker({ locations, location, setLocation, setIsDirty }: StyledLocationPickerProps) {
   const ios = Platform.OS === 'ios';
-  const [forceRender, setForceRender] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
+  const [tempLocation, setTempLocation] = useState<number | null>(location);
 
   if (ios) {
     return (
       <MarginItem>
-        <BtnPrimary title={location != null ? locations.find(loc => loc.id == location)?.name! : 'Selecciona un lugar'} onClick={() => setShowPicker(true)}></BtnPrimary>
+        <BtnPrimary
+          title={tempLocation != null ? locations.find(loc => loc.id == tempLocation)?.name! : 'Selecciona un lugar'}
+          onClick={() => {
+            setTempLocation(location ?? (locations.length > 0 ? locations[0].id : null));
+            setShowPicker(true);
+          }}
+        />
 
         {showPicker &&
           <StyledModal isModalVisible={showPicker} setIsModalVisible={(visible) => {
-            // The user may have closed the moda without changing the default selected value
-            // That should be considered as selecting the default value
-            if (!visible && location == null) {
-              setLocation(0);
-              setForceRender(!forceRender);
-              setIsDirty(true);
+            if (!visible) {
+              setTempLocation(location); // Reset temp location when closing without saving
             }
-
             setShowPicker(visible);
           }}>
             <Picker
-              selectedValue={location as string | null}
-              onValueChange={(itemValue, _) => {
-                setIsDirty(true);
-                setLocation((itemValue as number | null)!);
+              selectedValue={tempLocation?.toString() ?? null}
+              onValueChange={(itemValue) => {
+                setTempLocation(itemValue ? parseInt(itemValue) : null);
               }}
               itemStyle={{ color: 'white' }}
               style={{ color: 'white', marginBottom: 20, backgroundColor: 'black' }}
@@ -48,6 +48,14 @@ export function StyledLocationPicker({ locations, location, setLocation, setIsDi
                 <Picker.Item key={location.id} label={location.name} value={location.id.toString()} />
               ))}
             </Picker>
+
+            <BtnPrimary title='Guardar' onClick={() => {
+              if (tempLocation != null) {
+                setLocation(tempLocation);
+                setIsDirty(true);
+              }
+              setShowPicker(false);
+            }} />
           </StyledModal>
         }
       </MarginItem>

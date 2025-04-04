@@ -20,17 +20,20 @@ export type StyledDatePickerProps = {
 export function StyledDatePicker({ date, setDate, title, setIsDirty, futureOnly, pastOnly }: StyledDatePickerProps) {
   const ios = Platform.OS === 'ios';
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [tempDate, setTempDate] = useState<Date | null>(date);
 
   if (ios) {
     return (
       <MarginItem>
-        <BtnPrimary title={date ? dateDisplay(date) : title} onClick={() => setShowDatePicker(true)}></BtnPrimary>
+        <BtnPrimary title={date ? dateDisplay(date) : title} onClick={() => {
+          setTempDate(date);
+          setShowDatePicker(true);
+        }}></BtnPrimary>
 
         {showDatePicker &&
           <StyledModal isModalVisible={showDatePicker} setIsModalVisible={(visible) => {
-            if (setIsDirty) setIsDirty(true);
-            if (!visible && date == null) {
-              setDate(new Date());
+            if (!visible) {
+              setTempDate(date); // Reset temp date when closing without saving
             }
             setShowDatePicker(visible);
           }}>
@@ -40,16 +43,26 @@ export function StyledDatePicker({ date, setDate, title, setIsDirty, futureOnly,
                 minimumDate={futureOnly === true ? new Date() : undefined}
                 maximumDate={pastOnly === true ? new Date() : undefined}
                 style={{ width: 450 }}
-                value={date ?? new Date()}
+                value={tempDate ?? new Date()}
                 onChange={(_, selectedDate) => {
                   if (selectedDate) {
-                    setDate(selectedDate);
+                    setTempDate(selectedDate);
                   }
                 }}
                 mode="date"
                 display="inline"
               />
             </CenterAligned>
+
+            <BtnPrimary title="Guardar" onClick={() => {
+              if (setIsDirty) setIsDirty(true);
+              if (tempDate) {
+                setDate(tempDate);
+              } else {
+                setDate(new Date());
+              }
+              setShowDatePicker(false);
+            }} />
           </StyledModal>
         }
       </MarginItem>

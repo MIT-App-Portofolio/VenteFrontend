@@ -1,5 +1,5 @@
 import { Picker } from '@react-native-picker/picker';
-import { useState } from 'react';
+import { useState, Fragment } from 'react';
 import { FieldValues, Control, Controller, Path } from 'react-hook-form';
 import { Platform, View } from 'react-native';
 import { BtnPrimary } from './Buttons';
@@ -16,6 +16,8 @@ export type GenderPickerProps<T extends FieldValues> = {
 export function StyledGenderPicker<T extends FieldValues>({ gender, control, errorsGender }: GenderPickerProps<T>) {
   const ios = Platform.OS === 'ios';
   const [showPicker, setShowPicker] = useState(false);
+  const [clickedOnce, setClickedOnce] = useState(false);
+  const [tempGender, setTempGender] = useState<string>(gender.toString());
 
   let genderText = "Hombre";
   if (gender == 1) {
@@ -27,26 +29,44 @@ export function StyledGenderPicker<T extends FieldValues>({ gender, control, err
   if (ios) {
     return (
       <MarginItem>
-        <BtnPrimary title={genderText} onClick={() => setShowPicker(true)} />
+        <BtnPrimary title={clickedOnce ? genderText : "Escoge tu genero"} onClick={() => {
+          setTempGender(gender.toString());
+          setShowPicker(true);
+          setClickedOnce(true);
+        }} />
         {errorsGender && <ErrorText>{errorsGender.message}</ErrorText>}
         {showPicker &&
-          <StyledModal isModalVisible={showPicker} setIsModalVisible={setShowPicker}>
+          <StyledModal isModalVisible={showPicker} setIsModalVisible={(visible) => {
+            if (!visible) {
+              setTempGender(gender.toString()); // Reset temp gender when closing without saving
+            }
+            setShowPicker(visible);
+          }}>
             <Controller
               control={control}
               rules={{
                 required: true,
               }}
-              render={({ field: { onChange, value } }) => (
-                <Picker
-                  selectedValue={value.toString()}
-                  onValueChange={onChange}
-                  itemStyle={{ color: 'white' }}
-                  style={{ color: 'white', marginBottom: 20, backgroundColor: 'black' }}
-                >
-                  <Picker.Item label="Hombre" value={"0"} />
-                  <Picker.Item label="Mujer" value={"1"} />
-                  <Picker.Item label="No especificado" value={"2"} />
-                </Picker>
+              render={({ field: { onChange } }) => (
+                <Fragment>
+                  <Picker
+                    selectedValue={tempGender}
+                    onValueChange={(value) => {
+                      setTempGender(value);
+                    }}
+                    itemStyle={{ color: 'white' }}
+                    style={{ color: 'white', marginBottom: 20, backgroundColor: 'black' }}
+                  >
+                    <Picker.Item label="Hombre" value={"0"} />
+                    <Picker.Item label="Mujer" value={"1"} />
+                    <Picker.Item label="No especificado" value={"2"} />
+                  </Picker>
+
+                  <BtnPrimary title='Guardar' onClick={() => {
+                    onChange(parseInt(tempGender));
+                    setShowPicker(false);
+                  }} />
+                </Fragment>
               )}
               name={"gender" as Path<T>}
             />
@@ -90,7 +110,7 @@ type GenderFilterProps = {
 export function StyledGenderFilter({ gender, setGender }: GenderFilterProps) {
   const ios = Platform.OS === 'ios';
   const [showPicker, setShowPicker] = useState(false);
-
+  const [tempGender, setTempGender] = useState<number | null>(gender);
 
   if (ios) {
     let title = "";
@@ -100,17 +120,25 @@ export function StyledGenderFilter({ gender, setGender }: GenderFilterProps) {
 
     return (
       <View>
-        <BtnPrimary title={title} onClick={() => setShowPicker(true)} />
+        <BtnPrimary title={title} onClick={() => {
+          setTempGender(gender);
+          setShowPicker(true);
+        }} />
         {showPicker &&
-          <StyledModal isModalVisible={showPicker} setIsModalVisible={setShowPicker}>
+          <StyledModal isModalVisible={showPicker} setIsModalVisible={(visible) => {
+            if (!visible) {
+              setTempGender(gender); // Reset temp gender when closing without saving
+            }
+            setShowPicker(visible);
+          }}>
             <Picker
-              selectedValue={gender != null ? (gender + 1).toString() : "0"}
-              onValueChange={(itemValue, _) => {
+              selectedValue={tempGender != null ? (tempGender + 1).toString() : "0"}
+              onValueChange={(itemValue) => {
                 if (itemValue == "0") {
-                  setGender(null);
+                  setTempGender(null);
                 }
                 else {
-                  setGender(itemValue == "1" ? 0 : 1);
+                  setTempGender(itemValue == "1" ? 0 : 1);
                 }
               }}
               itemStyle={{ color: 'white' }}
@@ -120,6 +148,11 @@ export function StyledGenderFilter({ gender, setGender }: GenderFilterProps) {
               <Picker.Item label="Hombre" value={"1"} />
               <Picker.Item label="Mujer" value={"2"} />
             </Picker>
+
+            <BtnPrimary title='Guardar' onClick={() => {
+              setGender(tempGender);
+              setShowPicker(false);
+            }} />
           </StyledModal>
         }
       </View>

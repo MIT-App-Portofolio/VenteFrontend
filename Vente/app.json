@@ -76,6 +76,12 @@
             "useFrameworks": "static"
           }
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Necesitamos opcionalmente acceso a su ubicación para enseñarle los lugares mas cercanos."
+        }
       ]
     ],
     "extra": {

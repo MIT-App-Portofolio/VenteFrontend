@@ -1,86 +1,64 @@
-import { EventLocation } from '@/api';
-import { Picker } from '@react-native-picker/picker';
+import { EventLocation, useApi } from '@/api';
 import { useState } from 'react';
-import { Platform } from 'react-native';
+import { TouchableOpacity, ScrollView } from 'react-native';
 import { BtnPrimary } from './Buttons';
 import { MarginItem } from './MarginItem';
 import { StyledModal } from './StyledModal';
+import FastImage from 'react-native-fast-image';
+import { ThemedText } from './ThemedText';
+import * as Location from 'expo-location';
+import * as geolib from 'geolib';
 
 export type StyledLocationPickerProps = {
   locations: EventLocation[];
-  location: number | null;
-  setLocation: (location: number) => void;
+  location: string | null;
+  setLocation: (location: string) => void;
   setIsDirty: (dirty: boolean) => void;
 };
 
 export function StyledLocationPicker({ locations, location, setLocation, setIsDirty }: StyledLocationPickerProps) {
-  const ios = Platform.OS === 'ios';
   const [showPicker, setShowPicker] = useState(false);
-  const [tempLocation, setTempLocation] = useState<number | null>(location);
-
-  if (ios) {
-    return (
-      <MarginItem>
-        <BtnPrimary
-          title={tempLocation != null ? locations.find(loc => loc.id == tempLocation)?.name! : 'Selecciona un lugar'}
-          onClick={() => {
-            setTempLocation(location ?? (locations.length > 0 ? locations[0].id : null));
-            setShowPicker(true);
-          }}
-        />
-
-        {showPicker &&
-          <StyledModal isModalVisible={showPicker} setIsModalVisible={(visible) => {
-            if (!visible) {
-              setTempLocation(location); // Reset temp location when closing without saving
-            }
-            setShowPicker(visible);
-          }}>
-            <Picker
-              selectedValue={tempLocation?.toString() ?? null}
-              onValueChange={(itemValue) => {
-                setTempLocation(itemValue ? parseInt(itemValue) : null);
-              }}
-              itemStyle={{ color: 'white' }}
-              style={{ color: 'white', marginBottom: 20, backgroundColor: 'black' }}
-            >
-              {locations.map(location => (
-                <Picker.Item key={location.id} label={location.name} value={location.id.toString()} />
-              ))}
-            </Picker>
-
-            <BtnPrimary title='Guardar' onClick={() => {
-              if (tempLocation != null) {
-                setLocation(tempLocation);
-                setIsDirty(true);
-              }
-              setShowPicker(false);
-            }} />
-          </StyledModal>
-        }
-      </MarginItem>
-    )
-  }
+  const [allLocations, setAllLocations] = useState<EventLocation[]>(locations);
 
   return (
     <MarginItem>
-      {showPicker ?
-        <Picker selectedValue={location}
-          onValueChange={(itemValue, _) => {
-            setIsDirty(true);
-            setLocation(itemValue!);
-          }}
-          style={{ color: 'white', marginBottom: 20, backgroundColor: 'black' }}
-        >
-          {locations.map(location => (
-            <Picker.Item key={location.id} label={location.name} value={location.id} />
-          ))}
-        </Picker> :
-        <BtnPrimary title='Selecciona un lugar' onClick={() => {
-          // Android is different. No not-selected value unless hardcoded. which is pointless. clicking the choose loc button selects default location and allows usr to change.
-          setLocation(0);
+      <BtnPrimary
+        title={location != null ? locations.find(loc => loc.id == location)?.name! : 'Selecciona un lugar'}
+        onClick={async () => {
+          const { status } = await Location.requestForegroundPermissionsAsync();
+          if (status === 'granted') {
+            const { coords } = await Location.getCurrentPositionAsync({});
+            const sorted = [...allLocations].sort((a, b) => {
+              const distanceA = geolib.getDistance(coords, { latitude: a.latitude, longitude: a.longitude });
+              const distanceB = geolib.getDistance(coords, { latitude: b.latitude, longitude: b.longitude });
+              return distanceA - distanceB;
+            });
+            setAllLocations(sorted);
+          }
           setShowPicker(true);
-        }}></BtnPrimary>
+        }}
+      />
+
+      {showPicker &&
+        <StyledModal isModalVisible={showPicker} setIsModalVisible={(visible) => {
+          setShowPicker(visible);
+        }}>
+          <ScrollView >
+            {allLocations?.map((l, _1, _2) =>
+              <TouchableOpacity key={l.id} style={{ width: '100%', height: 100, borderRadius: 15, marginTop: 10 }} onPress={() => { setLocation(l.id); setShowPicker(false); setIsDirty(true); }}>
+                <FastImage source={{ uri: l.pictureUrl }} style={{ width: '100%', height: '100%', borderRadius: 15, opacity: 0.8 }} />
+                <ThemedText type='subtitle' style={{
+                  position: 'absolute',
+                  bottom: 10,
+                  left: 10,
+                  textTransform: 'uppercase'
+                }}>
+                  {l.name}
+                </ThemedText>
+              </TouchableOpacity>
+            )}
+          </ScrollView>
+        </StyledModal>
       }
     </MarginItem>
   );

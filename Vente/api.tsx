@@ -34,12 +34,15 @@ export type EventStatus = {
   active: boolean,
   time?: Date,
   with?: string[],
-  location?: EventLocation
+  locationId?: string
 }
 
 export type EventLocation = {
-  id: number,
+  id: string,
   name: string,
+  pictureUrl: string,
+  latitude: number,
+  longitude: number,
 };
 
 export type EventPlace = {
@@ -180,6 +183,10 @@ export class Api {
     } catch {
       return null;
     }
+  }
+
+  public getOwnLocationName(userProfile: Profile): string | undefined {
+    return this.locations?.find(l => l.id == userProfile.eventStatus.locationId)?.name;
   }
 
   // Assumes user is already in the db

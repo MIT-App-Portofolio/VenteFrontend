@@ -17,7 +17,7 @@ export default function Calendar() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [selectedLocation, setSelectedLocation] = useState<number | null>(userProfile?.eventStatus.location?.id ?? null);
+  const [selectedLocation, setSelectedLocation] = useState<string | null>(userProfile?.eventStatus.location?.id ?? null);
   const [date, setDate] = useState<Date | null>(userProfile?.eventStatus.time ?? null);
   const [isDirty, setIsDirty] = useState(false);
 
@@ -131,7 +131,7 @@ export default function Calendar() {
           {!userProfile?.eventStatus.active && <StyledLocationPicker locations={api.locations!} location={selectedLocation} setLocation={setSelectedLocation} setIsDirty={setIsDirty} />}
           {!userProfile?.eventStatus.active && <StyledDatePicker title="Escoge una fecha" date={date} setIsDirty={setIsDirty} setDate={setDate} futureOnly />}
 
-          {userProfile?.eventStatus.active && <ThemedText type="subtitle" style={{ textAlign: 'center' }}>{userProfile.eventStatus.location?.name} - {dateDisplay(userProfile.eventStatus.time!)}</ThemedText>}
+          {userProfile?.eventStatus.active && <ThemedText type="subtitle" style={{ textAlign: 'center' }}>{api.getOwnLocationName(userProfile)} - {dateDisplay(userProfile.eventStatus.time!)}</ThemedText>}
         </MarginItem>
 
         <Modal

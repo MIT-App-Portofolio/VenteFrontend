@@ -253,7 +253,7 @@ export default function Users() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
         contentContainerStyle={{ paddingBottom: 50 }}
       >
-        <ThemedText type='title' style={{ alignSelf: 'flex-start', marginTop: 10 }}>Usuarios que también van a {userProfile.eventStatus.location?.name}</ThemedText>
+        <ThemedText type='title' style={{ alignSelf: 'flex-start', marginTop: 10 }}>Usuarios que también van a {api.getOwnLocationName(userProfile)}</ThemedText>
 
         <View style={{ flexDirection: 'row', justifyContent: 'center', width: '100%', marginTop: 10, marginBottom: 10 }}>
           <BtnPrimary title='Filtrar usuarios' onClick={() => setIsFilterModalVisible(true)} />

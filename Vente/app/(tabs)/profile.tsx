@@ -13,7 +13,6 @@ import React, { useEffect, useState } from "react";
 import CropPicker from 'react-native-image-crop-picker';
 import * as ImagePicker from 'expo-image-picker';
 import { ImageManipulator, manipulateAsync, SaveFormat } from 'expo-image-manipulator';
-import { StyledGenderPicker } from "@/components/GenderPicker";
 import FastImage from "react-native-fast-image";
 import { redirectStore } from "@/redirect_storage";
 import { Feather, Ionicons } from "@expo/vector-icons";

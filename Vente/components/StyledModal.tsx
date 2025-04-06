@@ -11,13 +11,14 @@ export type ModalProps = {
   children?: React.ReactNode;
   isModalVisible: boolean;
   includeButton?: boolean;
+  noIncludeScrollView?: boolean;
   topRightElement?: TopRightElement;
   setIsModalVisible: (isVisible: boolean) => void;
 };
 
 const { height } = Dimensions.get('window');
 
-export function StyledModal({ children, isModalVisible, setIsModalVisible, includeButton = true, topRightElement }: ModalProps) {
+export function StyledModal({ children, isModalVisible, setIsModalVisible, includeButton = true, topRightElement, noIncludeScrollView }: ModalProps) {
   const topBarPercentage = 0.13;
 
   const styles = StyleSheet.create({
@@ -67,9 +68,15 @@ export function StyledModal({ children, isModalVisible, setIsModalVisible, inclu
           </TouchableOpacity>
         )}
 
-        <ScrollView style={styles.modalContent} contentContainerStyle={{ paddingBottom: height * topBarPercentage }}>
-          {children}
-        </ScrollView>
+        {noIncludeScrollView === true ?
+          <View style={styles.modalContent}>
+            {children}
+          </View> :
+          <ScrollView style={styles.modalContent} contentContainerStyle={{ paddingBottom: height * topBarPercentage }}>
+            {children}
+          </ScrollView>
+        }
+
       </View>
     </Modal>
   );

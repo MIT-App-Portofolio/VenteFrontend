@@ -1,6 +1,6 @@
 import { EventLocation, useApi } from '@/api';
 import { useState } from 'react';
-import { TouchableOpacity, ScrollView } from 'react-native';
+import { TouchableOpacity, ScrollView, TextInput, View, Keyboard } from 'react-native';
 import { BtnPrimary } from './Buttons';
 import { MarginItem } from './MarginItem';
 import { StyledModal } from './StyledModal';
@@ -8,6 +8,7 @@ import FastImage from 'react-native-fast-image';
 import { ThemedText } from './ThemedText';
 import * as Location from 'expo-location';
 import * as geolib from 'geolib';
+import { StyledTextInput } from './StyledInput';
 
 export type StyledLocationPickerProps = {
   locations: EventLocation[];
@@ -19,6 +20,11 @@ export type StyledLocationPickerProps = {
 export function StyledLocationPicker({ locations, location, setLocation, setIsDirty }: StyledLocationPickerProps) {
   const [showPicker, setShowPicker] = useState(false);
   const [allLocations, setAllLocations] = useState<EventLocation[]>(locations);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredLocations = allLocations.filter(loc =>
+    loc.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <MarginItem>
@@ -42,22 +48,33 @@ export function StyledLocationPicker({ locations, location, setLocation, setIsDi
       {showPicker &&
         <StyledModal isModalVisible={showPicker} setIsModalVisible={(visible) => {
           setShowPicker(visible);
-        }}>
-          <ScrollView >
-            {allLocations?.map((l, _1, _2) =>
-              <TouchableOpacity key={l.id} style={{ width: '100%', height: 100, borderRadius: 15, marginTop: 10 }} onPress={() => { setLocation(l.id); setShowPicker(false); setIsDirty(true); }}>
-                <FastImage source={{ uri: l.pictureUrl }} style={{ width: '100%', height: '100%', borderRadius: 15, opacity: 0.8 }} />
-                <ThemedText type='subtitle' style={{
-                  position: 'absolute',
-                  bottom: 10,
-                  left: 10,
-                  textTransform: 'uppercase'
-                }}>
-                  {l.name}
-                </ThemedText>
-              </TouchableOpacity>
-            )}
-          </ScrollView>
+          setSearchQuery(''); // Reset search when closing modal
+        }} noIncludeScrollView>
+          <View style={{ flex: 1 }}>
+            <View style={{ paddingHorizontal: 10, paddingBottom: 10 }}>
+              <StyledTextInput
+                placeholder="Buscar lugar..."
+                value={searchQuery}
+                setValue={setSearchQuery}
+                onChangeText={setSearchQuery}
+              />
+            </View>
+            <ScrollView style={{ flex: 1 }}>
+              {filteredLocations?.map((l, _1, _2) =>
+                <TouchableOpacity key={l.id} style={{ width: '100%', height: 100, borderRadius: 15, marginTop: 10 }} onPress={() => { setLocation(l.id); setShowPicker(false); setIsDirty(true); }}>
+                  <FastImage source={{ uri: l.pictureUrl }} style={{ width: '100%', height: '100%', borderRadius: 15, opacity: 0.8 }} />
+                  <ThemedText type='subtitle' style={{
+                    position: 'absolute',
+                    bottom: 10,
+                    left: 10,
+                    textTransform: 'uppercase'
+                  }}>
+                    {l.name}
+                  </ThemedText>
+                </TouchableOpacity>
+              )}
+            </ScrollView>
+          </View>
         </StyledModal>
       }
     </MarginItem>

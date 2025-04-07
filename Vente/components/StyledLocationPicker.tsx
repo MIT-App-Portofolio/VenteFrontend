@@ -1,6 +1,6 @@
-import { EventLocation, useApi } from '@/api';
-import { useState } from 'react';
-import { TouchableOpacity, ScrollView, TextInput, View, Keyboard } from 'react-native';
+import { EventLocation } from '@/api';
+import { useState, useRef } from 'react';
+import { TouchableOpacity, ScrollView, View, ActivityIndicator } from 'react-native';
 import { BtnPrimary } from './Buttons';
 import { MarginItem } from './MarginItem';
 import { StyledModal } from './StyledModal';
@@ -21,27 +21,46 @@ export function StyledLocationPicker({ locations, location, setLocation, setIsDi
   const [showPicker, setShowPicker] = useState(false);
   const [allLocations, setAllLocations] = useState<EventLocation[]>(locations);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSorting, setIsSorting] = useState(false);
+  const hasSorted = useRef(false);
 
   const filteredLocations = allLocations.filter(loc =>
     loc.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const sortLocations = async () => {
+    if (isSorting || hasSorted.current) return;
+
+    setTimeout(async () => {
+      setIsSorting(true);
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status === 'granted') {
+          const { coords } = await Location.getCurrentPositionAsync({});
+          const sorted = [...allLocations].sort((a, b) => {
+            const distanceA = geolib.getDistance(coords, { latitude: a.latitude, longitude: a.longitude });
+            const distanceB = geolib.getDistance(coords, { latitude: b.latitude, longitude: b.longitude });
+            return distanceA - distanceB;
+          });
+
+          setAllLocations(sorted);
+          hasSorted.current = true;
+        }
+      } catch (error) {
+        console.error('Error fetching location:', error);
+      } finally {
+        setIsSorting(false);
+      }
+    }, 0);
+  };
+
   return (
     <MarginItem>
       <BtnPrimary
         title={location != null ? locations.find(loc => loc.id == location)?.name! : 'Selecciona un lugar'}
-        onClick={async () => {
-          const { status } = await Location.requestForegroundPermissionsAsync();
-          if (status === 'granted') {
-            const { coords } = await Location.getCurrentPositionAsync({});
-            const sorted = [...allLocations].sort((a, b) => {
-              const distanceA = geolib.getDistance(coords, { latitude: a.latitude, longitude: a.longitude });
-              const distanceB = geolib.getDistance(coords, { latitude: b.latitude, longitude: b.longitude });
-              return distanceA - distanceB;
-            });
-            setAllLocations(sorted);
-          }
+        onClick={() => {
           setShowPicker(true);
+          sortLocations();
         }}
       />
 
@@ -58,6 +77,12 @@ export function StyledLocationPicker({ locations, location, setLocation, setIsDi
                 setValue={setSearchQuery}
                 onChangeText={setSearchQuery}
               />
+              {isSorting && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'center', marginTop: 8 }}>
+                  <ActivityIndicator size="small" color="white" />
+                  <ThemedText style={{ marginLeft: 8 }}>Ordenando por proximidad...</ThemedText>
+                </View>
+              )}
             </View>
             <ScrollView style={{ flex: 1 }}>
               {filteredLocations?.map((l, _1, _2) =>

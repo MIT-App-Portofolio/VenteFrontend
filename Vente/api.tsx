@@ -588,9 +588,9 @@ export class Api {
   public async queryVisitors(page: number, gender: number | null, ageRangeMin: number | null, ageRangeMax: number | null): Promise<string[] | null> {
     try {
       var query = '/api/query_visitors?page=' + page;
-      if (gender) query += '&gender=' + gender;
-      if (ageRangeMin) query += '&ageRangeMin=' + ageRangeMin;
-      if (ageRangeMax) query += '&ageRangeMax=' + ageRangeMax;
+      if (gender != null) query += '&gender=' + gender;
+      if (ageRangeMin != null) query += '&ageRangeMin=' + ageRangeMin;
+      if (ageRangeMax != null) query += '&ageRangeMax=' + ageRangeMax;
 
       const response = await this.axios!.get(query);
       const profiles: Profile[] = response.data;

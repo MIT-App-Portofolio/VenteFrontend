@@ -22,92 +22,102 @@ export default function Users() {
 
   const { api, userProfile } = useApi();
 
+  // State management
   const [loading, setLoading] = useState(false);
-
   const [visitors, setVisitors] = useState<string[]>([]);
   const [page, setPage] = useState(0);
-
+  const [lastUserFetchEmpty, setLastUserFetchEmpty] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
-
   const [isUserModalVisible, setIsUserModalVisible] = useState(false);
   const [userFlagVisible, setUserFlagVisible] = useState(false);
   const [userFlagLoading, setUserFlagLoading] = useState(false);
   const [userFlagMessage, setUserFlagMessage] = useState<string | null>(null);
-
-  const [lastUserFetchEmpty, setLastUserFetchEmpty] = useState(false);
-
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
   const [genderFilter, setGenderFilter] = useState<number | null>(null);
   const [ageRangeMin, setAgeRangeMin] = useState<number | null>(null);
   const [ageRangeMax, setAgeRangeMax] = useState<number | null>(null);
 
-  const [refreshing, setRefreshing] = useState(false);
-
   const scrollY = useRef(new Animated.Value(0)).current;
-  const preventFetchOnPageChange = useRef(false);
+  const isFetching = useRef(false);
 
-  useEffect(() => {
-    preventFetchOnPageChange.current = true;
-    setLastUserFetchEmpty(false);
+  // Fetch visitors with proper error handling and loading states
+  const fetchVisitors = useCallback(async (pageNum: number, shouldReset: boolean = false) => {
+    if (isFetching.current) return;
+    isFetching.current = true;
+    setLoading(true);
+
+    try {
+      const newVisitors = await api.queryVisitors(pageNum, genderFilter, ageRangeMin, ageRangeMax);
+
+      if (!newVisitors || newVisitors.length === 0) {
+        setLastUserFetchEmpty(true);
+      } else {
+        // Fetch profile pictures for all new visitors
+        await Promise.all(newVisitors.map(visitor => api.fetchPfp(visitor)));
+
+        // Fetch profile pictures for users they go with
+        await Promise.all(newVisitors.map(async visitor => {
+          const profile = api.getUserUnstable(visitor);
+          if (profile?.eventStatus?.with) {
+            await Promise.all(profile.eventStatus.with.map(async withUser => {
+              if (!api.hasUser(withUser)) {
+                await api.getUser(withUser);
+                await api.fetchPfp(withUser);
+              }
+            }));
+          }
+        }));
+
+        setVisitors(prev => shouldReset ? newVisitors : [...prev, ...newVisitors]);
+      }
+    } catch (error) {
+      console.error('Error fetching visitors:', error);
+      setLastUserFetchEmpty(true);
+    } finally {
+      setLoading(false);
+      isFetching.current = false;
+    }
+  }, [api, genderFilter, ageRangeMin, ageRangeMax]);
+
+  const initialFetch = useCallback(() => {
     setPage(0);
-    setVisitors([]);
-    fetchVisitors(true);
+    setLastUserFetchEmpty(false);
+    fetchVisitors(0, true);
+  }, [fetchVisitors]);
+
+  // Initial fetch and fetch on event status change
+  useEffect(() => {
+    initialFetch();
   }, [userProfile?.eventStatus]);
 
-  useEffect(() => {
-    if (!preventFetchOnPageChange.current) {
-      fetchVisitors();
+  const pageChangeFetch = useCallback(() => {
+    if (page > 0) {
+      fetchVisitors(page);
     }
-    preventFetchOnPageChange.current = false;
   }, [page]);
 
+  // Fetch more on page change
   useEffect(() => {
-    visitors.forEach(visitor => {
-      var profile = api.getUserUnstable(visitor);
-      if (profile.eventStatus.with) {
-        profile.eventStatus.with.forEach(async withUser => {
-          if (!api.hasUser(withUser)) {
-            // These functions would cache the respective values so that they can be accessed with unstable functions
-            await api.getUser(withUser);
-            await api.fetchPfp(withUser);
-          }
-        });
-      }
-    });
-  }, [visitors]);
+    pageChangeFetch();
+  }, [page]);
 
+  // Pull to refresh
   const refresh = useCallback(async () => {
-    preventFetchOnPageChange.current = true;
     setRefreshing(true);
     setLastUserFetchEmpty(false);
-    setVisitors([]);
     setPage(0);
-    await fetchVisitors(true);
+    await fetchVisitors(0, true);
     setRefreshing(false);
-  }, [genderFilter, ageRangeMin, ageRangeMax]);
+  }, [fetchVisitors]);
 
-  const fetchVisitors = async (overrideLastFetch?: boolean) => {
-    setLoading(true);
-    if (!overrideLastFetch && lastUserFetchEmpty) {
-      return;
-    }
-
-    const newVisitors = await api.queryVisitors(page, genderFilter, ageRangeMin, ageRangeMax);
-
-    if (!newVisitors || newVisitors.length === 0) {
-      setLastUserFetchEmpty(true);
-    }
-
-    if (newVisitors) {
-      await Promise.all(newVisitors.map(visitor => api.fetchPfp(visitor)));
-      if (overrideLastFetch === true) {
-        setVisitors(newVisitors);
-      } else {
-        setVisitors(prevVisitors => [...prevVisitors, ...newVisitors]);
-      }
-    }
-    setLoading(false);
-  };
+  // Apply filters
+  const applyFilter = useCallback(async () => {
+    setPage(0);
+    setLastUserFetchEmpty(false);
+    await fetchVisitors(0, true);
+    setIsFilterModalVisible(false);
+  }, [fetchVisitors]);
 
   const handleScroll = (event: any) => {
     Animated.event(
@@ -122,17 +132,6 @@ export default function Users() {
       contentSize.height - paddingToBottom && !loading && !lastUserFetchEmpty) {
       setPage(page + 1);
     }
-  };
-
-  const applyFilter = async () => {
-    preventFetchOnPageChange.current = true;
-    setPage(0);
-    setLastUserFetchEmpty(false);
-    setVisitors([]);
-
-    await fetchVisitors();
-
-    setIsFilterModalVisible(false);
   };
 
   const handleProfileClick = (profile: Profile) => {
@@ -441,7 +440,6 @@ export default function Users() {
                         </View>
                       );
                     })}
-                    )
                   </View>
                 </ScrollView>
               )

@@ -178,7 +178,25 @@ export default function Users() {
 
     return (
       <TouchableOpacity style={styles.card} onPress={() => handleProfileClick(visitor!)}>
-        <FastImage source={{ uri: pfpUrl }} style={styles.profilePicture} />
+        <View style={{ position: 'relative' }}>
+          <FastImage source={{ uri: pfpUrl }} style={styles.profilePicture} />
+          {visitor.note && (
+            <View style={{
+              position: 'absolute',
+              top: -10,
+              right: -10,
+              backgroundColor: '#2A2A2A',
+              padding: 10,
+              borderRadius: 10,
+              borderWidth: 1,
+              borderColor: '#3A3A3A',
+            }}>
+              <ThemedText style={{ fontSize: 14, maxWidth: 140 }}>
+                {visitor.note}
+              </ThemedText>
+            </View>
+          )}
+        </View>
         <View style={{ alignItems: 'flex-start', flexDirection: 'column' }}>
           <ThemedText type="subtitle" style={{ marginTop: 5, maxWidth: pfpSize * 0.9 }} ellipsizeMode='tail' numberOfLines={2}>{displayName}</ThemedText>
           <View style={{
@@ -350,7 +368,25 @@ export default function Users() {
                 </View>
               ) : (
                 <ScrollView style={styles.modalContent}>
-                  <FastImage source={{ uri: api.getPfpUnstable(selectedProfile.userName) }} style={styles.modalProfilePicture} />
+                  <View style={{ position: 'relative' }}>
+                    <FastImage source={{ uri: api.getPfpUnstable(selectedProfile.userName) }} style={styles.modalProfilePicture} />
+                    {selectedProfile.note && (
+                      <View style={{
+                        position: 'absolute',
+                        top: -10,
+                        right: -10,
+                        backgroundColor: '#2A2A2A',
+                        padding: 10,
+                        borderRadius: 10,
+                        borderWidth: 1,
+                        borderColor: '#3A3A3A',
+                      }}>
+                        <ThemedText style={{ fontSize: 14, maxWidth: 140 }}>
+                          {selectedProfile.note}
+                        </ThemedText>
+                      </View>
+                    )}
+                  </View>
 
                   <View style={{ flexDirection: 'column', alignItems: 'flex-start', marginTop: 10 }}>
                     {

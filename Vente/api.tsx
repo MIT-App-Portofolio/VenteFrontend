@@ -23,6 +23,7 @@ export type GroupStatus = {
 export type Profile = {
   userName: string,
   gender: number,
+  note?: string,
   years?: number,
   name?: string,
   igHandle?: string,
@@ -480,6 +481,26 @@ export class Api {
       });
     } catch (e) {
       console.log('update profile: ' + e);
+      return false;
+    }
+    return await this.getUserInfo() == AuthResult.Authenticated;
+  }
+
+  public async updateNote(note: string) {
+    try {
+      await this.axios!.post('/api/account/set_custom_note?note=' + note);
+    } catch (e) {
+      console.log('update note: ' + e);
+      return false;
+    }
+    return await this.getUserInfo() == AuthResult.Authenticated;
+  }
+
+  public async removeNote() {
+    try {
+      await this.axios!.post('/api/account/remove_custom_note');
+    } catch (e) {
+      console.log('remove note: ' + e);
       return false;
     }
     return await this.getUserInfo() == AuthResult.Authenticated;

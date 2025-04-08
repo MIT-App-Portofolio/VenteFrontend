@@ -17,6 +17,7 @@ import FastImage from "react-native-fast-image";
 import { redirectStore } from "@/redirect_storage";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import emitter from "@/eventEmitter";
+import { StyledModal } from "@/components/StyledModal";
 
 const { height } = Dimensions.get('window');
 const topBarPercentage = 0.13;
@@ -32,6 +33,10 @@ export default function Profile() {
   const [settingsScreen, setSettingsScreen] = useState(false);
   const [deleteConfirmScreen, setDeleteConfirmScreen] = useState(false);
   const [logoutConfirmScreen, setLogoutConfirmScreen] = useState(false);
+
+  const [customNoteEditing, setCustomNoteEditing] = useState(false);
+  const [customNotePrompt, setCustomNotePrompt] = useState(false);
+  const [customNote, setCustomNote] = useState(userProfile?.note);
 
   const schema = yup.object().shape({
     name: yup.string().max(35, "El nombre no puede ser mas largo de 35 caracteres"),
@@ -176,99 +181,154 @@ export default function Profile() {
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView
-        contentContainerStyle={{ paddingBottom: 90, paddingTop: 60 }}
-        showsHorizontalScrollIndicator={false}
-        showsVerticalScrollIndicator={false}
-        horizontal={false}
-      >
-        {!deleteConfirmScreen &&
-          <TouchableOpacity
-            style={{
-              position: 'absolute',
-              top: (height * topBarPercentage) / 2,
-              left: settingsScreen ? 20 : undefined,
-              right: settingsScreen ? undefined : 20,
-              zIndex: 1,
-            }}
-            onPress={() => {
-              setSettingsScreen(!settingsScreen);
-            }}
-          >
-            {!settingsScreen ?
-              <Feather name="settings" size={24} color='white' />
-              :
-              <Ionicons name="arrow-back" size={24} color='white' />
-            }
-          </TouchableOpacity>
-        }
+    <View>
+      <StyledModal isModalVisible={customNoteEditing} setIsModalVisible={setCustomNoteEditing}>
+        <StyledTextInput value={customNote ?? ""} setValue={setCustomNote} maxLength={50} />
 
+        <BtnPrimary title="Guardar" onClick={async () => {
+          setLoading(true);
+          await api.updateNote(customNote ?? "");
+          setLoading(false);
+          setCustomNoteEditing(false);
+        }} />
+      </StyledModal>
+
+      <StyledModal isModalVisible={customNotePrompt} setIsModalVisible={setCustomNotePrompt}>
         <CenterAligned>
-          <View style={{ width: '80%' }}>
-            {settingsScreen ?
-              (
-                <View style={{ marginTop: 15, flexDirection: 'column', gap: 5, paddingTop: 50 }}>
-                  <BtnPrimary title='Cerrar sesión' onClick={() => { setLogoutConfirmScreen(true); }} />
-                  <BtnSecondary title='Eliminar cuenta' onClick={() => { setDeleteConfirmScreen(true); }} />
-                </View>
-              ) : (
-                <View>
-                  <View style={{ marginBottom: 20, alignItems: 'center', width: '100%' }}>
-                    <ThemedText type="title">@{userProfile?.userName as string}</ThemedText>
-                  </View>
+          <ThemedText type="subtitle">¿Que quieres hacer con tu nota?</ThemedText>
 
-                  <MarginItem>
-                    {userPfp && <FastImage source={{ uri: userPfp }} style={{ width: '100%', height: undefined, aspectRatio: 1, borderRadius: 5 }} />}
-
-                    <BtnSecondary title="Cambiar foto de perfil" onClick={pickImage} />
-                  </MarginItem>
-
-                  <MarginItem>
-                    <Controller
-                      control={control}
-                      render={({ field: { onChange, value } }) => (
-                        <StyledTextInput title='Nombre' placeholder='' value={value || ''} setValue={onChange} autoCapitalize='none' />
-                      )}
-                      name="name"
-                    />
-                    {errors.name && <ErrorText>{errors.name.message}</ErrorText>}
-                  </MarginItem>
-
-                  <MarginItem>
-                    <Controller
-                      control={control}
-                      render={({ field: { onChange, value } }) => (
-                        <StyledTextInput title='Descripción' placeholder='' value={value || ''} setValue={onChange} autoCapitalize='none' />
-                      )}
-                      name="description"
-                    />
-                    {errors.description && <ErrorText>{errors.description.message}</ErrorText>}
-                  </MarginItem>
-
-                  <MarginItem>
-                    <Controller
-                      control={control}
-                      render={({ field: { onChange, value } }) => (
-                        <StyledTextInput title='Instagram' placeholder='' value={value || ''} setValue={onChange} autoCapitalize='none' />
-                      )}
-                      name="igHandle"
-                    />
-                    {errors.igHandle && <ErrorText>{errors.igHandle.message}</ErrorText>}
-                  </MarginItem>
-
-                  <BiggerMarginItem>
-                    {error && <ErrorText>{error}</ErrorText>}
-                    <BtnPrimary title="Guardar cambios" onClick={handleSubmit(onPressSend)} disabled={!isDirty} />
-                  </BiggerMarginItem>
-                </View>
-              )
-            }
+          <View style={{ flexDirection: 'column', gap: 5, marginBottom: 10, marginTop: 10, alignSelf: 'stretch' }}>
+            <BtnPrimary title="Cambiar" onClick={() => {
+              setCustomNote(userProfile?.note);
+              setCustomNoteEditing(true);
+              setCustomNotePrompt(false);
+            }} />
+            <BtnSecondary title="Eliminar" onClick={async () => {
+              setLoading(true);
+              setCustomNoteEditing(false);
+              setCustomNotePrompt(false);
+              await api.removeNote();
+              setLoading(false);
+            }} />
           </View>
         </CenterAligned>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </StyledModal>
+
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={{ paddingBottom: 90, paddingTop: 60 }}
+          showsHorizontalScrollIndicator={false}
+          showsVerticalScrollIndicator={false}
+          horizontal={false}
+        >
+          {!deleteConfirmScreen &&
+            <TouchableOpacity
+              style={{
+                position: 'absolute',
+                top: (height * topBarPercentage) / 2,
+                left: settingsScreen ? 20 : undefined,
+                right: settingsScreen ? undefined : 20,
+                zIndex: 1,
+              }}
+              onPress={() => {
+                setSettingsScreen(!settingsScreen);
+              }}
+            >
+              {!settingsScreen ?
+                <Feather name="settings" size={24} color='white' />
+                :
+                <Ionicons name="arrow-back" size={24} color='white' />
+              }
+            </TouchableOpacity>
+          }
+
+          <CenterAligned>
+            <View style={{ width: '80%' }}>
+              {settingsScreen ?
+                (
+                  <View style={{ marginTop: 15, flexDirection: 'column', gap: 5, paddingTop: 50 }}>
+                    <BtnPrimary title='Cerrar sesión' onClick={() => { setLogoutConfirmScreen(true); }} />
+                    <BtnSecondary title='Eliminar cuenta' onClick={() => { setDeleteConfirmScreen(true); }} />
+                  </View>
+                ) : (
+                  <View>
+                    <View style={{ marginBottom: 20, alignItems: 'center', width: '100%' }}>
+                      <ThemedText type="title">@{userProfile?.userName as string}</ThemedText>
+                    </View>
+
+                    <MarginItem>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, position: 'relative' }}>
+                        <View style={{ flex: 1 }}>
+                          {userPfp && <FastImage source={{ uri: userPfp }} style={{ width: '100%', height: undefined, aspectRatio: 1, borderRadius: 5 }} />}
+                        </View>
+                        <TouchableOpacity
+                          onPress={() => userProfile?.note ? setCustomNotePrompt(true) : setCustomNoteEditing(true)}
+                          style={{
+                            flex: 1,
+                            position: 'absolute',
+                            top: -10,
+                            right: -10,
+                            backgroundColor: '#2A2A2A',
+                            padding: 10,
+                            borderRadius: 10,
+                            borderWidth: 1,
+                            borderColor: '#3A3A3A',
+                          }}
+                        >
+                          <ThemedText style={{ fontSize: 14, maxWidth: 140 }}>
+                            {userProfile?.note || "Añade una nota..."}
+                          </ThemedText>
+                        </TouchableOpacity>
+                      </View>
+                      <BtnSecondary title="Cambiar foto de perfil" onClick={pickImage} />
+                    </MarginItem>
+
+                    <MarginItem>
+                      <Controller
+                        control={control}
+                        render={({ field: { onChange, value } }) => (
+                          <StyledTextInput title='Nombre' placeholder='' value={value || ''} setValue={onChange} autoCapitalize='none' />
+                        )}
+                        name="name"
+                      />
+                      {errors.name && <ErrorText>{errors.name.message}</ErrorText>}
+                    </MarginItem>
+
+                    <MarginItem>
+                      <Controller
+                        control={control}
+                        render={({ field: { onChange, value } }) => (
+                          <StyledTextInput title='Descripción' placeholder='' value={value || ''} setValue={onChange} autoCapitalize='none' />
+                        )}
+                        name="description"
+                      />
+                      {errors.description && <ErrorText>{errors.description.message}</ErrorText>}
+                    </MarginItem>
+
+                    <MarginItem>
+                      <Controller
+                        control={control}
+                        render={({ field: { onChange, value } }) => (
+                          <StyledTextInput title='Instagram' placeholder='' value={value || ''} setValue={onChange} autoCapitalize='none' />
+                        )}
+                        name="igHandle"
+                      />
+                      {errors.igHandle && <ErrorText>{errors.igHandle.message}</ErrorText>}
+                    </MarginItem>
+
+                    <BiggerMarginItem>
+                      {error && <ErrorText>{error}</ErrorText>}
+                      <BtnPrimary title="Guardar cambios" onClick={handleSubmit(onPressSend)} disabled={!isDirty} />
+                    </BiggerMarginItem>
+                  </View>
+                )
+              }
+            </View>
+          </CenterAligned>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 }

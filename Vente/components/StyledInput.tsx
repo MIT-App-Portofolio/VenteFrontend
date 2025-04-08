@@ -8,11 +8,11 @@ interface StyledTextInputProps extends TextInputProps {
   setValue: (e: string) => void;
 }
 
-export function StyledTextInput({ title, placeholder, value, setValue, autoCapitalize, secureTextEntry }: StyledTextInputProps) {
+export function StyledTextInput({ title, placeholder, value, setValue, autoCapitalize, secureTextEntry, maxLength }: StyledTextInputProps) {
   return (
     <View>
       <ThemedText>{title as string}</ThemedText>
-      <TextInput value={value} onChangeText={setValue} placeholder={placeholder} placeholderTextColor='white' autoCapitalize={autoCapitalize} secureTextEntry={secureTextEntry}
+      <TextInput value={value} onChangeText={setValue} placeholder={placeholder} placeholderTextColor='white' autoCapitalize={autoCapitalize} secureTextEntry={secureTextEntry} maxLength={maxLength}
         style={{
           padding: 10,
           borderColor: 'white',

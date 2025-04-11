@@ -108,7 +108,7 @@ const Auth: React.FC<AuthPageProps> = ({ onLogin }) => {
     setLoading(true);
     try {
       if (!appleAuth.isSupported) {
-        setError('Iniciar session con apple no esta disponible en este dispositivo.');
+        setError('Iniciar sesión con apple no esta disponible en este dispositivo.');
         setLoading(false);
         return;
       }
@@ -168,7 +168,7 @@ const Auth: React.FC<AuthPageProps> = ({ onLogin }) => {
               <BtnPrimary title='Crea una cuenta' onClick={() => { setCurrentPage('register') }}></BtnPrimary>
             </MarginItem>
             <MarginItem>
-              <BtnSecondary title='Iniciar Session' onClick={() => { setCurrentPage('login') }}></BtnSecondary>
+              <BtnSecondary title='Iniciar Sesión' onClick={() => { setCurrentPage('login') }}></BtnSecondary>
             </MarginItem>
           </View>
 
@@ -295,7 +295,7 @@ const Login: React.FC<AuthPageProps> = ({ onLogin }) => {
             {(error) && (
               <ErrorText>{errorMessage}</ErrorText>
             )}
-            <BtnPrimary title='Iniciar session' onClick={handleSubmit(onPressSend)}></BtnPrimary>
+            <BtnPrimary title='Iniciar Sesión' onClick={handleSubmit(onPressSend)}></BtnPrimary>
           </BiggerMarginItem>
         </ScrollView>
       </KeyboardAvoidingView>

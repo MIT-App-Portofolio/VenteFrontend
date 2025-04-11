@@ -71,12 +71,21 @@ export type EventPlaceOffer = {
   price?: number,
 }
 
+export type CustomOffer = {
+  name: string,
+  description?: string,
+  place: EventPlace,
+  imageUrl?: string,
+  validUntil: Date
+}
+
 const ApiContext = createContext<{
   api: Api,
   userProfile: Profile | null,
   userPfp: string | null,
   inviteStatus: InviteStatus | null
   groupStatus: GroupStatus | null
+  customOffers: CustomOffer[] | null
 } | null>(null);
 
 export const useApi = () => {
@@ -93,10 +102,11 @@ export const ApiProvider = ({ children }: { children: ReactNode }) => {
   const [userPfp, setUserPfp] = useState<string | null>(null);
   const [inviteStatus, setInviteStatus] = useState<InviteStatus | null>(null);
   const [groupStatus, setGroupStatus] = useState<GroupStatus | null>(null);
+  const [customOffers, setCustomOffers] = useState<CustomOffer[] | null>(null);
 
   useEffect(() => {
     const initializeApi = async () => {
-      const instance = new Api(setUserProfile, setUserPfp, setInviteStatus, setGroupStatus);
+      const instance = new Api(setUserProfile, setUserPfp, setInviteStatus, setGroupStatus, setCustomOffers);
       var url = "";
 
       if (__DEV__) {
@@ -130,7 +140,7 @@ export const ApiProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <ApiContext.Provider value={{ api, userProfile, userPfp, inviteStatus, groupStatus }}>
+    <ApiContext.Provider value={{ api, userProfile, userPfp, inviteStatus, groupStatus, customOffers }}>
       {children}
     </ApiContext.Provider>
   );
@@ -148,19 +158,23 @@ export class Api {
   private setInviteStatus: React.Dispatch<React.SetStateAction<InviteStatus | null>>;
   private setUserPfp: React.Dispatch<React.SetStateAction<string | null>>;
   private setGroupStatus: React.Dispatch<React.SetStateAction<GroupStatus | null>>;
+  private setCustomOffers: React.Dispatch<React.SetStateAction<CustomOffer[] | null>>;
 
   constructor(
     setUserProfile: React.Dispatch<React.SetStateAction<Profile | null>>,
     setUserPfp: React.Dispatch<React.SetStateAction<string | null>>,
     setInviteStatus: React.Dispatch<React.SetStateAction<InviteStatus | null>>,
-    setGroupStatus: React.Dispatch<React.SetStateAction<GroupStatus | null>>) {
+    setGroupStatus: React.Dispatch<React.SetStateAction<GroupStatus | null>>,
+    setCustomOffers: React.Dispatch<React.SetStateAction<CustomOffer[] | null>>
+  ) {
     this.locations = null;
     this.axios = null;
     this.username = null;
     this.setUserProfile = setUserProfile;
     this.setUserPfp = setUserPfp;
     this.setInviteStatus = setInviteStatus;
-    this.setGroupStatus = setGroupStatus
+    this.setGroupStatus = setGroupStatus;
+    this.setCustomOffers = setCustomOffers;
   }
 
   public async init(url: string) {
@@ -250,6 +264,22 @@ export class Api {
     } catch (e) {
       console.log('pfp: ' + e);
       return null;
+    }
+  }
+
+  public async getCustomOffers() {
+    try {
+      const response = await this.axios!.get('/api/account/get_offers');
+      response.data.forEach((element: CustomOffer) => {
+        element.validUntil = new Date(element.validUntil)
+      });
+
+      this.setCustomOffers(response.data);
+
+      return true;
+    } catch (e) {
+      console.log('custom offers info: ' + e);
+      return false;
     }
   }
 

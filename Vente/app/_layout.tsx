@@ -52,10 +52,19 @@ function Inner() {
       messaging().onTokenRefresh(async (token) => {
         await api.sendNotificationToken(token);
       });
-      messaging().onMessage(async (_) => {
-        // For now, the only notifications are the invite ones, so no need to handle other types.
-        // This will also obviously refresh the app if the invite status is different triggering the proper popup.
-        await api.getInviteStatus();
+      messaging().onMessage(async (notification) => {
+        if (notification.data) {
+          switch (notification.data.notification_type) {
+            case "invite":
+              await api.getInviteStatus();
+              break;
+            case "offer":
+              await api.getCustomOffers();
+              break;
+            default:
+              break;
+          }
+        }
       });
 
       // This is needed to handle the unique case where a user has recently closed the app, 

@@ -7,7 +7,7 @@ import { ThemedText, ViewMoreThemedText } from "@/components/ThemedText";
 import { CenterAligned } from "@/components/CenterAligned";
 import { StyledModal } from "@/components/StyledModal";
 import Carousel from "react-native-reanimated-carousel";
-import { pfpSize, styles as usersPageStyles } from '.';
+import { pfpSize, styles as usersPageStyles } from './users';
 import { BtnPrimary } from "@/components/Buttons";
 import FastImage from "react-native-fast-image";
 import { dateOnlyDisplay } from "@/dateDisplay";
@@ -27,13 +27,6 @@ export default function Places() {
   const [isEventModalVisible, setIsEventModalVisible] = useState(false);
 
   const screenWidth = Dimensions.get('window').width;
-
-  const scrollY = useRef(new Animated.Value(0)).current;
-  const buttonHeight = scrollY.interpolate({
-    inputRange: [0, 200],
-    outputRange: [160, 40],
-    extrapolate: 'clamp',
-  });
 
   useEffect(() => {
     const f = async () => {
@@ -74,33 +67,11 @@ export default function Places() {
 
   return (
     <HorizontallyAligned>
-      <Animated.View style={{
-        backgroundColor: 'black',
-        marginTop: 10,
-        borderRadius: 15,
-        width: '100%',
-        height: buttonHeight,
-      }}>
-        <TouchableOpacity onPress={() => router.push("/")} style={{
-          width: '100%',
-          height: '100%',
-        }}>
-          <Image source={require('../../assets/images/club.jpeg')} style={{ width: '100%', height: '100%', borderRadius: 15, opacity: 0.4 }} />
-          <ThemedText style={{
-            position: 'absolute',
-            bottom: 10,
-            left: 10,
-            textTransform: 'uppercase'
-          }}>
-            Ver Usuarios
-          </ThemedText>
-        </TouchableOpacity>
-      </Animated.View>
+      <View style={{ marginBottom: 10, width: 150 }}>
+        <BtnPrimary title='Volver' onClick={() => router.push("/")}></BtnPrimary>
+      </View>
+
       <Animated.ScrollView
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: false }
-        )}
         horizontal={false}
         showsHorizontalScrollIndicator={false}
         showsVerticalScrollIndicator={false}

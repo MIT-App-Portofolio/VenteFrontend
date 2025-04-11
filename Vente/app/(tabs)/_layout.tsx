@@ -36,6 +36,18 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="users"
+        options={{
+          href: null
+        }}
+      />
+      <Tabs.Screen
+        name="offers"
+        options={{
+          href: null
+        }}
+      />
+      <Tabs.Screen
         name="calendar"
         options={{
           title: 'Calendario',

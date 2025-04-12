@@ -3,7 +3,7 @@ import { FullScreenLoading } from "@/components/FullScreenLoading";
 import { HorizontallyAligned } from "@/components/HorizontallyAligned";
 import { ThemedText, ViewMoreThemedText } from "@/components/ThemedText";
 import { dateShortDisplay } from "@/dateDisplay";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, StyleSheet, TouchableOpacity, ScrollView, Animated, RefreshControl, Linking, Dimensions, Image } from "react-native";
 import FastImage from "react-native-fast-image";
 import { StyledModal } from "@/components/StyledModal";
@@ -12,32 +12,9 @@ import { CenterAligned } from "@/components/CenterAligned";
 import { BtnPrimary } from "@/components/Buttons";
 import { CustomOffer, EventPlace } from "@/api";
 import Carousel from "react-native-reanimated-carousel";
+import QRCode from 'react-native-qrcode-svg';
 
 export const offerImageSize = 250;
-
-type WidthFillingImageProps = {
-  url?: string,
-  maxHeight: number
-};
-
-function WidthFillingImage({ url, maxHeight }: WidthFillingImageProps) {
-  const [imageAspectRatio, setImageAspectRatio] = useState(1);
-
-  return (<View style={{ flex: 1 }}>
-    <FastImage
-      source={{ uri: url }}
-      style={{
-        borderRadius: 8,
-        width: '100%',
-        maxHeight: maxHeight,
-        aspectRatio: imageAspectRatio,
-      }}
-      onLoad={(e) =>
-        setImageAspectRatio(e.nativeEvent.width / e.nativeEvent.height)
-      }
-    />
-  </View>);
-}
 
 export default function Offers() {
   const { api, customOffers } = useApi();
@@ -46,8 +23,10 @@ export default function Offers() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState<CustomOffer | null>(null);
   const [selectedEventPlace, setSelectedEventPlace] = useState<EventPlace | null>(null);
-  const [isOfferModalVisible, setIsOfferModalVisible] = useState(false);
-  const [isEventPlaceModalVisible, setIsEventPlaceModalVisible] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [modalType, setModalType] = useState<'offer' | 'eventPlace' | 'qr' | null>(null);
+  const [qrToken, setQrToken] = useState<string | null>(null);
+  const [qrLoading, setQrLoading] = useState(false);
 
   const screenWidth = Dimensions.get('window').width;
 
@@ -75,17 +54,191 @@ export default function Offers() {
 
   const handleOfferClick = (offer: CustomOffer) => {
     setSelectedOffer(offer);
-    setIsOfferModalVisible(true);
+    setModalType('offer');
+    setIsModalVisible(true);
   };
 
   const handleEventPlaceClick = (eventPlace: EventPlace) => {
     setSelectedEventPlace(eventPlace);
-    setIsEventPlaceModalVisible(true);
+    setModalType('eventPlace');
+    setIsModalVisible(true);
   };
+
+  const handleShowQr = async (offer: CustomOffer) => {
+    setQrLoading(true);
+    const [success, token] = await api.getCustomOfferQrToken(offer);
+    if (success && token) {
+      setQrToken(token);
+      setModalType('qr');
+    } else {
+      setErrorText("No se pudo generar el código QR. Por favor, intenta de nuevo.");
+    }
+    setQrLoading(false);
+  };
+
+  // Add useEffect to handle QR token refresh
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    if (modalType === 'qr' && selectedOffer) {
+      // Refresh token every 2 minutes
+      interval = setInterval(async () => {
+        const [success, token] = await api.getCustomOfferQrToken(selectedOffer);
+        if (success && token) {
+          setQrToken(token);
+        }
+      }, 120000); // 2 minutes in milliseconds
+    }
+
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [modalType, selectedOffer]);
+
+  // Add useEffect to fetch new token when QR modal is opened
+  useEffect(() => {
+    if (modalType === 'qr' && selectedOffer) {
+      handleShowQr(selectedOffer);
+    }
+  }, [modalType]);
 
   if (loading) {
     return <FullScreenLoading></FullScreenLoading>
   }
+
+  const renderModalContent = () => {
+    switch (modalType) {
+      case 'offer':
+        return (
+          <ScrollView style={styles.modalContent}>
+            <View style={{ position: 'relative' }}>
+              <FastImage
+                source={{ uri: selectedOffer?.imageUrl || selectedOffer?.place.imageUrls[0] }}
+                style={styles.modalOfferImage}
+              />
+              {selectedOffer?.validUntil && (
+                <View style={styles.modalValidUntilContainer}>
+                  <Feather name='clock' size={16} color='white' />
+                  <ThemedText style={{ marginLeft: 5 }}>
+                    Válido hasta {dateShortDisplay(selectedOffer.validUntil)}
+                  </ThemedText>
+                </View>
+              )}
+            </View>
+
+            <View style={{ marginTop: 20 }}>
+              <ThemedText type="title">{selectedOffer?.name}</ThemedText>
+
+              {selectedOffer?.description && (
+                <ThemedText style={{ marginTop: 10 }}>{selectedOffer.description}</ThemedText>
+              )}
+
+              <View style={styles.modalEventPlacePreview}>
+                <ThemedText type="subtitle" style={{ marginBottom: 10 }}>En:</ThemedText>
+                <TouchableOpacity
+                  style={styles.modalEventPlaceCard}
+                  onPress={() => {
+                    setModalType('eventPlace');
+                    setSelectedEventPlace(selectedOffer?.place || null);
+                  }}
+                >
+                  <FastImage
+                    source={{ uri: selectedOffer?.place.imageUrls[0] }}
+                    style={styles.modalEventPlaceImage}
+                  />
+                  <View style={{ flex: 1, marginLeft: 10 }}>
+                    <ThemedText type="subtitle">{selectedOffer?.place.name}</ThemedText>
+                    {selectedOffer?.place.priceRangeBegin && selectedOffer?.place.priceRangeEnd && (
+                      <ThemedText style={styles.priceRange}>
+                        {selectedOffer.place.priceRangeBegin}€ - {selectedOffer.place.priceRangeEnd}€
+                      </ThemedText>
+                    )}
+                  </View>
+                </TouchableOpacity>
+              </View>
+
+              <View style={{ marginTop: 20 }}>
+                <BtnPrimary
+                  title={qrLoading ? "Cargando..." : "Mostrar QR"}
+                  onClick={() => handleShowQr(selectedOffer!)}
+                />
+              </View>
+            </View>
+          </ScrollView>
+        );
+      case 'eventPlace':
+        return (
+          <ScrollView>
+            <CenterAligned>
+              <Carousel
+                loop
+                width={screenWidth * 0.9}
+                height={200}
+                autoPlay={true}
+                data={selectedEventPlace?.imageUrls || []}
+                renderItem={({ item }) => (
+                  <FastImage
+                    source={{ uri: item }}
+                    style={{ width: '100%', height: 200 }}
+                  />
+                )}
+              />
+            </CenterAligned>
+
+            <ThemedText type="title">{selectedEventPlace?.name}</ThemedText>
+
+            {selectedEventPlace?.ageRequirement && (
+              <View style={{ alignSelf: 'flex-start', borderRadius: 5, borderColor: 'white', borderWidth: 1, paddingRight: 3, paddingLeft: 3, marginTop: 5 }}>
+                <ThemedText>+{selectedEventPlace.ageRequirement}</ThemedText>
+              </View>
+            )}
+
+            <ThemedText style={{ marginTop: 5 }}>{selectedEventPlace?.priceRangeBegin}€ - {selectedEventPlace?.priceRangeEnd}€</ThemedText>
+
+            {selectedEventPlace?.description &&
+              <ViewMoreThemedText style={{ marginTop: 5 }} maxLines={3}>
+                {selectedEventPlace?.description}
+              </ViewMoreThemedText>
+            }
+
+            {selectedEventPlace?.googleMapsLink && (
+              <View style={{ marginTop: 20 }}>
+                <BtnPrimary title="Abrir en mapas" onClick={() => Linking.openURL(selectedEventPlace.googleMapsLink!)} />
+              </View>
+            )}
+          </ScrollView>
+        );
+      case 'qr':
+        return (
+          <View style={styles.qrModalContent}>
+            <ThemedText type="title" style={{ marginBottom: 20 }}>Código QR</ThemedText>
+            {qrToken ? (
+              <View style={styles.qrContainer}>
+                <QRCode
+                  value={qrToken}
+                  logo={require("../../assets/images/icon.png")}
+                  size={screenWidth * 0.7}
+                  backgroundColor="white"
+                  color="black"
+                />
+              </View>
+            ) : (
+              <View style={styles.loadingContainer}>
+                <FullScreenLoading />
+                <ThemedText style={{ marginTop: 20 }}>Generando código QR...</ThemedText>
+              </View>
+            )}
+            <ThemedText style={{ marginTop: 20, textAlign: 'center' }}>
+              Muestra este código QR al personal del establecimiento para canjear tu oferta
+            </ThemedText>
+          </View>
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
     <HorizontallyAligned>
@@ -148,108 +301,12 @@ export default function Offers() {
             </CenterAligned>
           </Animated.ScrollView>
 
-          {/* Offer Modal */}
-          {selectedOffer && (
-            <StyledModal
-              isModalVisible={isOfferModalVisible}
-              setIsModalVisible={setIsOfferModalVisible}
-            >
-              <ScrollView style={styles.modalContent}>
-                <View style={{ position: 'relative' }}>
-                  <FastImage
-                    source={{ uri: selectedOffer.imageUrl || selectedOffer.place.imageUrls[0] }}
-                    style={styles.modalOfferImage}
-                  />
-                  {selectedOffer.validUntil && (
-                    <View style={styles.modalValidUntilContainer}>
-                      <Feather name='clock' size={16} color='white' />
-                      <ThemedText style={{ marginLeft: 5 }}>
-                        Válido hasta {dateShortDisplay(selectedOffer.validUntil)}
-                      </ThemedText>
-                    </View>
-                  )}
-                </View>
-
-                <View style={{ marginTop: 20 }}>
-                  <ThemedText type="title">{selectedOffer.name}</ThemedText>
-
-                  {selectedOffer.description && (
-                    <ThemedText style={{ marginTop: 10 }}>{selectedOffer.description}</ThemedText>
-                  )}
-
-                  <View style={styles.modalEventPlacePreview}>
-                    <ThemedText type="subtitle" style={{ marginBottom: 10 }}>En:</ThemedText>
-                    <TouchableOpacity
-                      style={styles.modalEventPlaceCard}
-                      onPress={() => {
-                        setIsOfferModalVisible(false);
-                        handleEventPlaceClick(selectedOffer.place);
-                      }}
-                    >
-                      <FastImage
-                        source={{ uri: selectedOffer.place.imageUrls[0] }}
-                        style={styles.modalEventPlaceImage}
-                      />
-                      <View style={{ flex: 1, marginLeft: 10 }}>
-                        <ThemedText type="subtitle">{selectedOffer.place.name}</ThemedText>
-                        {selectedOffer.place.priceRangeBegin && selectedOffer.place.priceRangeEnd && (
-                          <ThemedText style={styles.priceRange}>
-                            {selectedOffer.place.priceRangeBegin}€ - {selectedOffer.place.priceRangeEnd}€
-                          </ThemedText>
-                        )}
-                      </View>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </ScrollView>
-            </StyledModal>
-          )}
-
-          {/* Event Place Modal */}
-          {selectedEventPlace && (
-            <StyledModal
-              isModalVisible={isEventPlaceModalVisible}
-              setIsModalVisible={setIsEventPlaceModalVisible}
-            >
-              <ScrollView>
-                <CenterAligned>
-                  <Carousel
-                    loop
-                    width={screenWidth * 0.9}
-                    height={200}
-                    autoPlay={true}
-                    data={selectedEventPlace.imageUrls}
-                    renderItem={({ item }) => (
-                      <FastImage
-                        source={{ uri: item }}
-                        style={{ width: '100%', height: 200 }}
-                      />
-                    )}
-                  />
-                </CenterAligned>
-
-                <ThemedText type="title">{selectedEventPlace.name}</ThemedText>
-
-                {selectedEventPlace.ageRequirement && (
-                  <View style={{ alignSelf: 'flex-start', borderRadius: 5, borderColor: 'white', borderWidth: 1, paddingRight: 3, paddingLeft: 3, marginTop: 5 }}>
-                    <ThemedText>+{selectedEventPlace.ageRequirement}</ThemedText>
-                  </View>
-                )}
-
-                <ThemedText style={{ marginTop: 5 }}>{selectedEventPlace.priceRangeBegin}€ - {selectedEventPlace.priceRangeEnd}€</ThemedText>
-
-                <ViewMoreThemedText style={{ marginTop: 5 }} maxLines={3}>
-                  {selectedEventPlace.description}
-                </ViewMoreThemedText>
-
-                {selectedEventPlace.googleMapsLink && (
-                  <View style={{ marginTop: 20 }}>
-                    <BtnPrimary title="Abrir en mapas" onClick={() => Linking.openURL(selectedEventPlace.googleMapsLink!)} />
-                  </View>
-                )}
-              </ScrollView>
-            </StyledModal>
-          )}
+          <StyledModal
+            isModalVisible={isModalVisible}
+            setIsModalVisible={setIsModalVisible}
+          >
+            {renderModalContent()}
+          </StyledModal>
         </View>
       )}
     </HorizontallyAligned>
@@ -355,5 +412,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
+  },
+  qrModalContent: {
+    backgroundColor: 'black',
+    padding: 20,
+    marginTop: 80,
+    borderRadius: 10,
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  qrContainer: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 10,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

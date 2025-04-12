@@ -15,6 +15,7 @@ import messaging from '@react-native-firebase/messaging';
 import InviteScreen from './invite';
 import { AppState, Platform, View } from 'react-native';
 import emitter from '@/eventEmitter';
+import Affiliate from './affiliate';
 
 export default function RootLayout() {
   return (
@@ -31,6 +32,7 @@ function Inner() {
   const { api, inviteStatus } = useApi();
   const [isAuthenticated, setAuthenticated] = useState(false);
   const [unknownError, setUnknownError] = useState(false);
+  const [isAffiliate, setIsAffiliate] = useState(false);
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
     Inter_700Bold
@@ -95,6 +97,10 @@ function Inner() {
         setUnknownError(true);
       } else {
         setAuthenticated(auth == AuthResult.Authenticated);
+        if (auth == AuthResult.Authenticated) {
+          const affiliateStatus = await api.isAffiliate();
+          setIsAffiliate(affiliateStatus);
+        }
       }
 
       setLoading(false);
@@ -135,6 +141,17 @@ function Inner() {
         <InviteScreen />
       </CenterAligned>
     )
+  }
+
+  console.log(isAffiliate);
+
+  if (isAffiliate) {
+    return (
+      <View style={{ flex: 1 }}>
+        <Affiliate />
+        <StatusBar translucent backgroundColor="transparent" style='light' />
+      </View>
+    );
   }
 
   return (

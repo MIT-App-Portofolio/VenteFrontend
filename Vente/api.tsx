@@ -3,6 +3,7 @@ import axios, { AxiosInstance } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FullScreenLoading } from './components/FullScreenLoading';
 import { Platform } from 'react-native';
+import { date } from 'yup';
 
 export enum AuthResult {
   UnknownError,
@@ -48,7 +49,7 @@ export type EventLocation = {
 
 export type EventPlace = {
   name: string,
-  description: string,
+  description?: string,
   imageUrls: string[],
   priceRangeBegin: number,
   priceRangeEnd: number,
@@ -72,6 +73,7 @@ export type EventPlaceOffer = {
 }
 
 export type CustomOffer = {
+  id: number;
   name: string,
   description?: string,
   place: EventPlace,
@@ -209,6 +211,10 @@ export class Api {
     return this.usersDb[username];
   }
 
+  public async isAffiliate() {
+    return (await this.axios?.get('/api/venue/is_affiliate'))!.data === true;
+  }
+
   public async getUserInfo() {
     try {
       const response = await this.axios!.get('/api/account/info');
@@ -280,6 +286,35 @@ export class Api {
     } catch (e) {
       console.log('custom offers info: ' + e);
       return false;
+    }
+  }
+
+  public async getCustomOfferQrToken(offer: CustomOffer) {
+    try {
+      return [true, (await this.axios!.get('/api/account/get_offer_qr?offerId=' + offer.id)).data];
+    } catch (e) {
+      console.log('get custom offer qr: ' + e);
+      return [false, null];
+    }
+  }
+
+  public async getQrTokenInfo(token: string) {
+    try {
+      const data: CustomOffer = (await this.axios!.get('/api/venue/scan_offer_qr?token=' + token)).data;
+      data.validUntil = new Date(data.validUntil);
+      return [true, data];
+    } catch (e: any) {
+      console.log('get qr token info: ' + e);
+      if (e.response?.data === "token_not_found") {
+        return [false, "El código QR no es válido o ha expirado"];
+      } else if (e.response?.data === "unknown_offer") {
+        return [false, "La oferta no existe o ha sido eliminada"];
+      } else if (e.response?.data === "wrong_venue") {
+        return [false, "Esta oferta no es válida para este establecimiento"];
+      } else if (e.response?.status === 400) {
+        return [false, "Error al escanear el código QR"];
+      }
+      return [false, "Error al contactar con el servidor"];
     }
   }
 

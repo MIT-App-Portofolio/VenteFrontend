@@ -224,9 +224,12 @@ export default function Users() {
 
   return (
     <HorizontallyAligned>
-      <View style={{ marginBottom: 10, width: 150 }}>
-        <BtnPrimary title='Volver' onClick={() => router.push("/")}></BtnPrimary>
-      </View>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => router.push("/")}
+      >
+        <Feather name="arrow-left" size={24} color="white" />
+      </TouchableOpacity>
 
       <Animated.ScrollView
         onScroll={handleScroll}
@@ -235,7 +238,7 @@ export default function Users() {
         horizontal={false}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
-        contentContainerStyle={{ paddingBottom: 50 }}
+        contentContainerStyle={{ paddingBottom: 50, paddingTop: 50 }}
       >
         <ThemedText type='title' style={{ alignSelf: 'flex-start', marginTop: 10 }}>Usuarios que también van a {api.getOwnLocationName(userProfile)}</ThemedText>
 
@@ -538,5 +541,12 @@ export const styles = StyleSheet.create({
   },
   loadingText: {
     color: 'white',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    zIndex: 1,
+    padding: 10,
   },
 });

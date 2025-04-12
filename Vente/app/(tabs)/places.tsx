@@ -11,6 +11,7 @@ import { pfpSize, styles as usersPageStyles } from './users';
 import { BtnPrimary } from "@/components/Buttons";
 import FastImage from "react-native-fast-image";
 import { dateOnlyDisplay } from "@/dateDisplay";
+import { Feather } from '@expo/vector-icons';
 
 export default function Places() {
   const { api, userProfile } = useApi();
@@ -67,9 +68,12 @@ export default function Places() {
 
   return (
     <HorizontallyAligned>
-      <View style={{ marginBottom: 10, width: 150 }}>
-        <BtnPrimary title='Volver' onClick={() => router.push("/")}></BtnPrimary>
-      </View>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => router.push("/")}
+      >
+        <Feather name="arrow-left" size={24} color="white" />
+      </TouchableOpacity>
 
       <Animated.ScrollView
         horizontal={false}
@@ -239,4 +243,11 @@ const styles = StyleSheet.create({
   card: usersPageStyles.card,
   profilePicture: usersPageStyles.profilePicture,
   loadingText: usersPageStyles.loadingText,
+  backButton: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    zIndex: 1,
+    padding: 10,
+  },
 });

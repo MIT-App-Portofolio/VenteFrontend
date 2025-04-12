@@ -185,12 +185,14 @@ export default function Profile() {
       <StyledModal isModalVisible={customNoteEditing} setIsModalVisible={setCustomNoteEditing}>
         <StyledTextInput value={customNote ?? ""} setValue={setCustomNote} maxLength={50} />
 
-        <BtnPrimary title="Guardar" onClick={async () => {
-          setLoading(true);
-          await api.updateNote(customNote ?? "");
-          setLoading(false);
-          setCustomNoteEditing(false);
-        }} />
+        <View style={{ marginTop: 5 }}>
+          <BtnPrimary title="Guardar" onClick={async () => {
+            setLoading(true);
+            await api.updateNote(customNote ?? "");
+            setLoading(false);
+            setCustomNoteEditing(false);
+          }} />
+        </View>
       </StyledModal>
 
       <StyledModal isModalVisible={customNotePrompt} setIsModalVisible={setCustomNotePrompt}>

@@ -13,11 +13,13 @@ import { BtnPrimary } from "@/components/Buttons";
 import { CustomOffer, EventPlace } from "@/api";
 import Carousel from "react-native-reanimated-carousel";
 import QRCode from 'react-native-qrcode-svg';
+import { useRouter } from 'expo-router';
 
 export const offerImageSize = 250;
 
 export default function Offers() {
   const { api, customOffers } = useApi();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -242,6 +244,12 @@ export default function Offers() {
 
   return (
     <HorizontallyAligned>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => router.push("/")}
+      >
+        <Feather name="arrow-left" size={24} color="white" />
+      </TouchableOpacity>
       {errorText ? (
         <ThemedText>{errorText}</ThemedText>
       ) : (
@@ -431,5 +439,12 @@ const styles = StyleSheet.create({
   loadingContainer: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    zIndex: 1,
+    padding: 10,
   },
 });

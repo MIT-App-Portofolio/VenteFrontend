@@ -7,7 +7,7 @@ import { ThemedText, ViewMoreThemedText } from "@/components/ThemedText";
 import { CenterAligned } from "@/components/CenterAligned";
 import { StyledModal } from "@/components/StyledModal";
 import Carousel from "react-native-reanimated-carousel";
-import { pfpSize, styles as usersPageStyles } from './users';
+import { pfpSize, styles as usersPageStyles } from './index';
 import { BtnPrimary } from "@/components/Buttons";
 import FastImage from "react-native-fast-image";
 import { dateOnlyDisplay } from "@/dateDisplay";

@@ -19,13 +19,14 @@ export default function TabLayout() {
             // Use a transparent background on iOS to show the blur effect
             position: 'absolute',
           },
-          default: {},
+          default: {
+          },
         }),
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Indice',
+          title: '',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
         }}
       />
@@ -36,28 +37,30 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="users"
+        name="offers"
         options={{
-          href: null
+          title: '',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="tag" color={color} />,
         }}
       />
       <Tabs.Screen
-        name="offers"
+        name="picture"
         options={{
-          href: null
+          title: '',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="camera" color={color} />,
         }}
       />
       <Tabs.Screen
         name="calendar"
         options={{
-          title: 'Calendario',
+          title: '',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="calendar" color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Tu perfil',
+          title: '',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="person" color={color} />,
         }}
       />

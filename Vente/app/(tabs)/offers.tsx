@@ -244,12 +244,6 @@ export default function Offers() {
 
   return (
     <HorizontallyAligned>
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => router.push("/")}
-      >
-        <Feather name="arrow-left" size={24} color="white" />
-      </TouchableOpacity>
       {errorText ? (
         <ThemedText>{errorText}</ThemedText>
       ) : (
@@ -439,12 +433,5 @@ const styles = StyleSheet.create({
   loadingContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  backButton: {
-    position: 'absolute',
-    top: 10,
-    left: 10,
-    zIndex: 1,
-    padding: 10,
   },
 });

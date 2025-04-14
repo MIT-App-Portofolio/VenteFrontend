@@ -183,7 +183,7 @@ export default function Profile() {
   return (
     <View>
       <StyledModal isModalVisible={customNoteEditing} setIsModalVisible={setCustomNoteEditing}>
-        <StyledTextInput value={customNote ?? ""} setValue={setCustomNote} maxLength={50} />
+        <StyledTextInput value={customNote ?? ""} setValue={setCustomNote} maxLength={50} placeholder="Pon algo..." />
 
         <View style={{ marginTop: 5 }}>
           <BtnPrimary title="Guardar" onClick={async () => {

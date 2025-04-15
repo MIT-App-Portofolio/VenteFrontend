@@ -832,7 +832,6 @@ export class Api {
   public async getAlbums(): Promise<boolean> {
     try {
       const response = await this.axios!.get('/api/album/get_albums');
-      console.log(response.data);
       const albums = response.data.map((album: any) => ({
         id: album.id,
         locationId: album.locationId,

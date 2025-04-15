@@ -247,7 +247,7 @@ export default function Offers() {
       {errorText ? (
         <ThemedText>{errorText}</ThemedText>
       ) : (
-        <View style={{ width: '100%', padding: 20 }}>
+        <View style={{ width: '100%' }}>
           <Animated.ScrollView
             showsHorizontalScrollIndicator={false}
             horizontal={false}
@@ -259,7 +259,7 @@ export default function Offers() {
 
             <CenterAligned>
               {customOffers?.length === 0 && (
-                <ThemedText>Aun no hay ofertas disponibles</ThemedText>
+                <ThemedText>Aun no tienes ofertas disponibles</ThemedText>
               )}
 
               {customOffers?.map((offer, index) => (

@@ -1,17 +1,16 @@
 import { HorizontallyAligned } from "@/components/HorizontallyAligned";
 import { ThemedText } from "@/components/ThemedText";
-import { View, StyleSheet, TouchableOpacity, ScrollView, RefreshControl, Platform, Dimensions } from "react-native";
+import { View, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from "react-native";
 import { useApi } from "@/api";
 import { CenterAligned } from "@/components/CenterAligned";
 import { BtnPrimary, BtnSecondary } from "@/components/Buttons";
 import { FullScreenLoading } from "@/components/FullScreenLoading";
 import { StyledModal } from "@/components/StyledModal";
-import { MarginItem } from "@/components/MarginItem";
 import React, { useEffect, useState } from "react";
 import * as ImagePicker from 'expo-image-picker';
-import { ImageManipulator, manipulateAsync, SaveFormat } from 'expo-image-manipulator';
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { Feather } from "@expo/vector-icons";
-import { dateShortDisplay, timeShortDisplay } from "@/dateDisplay";
+import { timeShortDisplay } from "@/dateDisplay";
 import { useRouter } from "expo-router";
 
 const { height } = Dimensions.get('window');
@@ -126,11 +125,11 @@ export default function Picture() {
 
       <HorizontallyAligned>
         <View style={{ flexDirection: 'column', justifyContent: 'space-between', paddingBottom: height * 0.08 }}>
-          <ThemedText type="title" style={{ marginTop: 10, marginLeft: 10 }}>Captura una memoria</ThemedText>
+          <ThemedText type="title" style={{ marginTop: 10, marginLeft: 10, textAlign: 'center' }}>Captura una memoria</ThemedText>
 
-          {ownPictures?.pictures.length === 0 ? (
+          {ownPictures == null || ownPictures?.pictures.length === 0 ? (
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', maxWidth: '80%' }}>
-              <ThemedText style={{ textAlign: 'center' }}>Aun no has sacado fotos para esta noche.</ThemedText>
+              <ThemedText style={{ textAlign: 'center' }}>Aun no has sacado fotos.</ThemedText>
             </View>
           ) : (
             <ScrollView

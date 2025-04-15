@@ -51,7 +51,7 @@
       <true/>
     </dict>
     <key>NSCameraUsageDescription</key>
-    <string>Allow $(PRODUCT_NAME) to access your camera</string>
+    <string>Necesitamos acceso a su cámara para que puedas compartir recuerdos de tu noche.</string>
     <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
     <string>Necesitamos opcionalmente acceso a su ubicación para enseñarle los lugares mas cercanos.</string>
     <key>NSLocationAlwaysUsageDescription</key>

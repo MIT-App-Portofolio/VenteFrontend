@@ -22,6 +22,7 @@
       },
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Necesitamos acceso a su galería para que puedas subir una foto de perfil.",
+        "NSCameraUsageDescription": "Necesitamos acceso a su cámara para que puedas compartir recuerdos de tu noche.",
         "CFBundleDevelopmentRegion": "es",
         "CFBundleURLTypes": [
           {

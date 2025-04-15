@@ -813,15 +813,19 @@ export class Api {
   public async getOwnPictures(): Promise<boolean> {
     try {
       const response = await this.axios!.get('/api/album/get_own_pictures');
-      const pictures = response.data.pictures.map((pic: any) => ({
-        id: pic.id,
-        uploader: pic.uploader,
-        time: new Date(pic.time)
-      }));
-      this.setOwnPictures({
-        albumId: response.data.albumId,
-        pictures: pictures
-      });
+      if (response.data) {
+        const pictures = response.data.pictures.map((pic: any) => ({
+          id: pic.id,
+          uploader: pic.uploader,
+          time: new Date(pic.time)
+        }));
+        this.setOwnPictures({
+          albumId: response.data.albumId,
+          pictures: pictures
+        });
+      } else {
+        this.setOwnPictures(null);
+      }
       return true;
     } catch (e) {
       console.log('get own pictures: ' + e);

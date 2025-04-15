@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FullScreenLoading } from './components/FullScreenLoading';
 import { Platform } from 'react-native';
 import { date } from 'yup';
+import FastImage from 'react-native-fast-image';
 
 export enum AuthResult {
   UnknownError,
@@ -81,6 +82,24 @@ export type CustomOffer = {
   validUntil: Date
 }
 
+export type AlbumPicture = {
+  id: number;
+  uploader: string;
+  time: Date;
+}
+
+export type SharedAlbum = {
+  id: number;
+  locationId: string;
+  eventTime: Date;
+  pictures: AlbumPicture[];
+}
+
+export type OwnPictures = {
+  albumId: number;
+  pictures: AlbumPicture[];
+}
+
 const ApiContext = createContext<{
   api: Api,
   userProfile: Profile | null,
@@ -88,6 +107,9 @@ const ApiContext = createContext<{
   inviteStatus: InviteStatus | null
   groupStatus: GroupStatus | null
   customOffers: CustomOffer[] | null
+  ownPictures: OwnPictures | null
+  sharedAlbums: SharedAlbum[] | null
+  currentAlbumId: number | null
 } | null>(null);
 
 export const useApi = () => {
@@ -105,10 +127,22 @@ export const ApiProvider = ({ children }: { children: ReactNode }) => {
   const [inviteStatus, setInviteStatus] = useState<InviteStatus | null>(null);
   const [groupStatus, setGroupStatus] = useState<GroupStatus | null>(null);
   const [customOffers, setCustomOffers] = useState<CustomOffer[] | null>(null);
+  const [ownPictures, setOwnPictures] = useState<OwnPictures | null>(null);
+  const [sharedAlbums, setSharedAlbums] = useState<SharedAlbum[] | null>(null);
+  const [currentAlbumId, setCurrentAlbumId] = useState<number | null>(null);
 
   useEffect(() => {
     const initializeApi = async () => {
-      const instance = new Api(setUserProfile, setUserPfp, setInviteStatus, setGroupStatus, setCustomOffers);
+      const instance = new Api(
+        setUserProfile,
+        setUserPfp,
+        setInviteStatus,
+        setGroupStatus,
+        setCustomOffers,
+        setOwnPictures,
+        setSharedAlbums,
+        setCurrentAlbumId
+      );
       var url = "";
 
       if (__DEV__) {
@@ -142,7 +176,17 @@ export const ApiProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <ApiContext.Provider value={{ api, userProfile, userPfp, inviteStatus, groupStatus, customOffers }}>
+    <ApiContext.Provider value={{
+      api,
+      userProfile,
+      userPfp,
+      inviteStatus,
+      groupStatus,
+      customOffers,
+      ownPictures,
+      sharedAlbums,
+      currentAlbumId
+    }}>
       {children}
     </ApiContext.Provider>
   );
@@ -161,13 +205,19 @@ export class Api {
   private setUserPfp: React.Dispatch<React.SetStateAction<string | null>>;
   private setGroupStatus: React.Dispatch<React.SetStateAction<GroupStatus | null>>;
   private setCustomOffers: React.Dispatch<React.SetStateAction<CustomOffer[] | null>>;
+  private setOwnPictures: React.Dispatch<React.SetStateAction<OwnPictures | null>>;
+  private setSharedAlbums: React.Dispatch<React.SetStateAction<SharedAlbum[] | null>>;
+  private setCurrentAlbumId: React.Dispatch<React.SetStateAction<number | null>>;
 
   constructor(
     setUserProfile: React.Dispatch<React.SetStateAction<Profile | null>>,
     setUserPfp: React.Dispatch<React.SetStateAction<string | null>>,
     setInviteStatus: React.Dispatch<React.SetStateAction<InviteStatus | null>>,
     setGroupStatus: React.Dispatch<React.SetStateAction<GroupStatus | null>>,
-    setCustomOffers: React.Dispatch<React.SetStateAction<CustomOffer[] | null>>
+    setCustomOffers: React.Dispatch<React.SetStateAction<CustomOffer[] | null>>,
+    setOwnPictures: React.Dispatch<React.SetStateAction<OwnPictures | null>>,
+    setSharedAlbums: React.Dispatch<React.SetStateAction<SharedAlbum[] | null>>,
+    setCurrentAlbumId: React.Dispatch<React.SetStateAction<number | null>>
   ) {
     this.locations = null;
     this.axios = null;
@@ -177,6 +227,9 @@ export class Api {
     this.setInviteStatus = setInviteStatus;
     this.setGroupStatus = setGroupStatus;
     this.setCustomOffers = setCustomOffers;
+    this.setOwnPictures = setOwnPictures;
+    this.setSharedAlbums = setSharedAlbums;
+    this.setCurrentAlbumId = setCurrentAlbumId;
   }
 
   public async init(url: string) {
@@ -204,6 +257,10 @@ export class Api {
 
   public getOwnLocationName(userProfile: Profile): string | undefined {
     return this.locations?.find(l => l.id == userProfile.eventStatus.locationId)?.name;
+  }
+
+  public getLocationName(locationId: string): string | undefined {
+    return this.locations?.find(l => l.id == locationId)?.name;
   }
 
   // Assumes user is already in the db
@@ -751,5 +808,115 @@ export class Api {
     });
 
     return instance;
+  }
+
+  public async getOwnPictures(): Promise<boolean> {
+    try {
+      const response = await this.axios!.get('/api/album/get_own_pictures');
+      const pictures = response.data.pictures.map((pic: any) => ({
+        id: pic.id,
+        uploader: pic.uploader,
+        time: new Date(pic.time)
+      }));
+      this.setOwnPictures({
+        albumId: response.data.albumId,
+        pictures: pictures
+      });
+      return true;
+    } catch (e) {
+      console.log('get own pictures: ' + e);
+      return false;
+    }
+  }
+
+  public async getAlbums(): Promise<boolean> {
+    try {
+      const response = await this.axios!.get('/api/album/get_albums');
+      console.log(response.data);
+      const albums = response.data.map((album: any) => ({
+        id: album.id,
+        locationId: album.locationId,
+        eventTime: new Date(album.eventTime),
+        pictures: album.pictures.map((pic: any) => ({
+          id: pic.id,
+          uploader: pic.uploader,
+          time: new Date(pic.time)
+        }))
+      }));
+      this.setSharedAlbums(albums);
+      return true;
+    } catch (e) {
+      console.log('get albums: ' + e);
+      return false;
+    }
+  }
+
+  public async uploadPicture(uri: string): Promise<boolean> {
+    const formData = new FormData();
+
+    if (Platform.OS === 'android' || Platform.OS === 'ios') {
+      formData.append('file', {
+        uri: uri,
+        name: 'file',
+        type: 'image/jpeg',
+      });
+    } else {
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      const file = new File([blob], 'file', { type: 'image/jpeg' });
+      formData.append('file', file);
+    }
+
+    try {
+      const response = await this.axios!.post('/api/album/upload_picture', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+
+      });
+      this.setCurrentAlbumId(response.data);
+      return true;
+    } catch (e) {
+      console.log('upload picture: ' + e);
+      return false;
+    }
+  }
+
+  public async deletePicture(id: number): Promise<boolean> {
+    try {
+      await this.axios!.post('/api/album/delete_picture?id=' + id);
+      return true;
+    } catch (e) {
+      console.log('delete picture: ' + e);
+      return false;
+    }
+  }
+
+  public async getPictureStream(albumId: number, pictureId: number, omitTopBorderRadius?: boolean, omitBottomBorderRadius?: boolean): Promise<React.ReactElement | null> {
+    try {
+      const token = await AsyncStorage.getItem('authToken');
+      if (!token) return null;
+
+      const url = `${this.axios!.defaults.baseURL}/api/album/access_picture/${albumId}/${pictureId}`;
+
+      return (
+        <FastImage
+          source={{
+            uri: url,
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          }}
+          style={{
+            width: '100%',
+            height: undefined,
+            aspectRatio: 1,
+          }}
+        />
+      );
+    } catch (e) {
+      console.log('get picture stream: ' + e);
+      return null;
+    }
   }
 }

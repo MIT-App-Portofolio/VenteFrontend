@@ -143,8 +143,6 @@ function Inner() {
     )
   }
 
-  console.log(isAffiliate);
-
   if (isAffiliate) {
     return (
       <View style={{ flex: 1 }}>

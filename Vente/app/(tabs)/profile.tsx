@@ -1,4 +1,4 @@
-import { View, ScrollView, Platform, KeyboardAvoidingView, TouchableOpacity, Dimensions } from "react-native";
+import { View, ScrollView, Platform, KeyboardAvoidingView, TouchableOpacity, Dimensions, Linking, StyleSheet } from "react-native";
 import { useApi } from "@/api";
 import * as yup from 'yup';
 import { Controller, useForm } from "react-hook-form";
@@ -15,28 +15,38 @@ import * as ImagePicker from 'expo-image-picker';
 import { ImageManipulator, manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import FastImage from "react-native-fast-image";
 import { redirectStore } from "@/redirect_storage";
-import { Feather, Ionicons } from "@expo/vector-icons";
+import { Feather, Ionicons, FontAwesome } from "@expo/vector-icons";
 import emitter from "@/eventEmitter";
 import { StyledModal } from "@/components/StyledModal";
+import { dateShortDisplay, timeShortDisplay } from '@/dateDisplay';
+import { SharedAlbum } from '@/api';
 
 const { height } = Dimensions.get('window');
 const topBarPercentage = 0.13;
 
 export default function Profile() {
-  // another hack. too fucking bad
   redirectStore.resetPendingRedirect();
 
-  const { api, userPfp, userProfile } = useApi();
+  const { api, userPfp, userProfile, sharedAlbums } = useApi();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editProfileError, setEditProfileError] = useState<string | null>(null);
+  const [selectedAlbum, setSelectedAlbum] = useState<SharedAlbum | null>(null);
+  const [albumPictures, setAlbumPictures] = useState<{ [key: number]: React.ReactElement | null }>({});
+  const [albumModalVisible, setAlbumModalVisible] = useState(false);
 
   const [settingsScreen, setSettingsScreen] = useState(false);
   const [deleteConfirmScreen, setDeleteConfirmScreen] = useState(false);
   const [logoutConfirmScreen, setLogoutConfirmScreen] = useState(false);
+  const [editProfileModal, setEditProfileModal] = useState(false);
 
   const [customNoteEditing, setCustomNoteEditing] = useState(false);
   const [customNotePrompt, setCustomNotePrompt] = useState(false);
   const [customNote, setCustomNote] = useState(userProfile?.note);
+
+  useEffect(() => {
+    api.getAlbums();
+  }, [userProfile?.eventStatus]);
 
   const schema = yup.object().shape({
     name: yup.string().max(35, "El nombre no puede ser mas largo de 35 caracteres"),
@@ -66,6 +76,22 @@ export default function Profile() {
     reset(getDefaultValues());
   }, [userProfile]);
 
+  useEffect(() => {
+    const loadAlbumPictures = async () => {
+      if (!selectedAlbum) return;
+
+      const pictures: { [key: number]: React.ReactElement | null } = {};
+      for (const picture of selectedAlbum.pictures) {
+        await api.fetchPfp(picture.uploader);
+        const component = await api.getPictureStream(selectedAlbum.id, picture.id);
+        pictures[picture.id] = component;
+      }
+      setAlbumPictures(pictures);
+    };
+
+    loadAlbumPictures();
+  }, [selectedAlbum]);
+
   const onPressSend = async (data: any) => {
     setLoading(true);
     if (data.igHandle) {
@@ -73,9 +99,10 @@ export default function Profile() {
     }
 
     if (!await api.updateProfile(data)) {
-      setError("Ha sucedido un error desconocido");
+      setEditProfileError("Ha sucedido un error desconocido");
     } else {
-      setError(null);
+      setEditProfileError(null);
+      setEditProfileModal(false);
     }
     setLoading(false);
   };
@@ -119,7 +146,7 @@ export default function Profile() {
           mediaType: 'photo',
           cropping: true
         });
-      } catch (e) {
+      } catch (e: any) {
         if (e.code == 'E_CANNOT_SAVE_IMAGE' || e.code == 'E_NO_IMAGE_DATA_FOUND') {
           setError('La imagen no se pudo acceder. Si esta en iCloud, descargue la imagen y vuelva a intentar.');
         }
@@ -216,121 +243,252 @@ export default function Profile() {
         </CenterAligned>
       </StyledModal>
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView
-          contentContainerStyle={{ paddingBottom: 90, paddingTop: 60 }}
-          showsHorizontalScrollIndicator={false}
-          showsVerticalScrollIndicator={false}
-          horizontal={false}
+      <StyledModal isModalVisible={editProfileModal} setIsModalVisible={setEditProfileModal}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={{ flex: 1 }}
         >
-          {!deleteConfirmScreen &&
-            <TouchableOpacity
-              style={{
-                position: 'absolute',
-                top: (height * topBarPercentage) / 2,
-                left: settingsScreen ? 20 : undefined,
-                right: settingsScreen ? undefined : 20,
-                zIndex: 1,
-              }}
-              onPress={() => {
-                setSettingsScreen(!settingsScreen);
-              }}
-            >
-              {!settingsScreen ?
-                <Feather name="settings" size={24} color='white' />
-                :
-                <Ionicons name="arrow-back" size={24} color='white' />
-              }
-            </TouchableOpacity>
-          }
+          <ScrollView style={{ flex: 1 }}>
+            <MarginItem>
+              <Controller
+                control={control}
+                render={({ field: { onChange, value } }) => (
+                  <StyledTextInput title='Nombre' placeholder='' value={value || ''} setValue={onChange} autoCapitalize='none' />
+                )}
+                name="name"
+              />
+              {errors.name && <ErrorText>{errors.name.message}</ErrorText>}
+            </MarginItem>
 
-          <CenterAligned>
-            <View style={{ width: '80%' }}>
-              {settingsScreen ?
-                (
-                  <View style={{ marginTop: 15, flexDirection: 'column', gap: 5, paddingTop: 50 }}>
-                    <BtnPrimary title='Cerrar sesión' onClick={() => { setLogoutConfirmScreen(true); }} />
-                    <BtnSecondary title='Eliminar cuenta' onClick={() => { setDeleteConfirmScreen(true); }} />
-                  </View>
-                ) : (
-                  <View>
-                    <View style={{ marginBottom: 20, alignItems: 'center', width: '100%' }}>
-                      <ThemedText type="title">@{userProfile?.userName as string}</ThemedText>
+            <MarginItem>
+              <Controller
+                control={control}
+                render={({ field: { onChange, value } }) => (
+                  <StyledTextInput title='Descripción' placeholder='' value={value || ''} setValue={onChange} autoCapitalize='none' />
+                )}
+                name="description"
+              />
+              {errors.description && <ErrorText>{errors.description.message}</ErrorText>}
+            </MarginItem>
+
+            <MarginItem>
+              <Controller
+                control={control}
+                render={({ field: { onChange, value } }) => (
+                  <StyledTextInput title='Instagram' placeholder='' value={value || ''} setValue={onChange} autoCapitalize='none' />
+                )}
+                name="igHandle"
+              />
+              {errors.igHandle && <ErrorText>{errors.igHandle.message}</ErrorText>}
+            </MarginItem>
+
+            <BiggerMarginItem>
+              {editProfileError && <ErrorText>{editProfileError}</ErrorText>}
+              <BtnPrimary title="Guardar cambios" onClick={handleSubmit(onPressSend)} disabled={!isDirty} />
+            </BiggerMarginItem>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </StyledModal>
+
+      <StyledModal isModalVisible={albumModalVisible} setIsModalVisible={setAlbumModalVisible}>
+        <ScrollView style={{ flex: 1 }}>
+          {selectedAlbum && (
+            <>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                <ThemedText type="title">{api.getLocationName(selectedAlbum.locationId)}</ThemedText>
+                <ThemedText style={{ marginLeft: 10, color: 'gray' }}>
+                  {dateShortDisplay(selectedAlbum.eventTime)}
+                </ThemedText>
+              </View>
+
+              {selectedAlbum.pictures.map((picture) => (
+                <View key={picture.id} style={styles.albumPictureContainer}>
+                  <View style={styles.pictureHeader}>
+                    <FastImage
+                      source={{ uri: api.getPfpUnstable(picture.uploader) }}
+                      style={styles.picturePfp}
+                    />
+                    <View style={{ marginLeft: 10 }}>
+                      <ThemedText>@{picture.uploader}</ThemedText>
+                      <ThemedText style={{ fontSize: 12, color: 'gray' }}>
+                        {timeShortDisplay(picture.time)}
+                      </ThemedText>
                     </View>
+                  </View>
+                  {albumPictures[picture.id]}
+                </View>
+              ))}
+            </>
+          )}
+        </ScrollView>
+      </StyledModal>
 
-                    <MarginItem>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, position: 'relative' }}>
-                        <View style={{ flex: 1 }}>
-                          {userPfp && <FastImage source={{ uri: userPfp }} style={{ width: '100%', height: undefined, aspectRatio: 1, borderRadius: 5 }} />}
+      {!deleteConfirmScreen &&
+        <TouchableOpacity
+          style={{
+            position: 'absolute',
+            top: (height * topBarPercentage) / 2,
+            left: settingsScreen ? 20 : undefined,
+            right: settingsScreen ? undefined : 20,
+            zIndex: 1,
+          }}
+          onPress={() => {
+            setSettingsScreen(!settingsScreen);
+          }}
+        >
+          {!settingsScreen ?
+            <Feather name="settings" size={24} color='white' />
+            :
+            <Ionicons name="arrow-back" size={24} color='white' />
+          }
+        </TouchableOpacity>
+      }
+
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 90, paddingTop: 70 }}
+        showsHorizontalScrollIndicator={false}
+        showsVerticalScrollIndicator={false}
+        horizontal={false}
+      >
+        <CenterAligned>
+          <View style={{ width: '80%' }}>
+            {settingsScreen ?
+              (
+                <View style={{ marginTop: 15, flexDirection: 'column', gap: 5, paddingTop: 50 }}>
+                  <BtnPrimary title='Cerrar sesión' onClick={() => { setLogoutConfirmScreen(true); }} />
+                  <BtnSecondary title='Eliminar cuenta' onClick={() => { setDeleteConfirmScreen(true); }} />
+                </View>
+              ) : (
+                <View>
+                  <View style={{ position: 'relative' }}>
+                    <TouchableOpacity onPress={pickImage}>
+                      {userPfp && <FastImage source={{ uri: userPfp }} style={{ width: '100%', height: undefined, aspectRatio: 1, borderRadius: 15 }} />}
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => userProfile?.note ? setCustomNotePrompt(true) : setCustomNoteEditing(true)}
+                      style={{
+                        position: 'absolute',
+                        top: -10,
+                        right: -10,
+                        backgroundColor: '#2A2A2A',
+                        padding: 10,
+                        borderRadius: 10,
+                        borderWidth: 1,
+                        borderColor: '#3A3A3A',
+                      }}
+                    >
+                      <ThemedText style={{ fontSize: 14, maxWidth: 140 }}>
+                        {userProfile?.note || "Añade una nota..."}
+                      </ThemedText>
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={{ flexDirection: 'column', alignItems: 'flex-start', marginTop: 10 }}>
+                    {userProfile?.name &&
+                      <ThemedText style={{ marginRight: 10 }} type="title">{userProfile.name}</ThemedText>
+                    }
+                    <ThemedText style={{ color: 'gray' }}>@{userProfile?.userName}</ThemedText>
+                  </View>
+
+                  {
+                    (userProfile?.eventStatus.time || userProfile?.years) &&
+                    <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8, marginTop: 5 }}>
+                      {userProfile?.years &&
+                        <ThemedText>{userProfile.years} años</ThemedText>
+                      }
+
+                      {userProfile?.eventStatus.time &&
+                        <View style={{
+                          flexDirection: 'row',
+                          gap: 2,
+                          alignItems: 'center',
+                        }}>
+                          <Feather name='calendar' size={16} color='white' />
+                          <ThemedText>{dateShortDisplay(new Date(userProfile?.eventStatus.time!))}</ThemedText>
                         </View>
+                      }
+                    </View>
+                  }
+
+                  {userProfile?.description &&
+                    <ThemedText style={{ marginTop: 5 }}>{userProfile?.description}</ThemedText>
+                  }
+
+                  {userProfile?.igHandle && (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
+                      <FontAwesome name="instagram" size={16} color="white" />
+                      <ThemedText type="link" style={{ marginLeft: 3 }} onPress={() => Linking.openURL(`https://www.instagram.com/${userProfile.igHandle}`)} numberOfLines={1} ellipsizeMode='tail'>
+                        {userProfile.igHandle}
+                      </ThemedText>
+                    </View>
+                  )}
+
+                  <View style={{ marginTop: 20, flexDirection: 'column', gap: 5 }}>
+                    {error && <ErrorText>{error}</ErrorText>}
+                    <BtnPrimary title="Editar perfil" onClick={() => setEditProfileModal(true)} />
+                  </View>
+
+                  {sharedAlbums && sharedAlbums.length > 0 && (
+                    <View style={{ marginTop: 20 }}>
+                      <ThemedText type="title">Álbumes</ThemedText>
+                      {sharedAlbums.map((album) => (
                         <TouchableOpacity
-                          onPress={() => userProfile?.note ? setCustomNotePrompt(true) : setCustomNoteEditing(true)}
-                          style={{
-                            flex: 1,
-                            position: 'absolute',
-                            top: -10,
-                            right: -10,
-                            backgroundColor: '#2A2A2A',
-                            padding: 10,
-                            borderRadius: 10,
-                            borderWidth: 1,
-                            borderColor: '#3A3A3A',
+                          key={album.id}
+                          style={styles.albumCard}
+                          onPress={() => {
+                            setSelectedAlbum(album);
+                            setAlbumModalVisible(true);
                           }}
                         >
-                          <ThemedText style={{ fontSize: 14, maxWidth: 140 }}>
-                            {userProfile?.note || "Añade una nota..."}
+                          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <ThemedText>{api.getLocationName(album.locationId)}</ThemedText>
+                            <ThemedText style={{ marginLeft: 10, color: 'gray' }}>
+                              {dateShortDisplay(album.eventTime)}
+                            </ThemedText>
+                          </View>
+                          <ThemedText style={{ color: 'gray' }}>
+                            {album.pictures.length} fotos
                           </ThemedText>
                         </TouchableOpacity>
-                      </View>
-                      <BtnSecondary title="Cambiar foto de perfil" onClick={pickImage} />
-                    </MarginItem>
-
-                    <MarginItem>
-                      <Controller
-                        control={control}
-                        render={({ field: { onChange, value } }) => (
-                          <StyledTextInput title='Nombre' placeholder='' value={value || ''} setValue={onChange} autoCapitalize='none' />
-                        )}
-                        name="name"
-                      />
-                      {errors.name && <ErrorText>{errors.name.message}</ErrorText>}
-                    </MarginItem>
-
-                    <MarginItem>
-                      <Controller
-                        control={control}
-                        render={({ field: { onChange, value } }) => (
-                          <StyledTextInput title='Descripción' placeholder='' value={value || ''} setValue={onChange} autoCapitalize='none' />
-                        )}
-                        name="description"
-                      />
-                      {errors.description && <ErrorText>{errors.description.message}</ErrorText>}
-                    </MarginItem>
-
-                    <MarginItem>
-                      <Controller
-                        control={control}
-                        render={({ field: { onChange, value } }) => (
-                          <StyledTextInput title='Instagram' placeholder='' value={value || ''} setValue={onChange} autoCapitalize='none' />
-                        )}
-                        name="igHandle"
-                      />
-                      {errors.igHandle && <ErrorText>{errors.igHandle.message}</ErrorText>}
-                    </MarginItem>
-
-                    <BiggerMarginItem>
-                      {error && <ErrorText>{error}</ErrorText>}
-                      <BtnPrimary title="Guardar cambios" onClick={handleSubmit(onPressSend)} disabled={!isDirty} />
-                    </BiggerMarginItem>
-                  </View>
-                )
-              }
-            </View>
-          </CenterAligned>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </View>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              )
+            }
+          </View>
+        </CenterAligned>
+      </ScrollView>
+    </View >
   );
 }
+
+const styles = StyleSheet.create({
+  albumCard: {
+    backgroundColor: 'black',
+    padding: 15,
+    marginTop: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#2A2A2A',
+  },
+  albumPictureContainer: {
+    marginBottom: 20,
+    backgroundColor: '#2A2A2A',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#3A3A3A',
+    overflow: 'hidden',
+  },
+  pictureHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    backgroundColor: '#1A1A1A',
+  },
+  picturePfp: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+});

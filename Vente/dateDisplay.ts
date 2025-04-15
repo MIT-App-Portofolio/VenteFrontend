@@ -44,6 +44,13 @@ export function dateShortDisplay(date: Date): string {
   return `${dd}/${mm}`;
 }
 
+export function timeShortDisplay(date: Date): string {
+  const HH: string = String(date.getHours()).padStart(2, '0');
+  const MM: string = String(date.getMinutes()).padStart(2, '0');
+
+  return `${HH}:${MM}`;
+}
+
 export function dateDisplay(date: Date): string {
   return date.toLocaleDateString("es");
 }

@@ -125,10 +125,13 @@ export default function Picture() {
 
       <HorizontallyAligned>
         <View style={{ flexDirection: 'column', justifyContent: 'space-between', paddingBottom: height * 0.08 }}>
-          <ThemedText type="title" style={{ marginTop: 10, marginLeft: 10, textAlign: 'center' }}>Captura una memoria</ThemedText>
+          <View>
+            <ThemedText type="title" style={{ marginTop: 10, marginLeft: 10, textAlign: 'center' }}>Captura una memoria</ThemedText>
+            <ThemedText style={{ marginTop: 10, marginLeft: 10, textAlign: 'center' }}>Estas fotos serán disponibles para tu y tu grupo después del evento.</ThemedText>
+          </View>
 
           {ownPictures == null || ownPictures?.pictures.length === 0 ? (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', maxWidth: '80%' }}>
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
               <ThemedText style={{ textAlign: 'center' }}>Aun no has sacado fotos.</ThemedText>
             </View>
           ) : (

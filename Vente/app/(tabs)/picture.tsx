@@ -23,7 +23,6 @@ export default function Picture() {
   const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
   const [pictureComponents, setPictureComponents] = useState<{ [key: number]: React.ReactElement | null }>({});
 
-
   const fetchPictures = async () => {
     setLoading(true);
     await api.getOwnPictures();
@@ -108,6 +107,20 @@ export default function Picture() {
     return (
       <CenterAligned>
         <ThemedText>No estas registrado en ningún evento.</ThemedText>
+        <BtnPrimary title='Ir a calendario' onClick={() => router.push('/calendar')}></BtnPrimary>
+      </CenterAligned>
+    );
+  }
+
+  const eventDate = new Date(userProfile.eventStatus.time!);
+  const currentDate = new Date();
+  const timeDiff = Math.abs(currentDate.getTime() - eventDate.getTime());
+  const dayDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+
+  if (dayDiff > 2) {
+    return (
+      <CenterAligned>
+        <ThemedText>Aun no ha llegado el dia del evento.</ThemedText>
         <BtnPrimary title='Ir a calendario' onClick={() => router.push('/calendar')}></BtnPrimary>
       </CenterAligned>
     );

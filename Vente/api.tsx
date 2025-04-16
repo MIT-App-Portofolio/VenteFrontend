@@ -895,6 +895,29 @@ export class Api {
     }
   }
 
+  public async fetchPictureBlob(albumId: number, pictureId: number): Promise<Blob | null> {
+    try {
+      const token = await AsyncStorage.getItem('authToken');
+      if (!token) return null;
+
+      const response = await fetch(`${this.axios!.defaults.baseURL}/api/album/access_picture/${albumId}/${pictureId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch picture');
+      }
+
+      const blob = await response.blob();
+      return blob;
+    } catch (e) {
+      console.log('fetch picture blob: ' + e);
+      return null;
+    }
+  }
+
   public async getPictureStream(albumId: number, pictureId: number, omitTopBorderRadius?: boolean, omitBottomBorderRadius?: boolean): Promise<React.ReactElement | null> {
     try {
       const token = await AsyncStorage.getItem('authToken');

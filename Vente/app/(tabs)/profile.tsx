@@ -1,4 +1,4 @@
-import { View, ScrollView, Platform, KeyboardAvoidingView, TouchableOpacity, Dimensions, Linking, StyleSheet } from "react-native";
+import { View, ScrollView, Platform, KeyboardAvoidingView, TouchableOpacity, Dimensions, Linking, StyleSheet, ActivityIndicator } from "react-native";
 import { useApi } from "@/api";
 import * as yup from 'yup';
 import { Controller, useForm } from "react-hook-form";
@@ -20,6 +20,10 @@ import emitter from "@/eventEmitter";
 import { StyledModal } from "@/components/StyledModal";
 import { dateShortDisplay, timeShortDisplay } from '@/dateDisplay';
 import { SharedAlbum } from '@/api';
+import * as MediaLibrary from 'expo-media-library';
+import * as Sharing from 'expo-sharing';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as FileSystem from 'expo-file-system';
 
 const { height } = Dimensions.get('window');
 const topBarPercentage = 0.13;
@@ -34,6 +38,11 @@ export default function Profile() {
   const [selectedAlbum, setSelectedAlbum] = useState<SharedAlbum | null>(null);
   const [albumPictures, setAlbumPictures] = useState<{ [key: number]: React.ReactElement | null }>({});
   const [albumModalVisible, setAlbumModalVisible] = useState(false);
+  const [savingPicture, setSavingPicture] = useState<number | null>(null);
+  const [sharingPicture, setSharingPicture] = useState<number | null>(null);
+  const [savedPictures, setSavedPictures] = useState<number[]>([]);
+  const [savingError, setSavingError] = useState<string | null>(null);
+  const [savingSuccess, setSavingSuccess] = useState<string | null>(null);
 
   const [settingsScreen, setSettingsScreen] = useState(false);
   const [deleteConfirmScreen, setDeleteConfirmScreen] = useState(false);
@@ -179,6 +188,118 @@ export default function Profile() {
     setLoading(false);
   };
 
+  const savePicture = async (pictureId: number) => {
+    if (!selectedAlbum) return;
+
+    setSavingPicture(pictureId);
+    setSavingError(null);
+    setSavingSuccess(null);
+    try {
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        setError('Se necesita permiso para guardar la imagen');
+        return;
+      }
+
+      const blob = await api.fetchPictureBlob(selectedAlbum.id, pictureId);
+      if (!blob) {
+        setError('No se pudo obtener la imagen');
+        return;
+      }
+
+      // Create filename with event time and picture ID
+      const eventTime = selectedAlbum.eventTime.toISOString().split('T')[0];
+      const tempFile = `${FileSystem.cacheDirectory}Vente_${eventTime}_${pictureId}.jpg`;
+
+      // Convert blob to base64 using FileReader
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          if (typeof reader.result === 'string') {
+            resolve(reader.result);
+          } else {
+            reject(new Error('Failed to convert blob to base64'));
+          }
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+
+      // Write base64 to file
+      await FileSystem.writeAsStringAsync(tempFile, base64.split(',')[1], {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      // Save to media library
+      const asset = await MediaLibrary.createAssetAsync(tempFile);
+      await MediaLibrary.createAlbumAsync('Vente', asset, false);
+
+      // Clean up
+      await FileSystem.deleteAsync(tempFile);
+
+      // Show success message
+      setSavedPictures(prev => [...prev, pictureId]);
+      setSavingSuccess('Imagen guardada correctamente');
+
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setSavingSuccess(null);
+      }, 3000);
+    } catch (error) {
+      console.log('error', error);
+      setSavingError('Error al guardar la imagen');
+    } finally {
+      setSavingPicture(null);
+    }
+  };
+
+  const sharePicture = async (pictureId: number) => {
+    if (!selectedAlbum) return;
+
+    setSharingPicture(pictureId);
+    try {
+      const blob = await api.fetchPictureBlob(selectedAlbum.id, pictureId);
+      if (!blob) {
+        setError('No se pudo obtener la imagen');
+        return;
+      }
+
+      // Create filename with event time and picture ID
+      const eventTime = selectedAlbum.eventTime.toISOString().split('T')[0];
+      const tempFile = `${FileSystem.cacheDirectory}Vente_${eventTime}_${pictureId}.jpg`;
+
+      // Convert blob to base64 using FileReader
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          if (typeof reader.result === 'string') {
+            resolve(reader.result);
+          } else {
+            reject(new Error('Failed to convert blob to base64'));
+          }
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+
+      // Write base64 to file
+      await FileSystem.writeAsStringAsync(tempFile, base64.split(',')[1], {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      // Share the file
+      await Sharing.shareAsync(tempFile);
+
+      // Clean up
+      await FileSystem.deleteAsync(tempFile);
+    } catch (error) {
+      console.log('error', error);
+      setError('Error al compartir la imagen');
+    } finally {
+      setSharingPicture(null);
+    }
+  };
+
   if (loading) {
     return <FullScreenLoading />
   }
@@ -316,6 +437,41 @@ export default function Profile() {
                     </View>
                   </View>
                   {albumPictures[picture.id]}
+                  <View style={styles.pictureActions}>
+                    <TouchableOpacity
+                      style={[
+                        styles.actionButton,
+                        savedPictures.includes(picture.id) && styles.savedButton
+                      ]}
+                      onPress={() => savePicture(picture.id)}
+                      disabled={savingPicture === picture.id}
+                    >
+                      {savingPicture === picture.id ? (
+                        <ActivityIndicator color="white" size="small" />
+                      ) : savedPictures.includes(picture.id) ? (
+                        <Feather name="check" size={20} color="white" />
+                      ) : (
+                        <Feather name="download" size={20} color="white" />
+                      )}
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.actionButton}
+                      onPress={() => sharePicture(picture.id)}
+                      disabled={sharingPicture === picture.id}
+                    >
+                      {sharingPicture === picture.id ? (
+                        <ActivityIndicator color="white" size="small" />
+                      ) : (
+                        <Feather name="share-2" size={20} color="white" />
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                  {savingPicture === picture.id && savingError && (
+                    <ErrorText style={{ marginTop: 5 }}>{savingError}</ErrorText>
+                  )}
+                  {savingPicture === picture.id && savingSuccess && (
+                    <ThemedText style={{ marginTop: 5, color: '#4CAF50' }}>{savingSuccess}</ThemedText>
+                  )}
                 </View>
               ))}
             </>
@@ -490,5 +646,21 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
+  },
+  pictureActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    padding: 10,
+    gap: 10,
+  },
+  actionButton: {
+    backgroundColor: '#2A2A2A',
+    padding: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#3A3A3A',
+  },
+  savedButton: {
+    backgroundColor: '#4CAF50',
   },
 });

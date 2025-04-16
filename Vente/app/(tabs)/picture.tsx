@@ -62,7 +62,7 @@ export default function Picture() {
     }
 
     // temporary because simulator doesn't support camera
-    const result = await ImagePicker.launchCameraAsync({
+    const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],

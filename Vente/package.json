@@ -64,7 +64,10 @@
     "react-native-svg": "15.8.0",
     "react-native-web": "~0.19.13",
     "yup": "^1.6.1",
-    "expo-modules-core": "~2.2.3"
+    "expo-modules-core": "~2.2.3",
+    "expo-media-library": "~17.0.6",
+    "expo-sharing": "~13.0.1",
+    "expo-file-system": "~18.0.12"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

@@ -130,12 +130,20 @@ export default function Offers() {
               )}
             </View>
 
+
             <View style={{ marginTop: 20 }}>
               <ThemedText type="title">{selectedOffer?.name}</ThemedText>
 
               {selectedOffer?.description && (
                 <ThemedText style={{ marginTop: 10 }}>{selectedOffer.description}</ThemedText>
               )}
+
+              <View style={{ marginTop: 20 }}>
+                <BtnPrimary
+                  title={qrLoading ? "Cargando..." : "Mostrar QR"}
+                  onClick={() => handleShowQr(selectedOffer!)}
+                />
+              </View>
 
               <View style={styles.modalEventPlacePreview}>
                 <ThemedText type="subtitle" style={{ marginBottom: 10 }}>En:</ThemedText>
@@ -148,8 +156,9 @@ export default function Offers() {
                 >
                   <FastImage
                     source={{ uri: selectedOffer?.place.imageUrls[0] }}
-                    style={styles.modalEventPlaceImage}
+                    style={styles.eventPlaceImage}
                   />
+
                   <View style={{ flex: 1, marginLeft: 10 }}>
                     <ThemedText type="subtitle">{selectedOffer?.place.name}</ThemedText>
                     {selectedOffer?.place.priceRangeBegin && selectedOffer?.place.priceRangeEnd && (
@@ -159,13 +168,6 @@ export default function Offers() {
                     )}
                   </View>
                 </TouchableOpacity>
-              </View>
-
-              <View style={{ marginTop: 20 }}>
-                <BtnPrimary
-                  title={qrLoading ? "Cargando..." : "Mostrar QR"}
-                  onClick={() => handleShowQr(selectedOffer!)}
-                />
               </View>
             </View>
           </ScrollView>
@@ -253,11 +255,11 @@ export default function Offers() {
             horizontal={false}
             showsVerticalScrollIndicator={false}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
-            contentContainerStyle={{ paddingBottom: 50 }}
+            contentContainerStyle={{ paddingBottom: 50, width: '100%' }}
           >
             <ThemedText type='title' style={{ alignSelf: 'flex-start', marginTop: 10 }}>Ofertas disponibles</ThemedText>
 
-            <CenterAligned>
+            <View style={{ width: '100%', alignSelf: 'center', marginTop: 20 }}>
               {customOffers?.length === 0 && (
                 <ThemedText>Aun no tienes ofertas disponibles</ThemedText>
               )}
@@ -268,39 +270,44 @@ export default function Offers() {
                   style={styles.offerCard}
                   onPress={() => handleOfferClick(offer)}
                 >
-                  {(offer.imageUrl || (offer.place.imageUrls && offer.place.imageUrls.length > 0)) ? (
-                    <View style={{ position: 'relative' }}>
-                      <FastImage
-                        source={{ uri: offer.imageUrl || offer.place.imageUrls[0] }}
-                        style={styles.offerImage}
-                        resizeMode="cover"
-                      />
+                  <View style={styles.offerHeader}>
+                    <FastImage
+                      source={{ uri: offer.place.imageUrls[0] }}
+                      style={styles.venueImage}
+                    />
+                    <View style={{ marginLeft: 10 }}>
+                      <ThemedText type="subtitle">{offer.place.name}</ThemedText>
                       {offer.validUntil && (
-                        <View style={styles.validUntilContainer}>
-                          <Feather name='clock' size={16} color='white' />
-                          <ThemedText style={{ marginLeft: 5 }}>
-                            Válido hasta {dateShortDisplay(offer.validUntil)}
-                          </ThemedText>
-                        </View>
+                        <ThemedText style={{ fontSize: 12, color: '#ffffff7f' }}>
+                          Válido hasta {dateShortDisplay(offer.validUntil)}
+                        </ThemedText>
                       )}
                     </View>
+                  </View>
+
+                  {(offer.imageUrl || (offer.place.imageUrls && offer.place.imageUrls.length > 0)) ? (
+                    <FastImage
+                      source={{ uri: offer.imageUrl || offer.place.imageUrls[0] }}
+                      style={styles.offerImage}
+                      resizeMode="cover"
+                    />
                   ) : (
                     <View style={styles.noImageContainer}>
                       <Feather name="image" size={40} color="#ffffff7f" />
-                      {offer.validUntil && (
-                        <View style={styles.validUntilContainer}>
-                          <Feather name='clock' size={16} color='white' />
-                          <ThemedText style={{ marginLeft: 5 }}>
-                            Válido hasta {dateShortDisplay(offer.validUntil)}
-                          </ThemedText>
-                        </View>
-                      )}
                     </View>
                   )}
-                  <ThemedText type="subtitle" style={{ marginTop: 5 }}>{offer.name}</ThemedText>
+
+                  <View style={styles.offerContent}>
+                    <ThemedText type="subtitle">{offer.name}</ThemedText>
+                    {offer.description && (
+                      <ThemedText style={{ marginTop: 5, color: '#ffffff7f' }}>
+                        {offer.description}
+                      </ThemedText>
+                    )}
+                  </View>
                 </TouchableOpacity>
               ))}
-            </CenterAligned>
+            </View>
           </Animated.ScrollView>
 
           <StyledModal
@@ -317,17 +324,37 @@ export default function Offers() {
 
 const styles = StyleSheet.create({
   offerCard: {
-    backgroundColor: 'black',
+    backgroundColor: '#2A2A2A',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#3A3A3A',
+    overflow: 'hidden',
+    marginBottom: 15,
+  },
+  offerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 10,
-    margin: 10,
-    borderRadius: 5,
-    alignItems: 'flex-start',
-    width: '100%',
+    backgroundColor: '#1A1A1A',
+  },
+  venueImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
   },
   offerImage: {
-    width: offerImageSize,
-    height: offerImageSize,
-    borderRadius: 10,
+    width: '100%',
+    height: 250,
+  },
+  noImageContainer: {
+    width: '100%',
+    height: 250,
+    backgroundColor: '#1A1A1A',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  offerContent: {
+    padding: 15,
   },
   validUntilContainer: {
     position: 'absolute',
@@ -383,8 +410,8 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   eventPlaceImage: {
-    width: 60,
-    height: 60,
+    width: 80,
+    height: 80,
     borderRadius: 5,
   },
   modalEventPlacePreview: {
@@ -400,20 +427,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#1a1a1a',
     padding: 15,
     borderRadius: 5,
-  },
-  modalEventPlaceImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 5,
-  },
-  noImageContainer: {
-    width: '100%',
-    height: offerImageSize,
-    backgroundColor: '#1a1a1a',
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
   },
   qrModalContent: {
     backgroundColor: 'black',

@@ -4,7 +4,7 @@ import { CenterAligned } from "@/components/CenterAligned";
 import { FullScreenLoading } from "@/components/FullScreenLoading";
 import { BiggerMarginItem, MarginItem } from "@/components/MarginItem";
 import { ThemedText } from "@/components/ThemedText";
-import { dateTimeDisplay } from "@/dateDisplay";
+import { dateShortDisplay } from "@/dateDisplay";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
 import FastImage from "react-native-fast-image";
@@ -67,7 +67,7 @@ export default function InviteScreen() {
         }
 
         <MarginItem>
-          <ThemedText style={{ textAlign: 'center' }}>{invitor.eventStatus.location?.name} - {dateTimeDisplay(invitor.eventStatus.time!)}</ThemedText>
+          <ThemedText style={{ textAlign: 'center' }}>{api.getLocationName(invitor.eventStatus.locationId!)} - {dateShortDisplay(invitor.eventStatus.time!)}</ThemedText>
         </MarginItem>
 
         <View style={{ width: '100%' }}>

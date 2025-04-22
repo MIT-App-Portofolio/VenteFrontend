@@ -17,7 +17,7 @@ export default function Calendar() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [selectedLocation, setSelectedLocation] = useState<string | null>(userProfile?.eventStatus.location?.id ?? null);
+  const [selectedLocation, setSelectedLocation] = useState<string | null>(userProfile?.eventStatus.locationId ?? null);
   const [date, setDate] = useState<Date | null>(userProfile?.eventStatus.time ?? null);
   const [isDirty, setIsDirty] = useState(false);
 

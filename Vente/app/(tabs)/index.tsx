@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView, Linking, TextInput, Animated, RefreshControl, Image } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Linking, TextInput, Animated, Image, FlatList, RefreshControl } from 'react-native';
 import { MarginItem } from '@/components/MarginItem';
 import { ThemedText } from '@/components/ThemedText';
 import { BtnPrimary, BtnSecondary } from '@/components/Buttons';
@@ -120,20 +120,10 @@ export default function Users() {
     setIsFilterModalVisible(false);
   }, [fetchVisitors]);
 
-  const handleScroll = (event: any) => {
-    Animated.event(
-      [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-      { useNativeDriver: false }
-    )(event);
-
-    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
-    const paddingToBottom = 20;
-
-    if (layoutMeasurement.height + contentOffset.y >=
-      contentSize.height - paddingToBottom && !loading && !lastUserFetchEmpty) {
-      setPage(page + 1);
-    }
-  };
+  const handleScroll = Animated.event(
+    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+    { useNativeDriver: false }
+  );
 
   const handleProfileClick = (profile: Profile) => {
     setSelectedProfile(profile);
@@ -236,6 +226,21 @@ export default function Users() {
     setUserFlagVisible(true);
   };
 
+  const handleLoadMore = useCallback(() => {
+    if (!loading && !lastUserFetchEmpty) {
+      setPage(prevPage => prevPage + 1);
+    }
+  }, [loading, lastUserFetchEmpty]);
+
+  const renderFooter = () => {
+    if (!loading) return null;
+    return (
+      <View style={styles.loadingContainer}>
+        <ThemedText>Cargando mas...</ThemedText>
+      </View>
+    );
+  };
+
   return (
     <HorizontallyAligned>
       <Animated.View style={{
@@ -261,31 +266,29 @@ export default function Users() {
         </TouchableOpacity>
       </Animated.View>
 
-      <Animated.ScrollView
+      <FlatList
+        data={visitors}
+        renderItem={renderVisitor}
+        keyExtractor={(item) => item}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
         onScroll={handleScroll}
         scrollEventThrottle={16}
-        showsHorizontalScrollIndicator={false}
-        horizontal={false}
-        showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
+        ListHeaderComponent={
+          <>
+            <ThemedText type='title' style={{ alignSelf: 'center', marginTop: 10 }}>¿Quien sale a {api.getOwnLocationName(userProfile)}?</ThemedText>
+            <View style={{ flexDirection: 'row', justifyContent: 'center', width: '100%', marginTop: 10, marginBottom: 10 }}>
+              <BtnPrimary title='Filtrar usuarios' onClick={() => setIsFilterModalVisible(true)} />
+            </View>
+          </>
+        }
+        ListFooterComponent={renderFooter}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={refresh} />
+        }
         contentContainerStyle={{ paddingBottom: 50 }}
-      >
-        <ThemedText type='title' style={{ alignSelf: 'center', marginTop: 10 }}>¿Quien sale a {api.getOwnLocationName(userProfile)}?</ThemedText>
-
-        <View style={{ flexDirection: 'row', justifyContent: 'center', width: '100%', marginTop: 10, marginBottom: 10 }}>
-          <BtnPrimary title='Filtrar usuarios' onClick={() => setIsFilterModalVisible(true)} />
-        </View>
-
-        <CenterAligned>
-          {visitors.map((value, _1, _2) => (
-            <React.Fragment key={value}>
-              {renderVisitor({ item: value })}
-            </React.Fragment>
-          ))}
-
-          {loading && <ThemedText>Cargando mas...</ThemedText>}
-        </CenterAligned>
-      </Animated.ScrollView>
+        showsVerticalScrollIndicator={false}
+      />
 
       {/* Filter modal */}
       <StyledModal isModalVisible={isFilterModalVisible} setIsModalVisible={setIsFilterModalVisible} includeButton={false}>
@@ -578,5 +581,9 @@ export const styles = StyleSheet.create({
     left: 10,
     zIndex: 1,
     padding: 10,
+  },
+  loadingContainer: {
+    paddingVertical: 20,
+    alignItems: 'center',
   },
 });

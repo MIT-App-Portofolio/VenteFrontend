@@ -130,6 +130,12 @@ export default function Users() {
     setIsUserModalVisible(true);
   };
 
+  const handleLoadMore = useCallback(() => {
+    if (!loading && !lastUserFetchEmpty) {
+      setPage(prevPage => prevPage + 1);
+    }
+  }, [loading, lastUserFetchEmpty]);
+
   const pendingRedirect = redirectStore.getPendingRedirect();
   const rootNavigationState = useRootNavigationState();
   if (pendingRedirect) {
@@ -225,12 +231,6 @@ export default function Users() {
     setUserFlagMessage(null);
     setUserFlagVisible(true);
   };
-
-  const handleLoadMore = useCallback(() => {
-    if (!loading && !lastUserFetchEmpty) {
-      setPage(prevPage => prevPage + 1);
-    }
-  }, [loading, lastUserFetchEmpty]);
 
   const renderFooter = () => {
     if (!loading) return null;

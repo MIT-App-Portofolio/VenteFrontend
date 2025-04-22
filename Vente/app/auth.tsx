@@ -190,7 +190,7 @@ const Auth: React.FC<AuthPageProps> = ({ onLogin }) => {
           </MarginItem>
         </View>)}
       {(currentPage == "login" || currentPage == 'register') && (
-        <BtnSecondary title='Ir atrás' onClick={() => setCurrentPage('main')}></BtnSecondary>
+        <BtnSecondary title='Atrás' onClick={() => setCurrentPage('main')}></BtnSecondary>
       )}
       {(currentPage == "register") && (
         <Register onLogin={onLogin}></Register>

@@ -9,7 +9,7 @@ import { FullScreenLoading } from '@/components/FullScreenLoading';
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { StyledDatePicker, StyledDateTimePicker } from "@/components/StyledDatePicker";
 import { StyledLocationPicker } from "@/components/StyledLocationPicker";
-import { dateDisplay, dateTimeDisplay } from "@/dateDisplay";
+import { dateDisplay, dateShortDisplay, dateTimeDisplay } from "@/dateDisplay";
 
 export default function Calendar() {
   const { api, userProfile, groupStatus } = useApi();
@@ -121,8 +121,8 @@ export default function Calendar() {
   return (
     <CenterAligned>
       <MarginItem>
-        {userProfile?.eventStatus.active && <ThemedText type="title">Tu evento.</ThemedText>}
-        {!userProfile?.eventStatus.active && <ThemedText type="title">Regístrate en un evento.</ThemedText>}
+        {userProfile?.eventStatus.active && <ThemedText type="title">{api.getOwnLocationName(userProfile)} - {dateShortDisplay(userProfile.eventStatus.time!)}</ThemedText>}
+        {!userProfile?.eventStatus.active && <ThemedText type="title">¿Cuando vas?</ThemedText>}
       </MarginItem>
 
       <View style={{ width: '80%' }}>
@@ -130,8 +130,6 @@ export default function Calendar() {
         <MarginItem>
           {!userProfile?.eventStatus.active && <StyledLocationPicker locations={api.locations!} location={selectedLocation} setLocation={setSelectedLocation} setIsDirty={setIsDirty} />}
           {!userProfile?.eventStatus.active && <StyledDatePicker title="Escoge una fecha" date={date} setIsDirty={setIsDirty} setDate={setDate} futureOnly />}
-
-          {userProfile?.eventStatus.active && <ThemedText type="subtitle" style={{ textAlign: 'center' }}>{api.getOwnLocationName(userProfile)} - {dateDisplay(userProfile.eventStatus.time!)}</ThemedText>}
         </MarginItem>
 
         <Modal
@@ -189,7 +187,7 @@ export default function Calendar() {
               />
 
               <View style={{ flexDirection: 'column', gap: 5 }}>
-                <BtnPrimary title="Invitar" onClick={inviteUser} disabled={inviteUsername ? false : true} />
+                <BtnPrimary title="¡Vente!" onClick={inviteUser} disabled={inviteUsername ? false : true} />
                 <BtnSecondary title="Cancelar" onClick={() => setIsModalVisible(false)} />
               </View>
             </View>
@@ -210,7 +208,7 @@ export default function Calendar() {
 
           {
             userProfile?.eventStatus.active &&
-            <BtnSecondary title="Cancelar Evento" onClick={onCancel} />
+            <BtnSecondary title="Cancelar fecha" onClick={onCancel} />
           }
         </BiggerMarginItem>
 

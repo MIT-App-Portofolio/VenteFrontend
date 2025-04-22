@@ -256,7 +256,7 @@ export default function Users() {
             left: 10,
             textTransform: 'uppercase'
           }}>
-            Ver Lugares de Eventos
+            Bares, clubs y discos
           </ThemedText>
         </TouchableOpacity>
       </Animated.View>
@@ -270,7 +270,7 @@ export default function Users() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
         contentContainerStyle={{ paddingBottom: 50 }}
       >
-        <ThemedText type='title' style={{ alignSelf: 'flex-start', marginTop: 10 }}>Usuarios que también van a {api.getOwnLocationName(userProfile)}</ThemedText>
+        <ThemedText type='title' style={{ alignSelf: 'center', marginTop: 10 }}>¿Quien sale a {api.getOwnLocationName(userProfile)}?</ThemedText>
 
         <View style={{ flexDirection: 'row', justifyContent: 'center', width: '100%', marginTop: 10, marginBottom: 10 }}>
           <BtnPrimary title='Filtrar usuarios' onClick={() => setIsFilterModalVisible(true)} />

@@ -14,6 +14,7 @@ export function HorizontallyAligned({ children }: { children: ReactNode }) {
     },
     centeredView: {
       width: '100%', // Full width
+      paddingTop: 0,
       padding: 20, // Some padding around content
       alignItems: 'center', // Center children horizontally within this View
       justifyContent: 'center', // Center children vertically within this View

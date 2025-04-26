@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { Platform } from "react-native";
 import { BtnPrimary } from "./Buttons";
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { MarginItem } from "./MarginItem";
 import { StyledModal } from "./StyledModal";
 import { dateDisplay, dateTimeDisplay } from "@/dateDisplay";
 import { CenterAligned } from "./CenterAligned";
+import DateTimePicker, { useDefaultStyles } from "react-native-ui-datepicker";
 
 
 export type StyledDatePickerProps = {
@@ -13,163 +13,194 @@ export type StyledDatePickerProps = {
   title: string;
   futureOnly?: boolean;
   pastOnly?: boolean;
+  minDate?: Date;
+  maxDate?: Date;
   setIsDirty?: (dirty: boolean) => void;
   setDate: (date: Date) => void;
 };
 
-export function StyledDatePicker({ date, setDate, title, setIsDirty, futureOnly, pastOnly }: StyledDatePickerProps) {
-  const ios = Platform.OS === 'ios';
+export function StyledDatePicker({ date, setDate, title, setIsDirty, futureOnly, pastOnly, minDate, maxDate }: StyledDatePickerProps) {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [tempDate, setTempDate] = useState<Date | null>(date);
 
-  if (ios) {
-    return (
-      <MarginItem>
-        <BtnPrimary title={date ? dateDisplay(date) : title} onClick={() => {
-          setTempDate(date);
-          setShowDatePicker(true);
-        }}></BtnPrimary>
+  maxDate = maxDate ?? (pastOnly === true ? new Date() : undefined);
+  minDate = minDate ?? (futureOnly === true ? new Date() : undefined);
 
-        {showDatePicker &&
-          <StyledModal isModalVisible={showDatePicker} setIsModalVisible={(visible) => {
-            if (!visible) {
-              setTempDate(date); // Reset temp date when closing without saving
-            }
-            setShowDatePicker(visible);
-          }}>
-            <CenterAligned>
-              <DateTimePicker
-                themeVariant='dark'
-                minimumDate={futureOnly === true ? new Date() : undefined}
-                maximumDate={pastOnly === true ? new Date() : undefined}
-                style={{ width: 450 }}
-                value={tempDate ?? new Date()}
-                onChange={(_, selectedDate) => {
-                  if (selectedDate) {
-                    setTempDate(selectedDate);
-                  }
-                }}
-                mode="date"
-                display="inline"
-              />
-            </CenterAligned>
-
-            <BtnPrimary title="Guardar" onClick={() => {
-              if (setIsDirty) setIsDirty(true);
-              if (tempDate) {
-                setDate(tempDate);
-              } else {
-                setDate(new Date());
-              }
-              setShowDatePicker(false);
-            }} />
-          </StyledModal>
-        }
-      </MarginItem>
-    );
-  }
+  const defaultStyles = useDefaultStyles();
 
   return (
     <MarginItem>
-      <BtnPrimary title={date ? dateDisplay(date) : title} onClick={() => setShowDatePicker(true)}></BtnPrimary>
+      <BtnPrimary title={date ? dateDisplay(date) : title} onClick={() => {
+        setTempDate(date);
+        setShowDatePicker(true);
+      }}></BtnPrimary>
 
-      {showDatePicker && (
-        <DateTimePicker
-          value={date ?? new Date()}
-          minimumDate={futureOnly === true ? new Date() : undefined}
-          maximumDate={pastOnly === true ? new Date() : undefined}
-          onChange={(_, selectedDate) => {
-            setShowDatePicker(false);
-            if (selectedDate) {
-              setDate(selectedDate);
+      {showDatePicker &&
+        <StyledModal isModalVisible={showDatePicker} setIsModalVisible={(visible) => {
+          if (!visible) {
+            setTempDate(date); // Reset temp date when closing without saving
+          }
+          setShowDatePicker(visible);
+        }}>
+          <CenterAligned>
+            <DateTimePicker
+              timePicker={false}
+              locale="es"
+              styles={{
+                ...defaultStyles,
+                button_next: { color: 'white', backgroundColor: 'white', padding: 10, borderRadius: 5 },
+                button_prev: { color: 'white', backgroundColor: 'white', padding: 10, borderRadius: 5 },
+                button_prev_image: { tintColor: 'black', fontSize: 16 },
+                button_next_image: { tintColor: 'black', fontSize: 16 },
+
+
+                month_selector: { backgroundColor: 'white', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 5 },
+                year_selector: { backgroundColor: 'white', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 5 },
+
+                month_selector_label: { color: 'black', fontSize: 16 },
+                year_selector_label: { color: 'black', fontSize: 16 },
+
+                month: { color: 'white' },
+                year: { color: 'white' },
+
+                day_label: { color: 'white' },
+
+                month_label: { color: 'white' },
+                year_label: { color: 'white' },
+                today: { borderColor: 'blue', borderWidth: 2, color: 'white' },
+                today_label: { color: 'white' },
+                selected: { backgroundColor: 'white' },
+                selected_label: { color: 'black' },
+              }}
+              mode="single"
+              minDate={minDate}
+              maxDate={maxDate}
+              date={tempDate ?? new Date()}
+              onChange={({ date }) => {
+                setTempDate(date as Date);
+              }}
+            />
+          </CenterAligned>
+
+          <BtnPrimary title="Guardar" onClick={() => {
+            if (setIsDirty) setIsDirty(true);
+            if (tempDate) {
+              setDate(tempDate);
+            } else {
+              setDate(new Date());
             }
-          }}
-          mode="date"
-          display="default"
-        />
-      )}
+            setShowDatePicker(false);
+          }} />
+        </StyledModal>
+      }
     </MarginItem>
   );
 }
 
-type StyledDateTimePickerProps = {
-  date: Date | null;
+export type StyledMultipleDatesPickerProps = {
+  minDate?: Date;
+  maxDate?: Date;
   title: string;
-  setIsDirty: (dirty: boolean) => void;
-  setDate: (date: Date) => void;
+  futureOnly?: boolean;
+  pastOnly?: boolean;
+  dates: Date[] | null,
+  setIsDirty?: (dirty: boolean) => void;
+  setDates: (dates: Date[]) => void,
 };
 
-export function StyledDateTimePicker({ date, setDate, title, setIsDirty }: StyledDateTimePickerProps) {
-  const ios = Platform.OS === 'ios';
+export function StyledMultipleDatesPicker({
+  dates,
+  title,
+  setIsDirty,
+  futureOnly,
+  pastOnly,
+  setDates,
+  minDate,
+  maxDate
+}: StyledMultipleDatesPickerProps) {
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [tempDates, setTempDates] = useState<Date[] | null>(dates);
 
-  if (ios) {
-    return (
-      <MarginItem>
-        <BtnPrimary title={date ? dateTimeDisplay(date) : title} onClick={() => setShowDatePicker(true)}></BtnPrimary>
+  maxDate = maxDate ?? (pastOnly === true ? new Date() : undefined);
+  minDate = minDate ?? (futureOnly === true ? new Date() : undefined);
 
-        {showDatePicker &&
-          <StyledModal isModalVisible={showDatePicker} setIsModalVisible={(visible) => {
-            if (!visible && date == null) {
-              setDate(new Date());
-              setIsDirty(true);
-            }
-            setShowDatePicker(visible);
-          }
-          }>
-            <DateTimePicker
-              style={{ width: 450 }}
-              value={date ?? new Date()}
-              onChange={(_, selectedDate) => {
-                if (selectedDate) {
-                  setDate(selectedDate);
-                }
-              }}
-              mode="date"
-              display="calendar"
-            />
-          </StyledModal>
-        }
-      </MarginItem>
-    );
-  }
+  const defaultStyles = useDefaultStyles();
+
+  const getDisplayText = () => {
+    if (!dates || dates.length === 0) return title;
+    return `${dates?.length} fechas`;
+  };
 
   return (
     <MarginItem>
-      <BtnPrimary title={date ? dateTimeDisplay(date) : title} onClick={() => setShowDatePicker(true)}></BtnPrimary>
+      <BtnPrimary
+        title={getDisplayText()}
+        onClick={() => {
+          setTempDates(dates);
+          setShowDatePicker(true);
+        }}
+      />
 
       {showDatePicker && (
-        <DateTimePicker
-          value={date ?? new Date()}
-          minimumDate={new Date()}
-          onChange={(_, selectedDate) => {
-            setShowDatePicker(false);
-            if (selectedDate) {
-              setIsDirty(true);
-              setDate(selectedDate);
-              setShowTimePicker(true);
+        <StyledModal
+          isModalVisible={showDatePicker}
+          setIsModalVisible={(visible) => {
+            if (!visible) {
+              setTempDates(dates);
             }
+            setShowDatePicker(visible);
           }}
-          mode="date"
-          display="compact"
-        />
-      )}
+        >
+          <CenterAligned>
+            <DateTimePicker
+              timePicker={false}
+              locale="es"
+              firstDayOfWeek={1}
+              styles={{
+                ...defaultStyles,
+                button_next: { color: 'white', backgroundColor: 'white', padding: 10, borderRadius: 5 },
+                button_prev: { color: 'white', backgroundColor: 'white', padding: 10, borderRadius: 5 },
+                button_prev_image: { tintColor: 'black', fontSize: 16 },
+                button_next_image: { tintColor: 'black', fontSize: 16 },
+                month_selector: { backgroundColor: 'white', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 5 },
+                year_selector: { backgroundColor: 'white', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 5 },
+                month_selector_label: { color: 'black', fontSize: 16 },
+                year_selector_label: { color: 'black', fontSize: 16 },
+                month: { color: 'white' },
+                year: { color: 'white' },
+                day_label: { color: 'white' },
+                month_label: { color: 'white' },
+                year_label: { color: 'white' },
+                today: { borderColor: 'blue', borderWidth: 2, color: 'white' },
+                today_label: { color: 'white' },
+                selected: { backgroundColor: 'white' },
+                range_fill: { backgroundColor: 'lightgray', marginTop: '10%', marginBottom: '10%' },
+                selected_label: { color: 'black' },
+                range_start_label: { color: 'black' },
+                range_end_label: { color: 'black' },
+                range_middle_label: { color: 'black' },
+              }}
+              mode="multiple"
+              multiRangeMode
+              max={20}
+              dates={tempDates ?? []}
+              minDate={minDate}
+              maxDate={maxDate}
+              onChange={({ dates }) => {
+                setTempDates(dates as Date[]);
+              }}
+            />
+          </CenterAligned>
 
-      {showTimePicker && (
-        <DateTimePicker
-          value={date ?? new Date()}
-          minimumDate={new Date()}
-          onChange={(_, selectedDate) => {
-            setShowTimePicker(false);
-            if (selectedDate) {
-              setIsDirty(true);
-              setDate(selectedDate);
-            }
-          }}
-          mode="time"
-          display="default"
-        />
+          <BtnPrimary
+            title="Guardar"
+            onClick={() => {
+              if (setIsDirty) setIsDirty(true);
+              setDates(tempDates ?? []);
+              setShowDatePicker(false);
+            }}
+          />
+        </StyledModal>
       )}
     </MarginItem>
   );

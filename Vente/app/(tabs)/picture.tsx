@@ -2,7 +2,6 @@ import { HorizontallyAligned } from "@/components/HorizontallyAligned";
 import { ThemedText } from "@/components/ThemedText";
 import { View, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from "react-native";
 import { useApi } from "@/api";
-import { CenterAligned } from "@/components/CenterAligned";
 import { BtnPrimary, BtnSecondary } from "@/components/Buttons";
 import { FullScreenLoading } from "@/components/FullScreenLoading";
 import { StyledModal } from "@/components/StyledModal";
@@ -11,13 +10,11 @@ import * as ImagePicker from 'expo-image-picker';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { Feather } from "@expo/vector-icons";
 import { timeShortDisplay } from "@/dateDisplay";
-import { useRouter } from "expo-router";
 
 const { height } = Dimensions.get('window');
 
 export default function Picture() {
-  const { api, ownPictures, userProfile } = useApi();
-  const router = useRouter();
+  const { api, ownPictures } = useApi();
   const [loading, setLoading] = useState(false);
   const [selectedPicture, setSelectedPicture] = useState<number | null>(null);
   const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
@@ -102,28 +99,6 @@ export default function Picture() {
     return <FullScreenLoading />;
   }
 
-  if (!userProfile?.eventStatus.active) {
-    return (
-      <CenterAligned>
-        <ThemedText>No estas registrado en ningún evento.</ThemedText>
-        <BtnPrimary title='Ir a calendario' onClick={() => router.push('/calendar')}></BtnPrimary>
-      </CenterAligned>
-    );
-  }
-
-  const eventDate = new Date(userProfile.eventStatus.time!);
-  const currentDate = new Date();
-  const timeDiff = Math.abs(currentDate.getTime() - eventDate.getTime());
-  const dayDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
-
-  if (dayDiff > 2) {
-    return (
-      <CenterAligned>
-        <ThemedText>Aun no ha llegado el dia del evento.</ThemedText>
-        <BtnPrimary title='Ir a calendario' onClick={() => router.push('/calendar')}></BtnPrimary>
-      </CenterAligned>
-    );
-  }
 
   return (
     <>

@@ -1,12 +1,23 @@
 import { Tabs } from 'expo-router';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Platform } from 'react-native';
 
 import { HapticTab } from '@/components/HapticTab';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import TabBarBackground from '@/components/ui/TabBarBackground';
+import { useApi } from '@/api';
 
 export default function TabLayout() {
+  const { exitAlbumAvailable, api } = useApi();
+
+  // refresh every couple of seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      api.exitAlbumAvailable();
+    }, 20000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <Tabs
       screenOptions={{
@@ -45,9 +56,11 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="picture"
-        options={{
+        options={exitAlbumAvailable ? {
           title: '',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="camera" color={color} />,
+        } : {
+          href: null
         }}
       />
       <Tabs.Screen

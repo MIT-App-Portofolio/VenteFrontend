@@ -1,27 +1,51 @@
 import { Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
+import Toast from 'react-native-toast-message';
 
 import Auth from './auth';
 import * as Notifications from 'expo-notifications';
 import { StatusBar } from 'expo-status-bar';
-import { ErrorText } from '@/components/ThemedText';
+import { ErrorText, ThemedText } from '@/components/ThemedText';
 import { CenterAligned } from '@/components/CenterAligned';
 import { FullScreenLoading } from '@/components/FullScreenLoading';
 import { ApiProvider, AuthResult, useApi } from '../api';
 import { DarkTheme, ThemeProvider } from '@react-navigation/native';
 import { Inter_400Regular, Inter_700Bold, useFonts } from '@expo-google-fonts/inter';
 import messaging from '@react-native-firebase/messaging';
-import InviteScreen from './invite';
 import { AppState, Platform, View } from 'react-native';
 import emitter from '@/eventEmitter';
 import Affiliate from './affiliate';
+import { IconSymbol } from '@/components/ui/IconSymbol';
+
+const toastConfig = {
+  error: (props: any) => (
+    <View style={{
+      backgroundColor: '#2A2A2A',
+      padding: 12,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: '#3A3A3A',
+      marginHorizontal: 20,
+      marginTop: 40,
+      flexDirection: 'row',
+      alignItems: 'center',
+    }}>
+      <IconSymbol name="xmark.circle.fill" color="red" size={20} style={{ marginRight: 8 }} />
+      <View style={{ flex: 1 }}>
+        <ThemedText type="subtitle" style={{ fontSize: 14 }}>{props.text1}</ThemedText>
+        <ThemedText style={{ fontSize: 12 }}>{props.text2}</ThemedText>
+      </View>
+    </View>
+  ),
+};
 
 export default function RootLayout() {
   return (
     <ApiProvider>
       <View style={{ flex: 1, backgroundColor: 'black' }}>
         <Inner></Inner>
+        <Toast config={toastConfig} />
       </View>
     </ApiProvider>
   )
@@ -29,7 +53,7 @@ export default function RootLayout() {
 
 function Inner() {
   const [loadingAuthStatus, setLoading] = useState(true);
-  const { api, inviteStatus } = useApi();
+  const { api } = useApi();
   const [isAuthenticated, setAuthenticated] = useState(false);
   const [unknownError, setUnknownError] = useState(false);
   const [isAffiliate, setIsAffiliate] = useState(false);
@@ -58,7 +82,10 @@ function Inner() {
         if (notification.data) {
           switch (notification.data.notification_type) {
             case "invite":
-              await api.getInviteStatus();
+              await api.getInvitationExits();
+              break;
+            case "invite_accept":
+              await api.getExits();
               break;
             case "offer":
               await api.getCustomOffers();
@@ -74,7 +101,7 @@ function Inner() {
       // start and we need to check the invite status once again.
       AppState.addEventListener('change', async (nextAppState) => {
         if (appState.match(/inactive|background/) && nextAppState === 'active') {
-          await api.getInviteStatus();
+          await api.getInvitationExits();
         }
         setAppState(nextAppState);
       });
@@ -100,6 +127,9 @@ function Inner() {
         if (auth == AuthResult.Authenticated) {
           const affiliateStatus = await api.isAffiliate();
           setIsAffiliate(affiliateStatus);
+          await api.getExits();
+          await api.getInvitationExits();
+          await api.exitAlbumAvailable();
         }
       }
 
@@ -135,13 +165,6 @@ function Inner() {
     );
   }
 
-  if (inviteStatus?.invited) {
-    return (
-      <CenterAligned>
-        <InviteScreen />
-      </CenterAligned>
-    )
-  }
 
   if (isAffiliate) {
     return (

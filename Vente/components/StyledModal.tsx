@@ -14,11 +14,12 @@ export type ModalProps = {
   noIncludeScrollView?: boolean;
   topRightElement?: TopRightElement;
   setIsModalVisible: (isVisible: boolean) => void;
+  fixedBottomContent?: React.ReactNode;
 };
 
 const { height } = Dimensions.get('window');
 
-export function StyledModal({ children, isModalVisible, setIsModalVisible, includeButton = true, topRightElement, noIncludeScrollView }: ModalProps) {
+export function StyledModal({ children, isModalVisible, setIsModalVisible, includeButton = true, topRightElement, noIncludeScrollView, fixedBottomContent }: ModalProps) {
   const topBarPercentage = 0.13;
 
   const styles = StyleSheet.create({
@@ -47,6 +48,16 @@ export function StyledModal({ children, isModalVisible, setIsModalVisible, inclu
       right: 20,
       zIndex: 1,
     },
+    fixedBottom: {
+      position: 'absolute',
+      bottom: 100,
+      left: 0,
+      right: 0,
+      padding: 20,
+      backgroundColor: 'black',
+      borderTopWidth: 1,
+      borderTopColor: '#333',
+    },
   });
 
   return (
@@ -72,13 +83,17 @@ export function StyledModal({ children, isModalVisible, setIsModalVisible, inclu
           <View style={styles.modalContent}>
             {children}
           </View> :
-          <ScrollView style={styles.modalContent} contentContainerStyle={{ paddingBottom: height * topBarPercentage }}>
+          <ScrollView style={styles.modalContent} contentContainerStyle={{ paddingBottom: height * topBarPercentage + (fixedBottomContent ? 100 : 0) }}>
             {children}
           </ScrollView>
         }
 
+        {fixedBottomContent && (
+          <View style={styles.fixedBottom}>
+            {fixedBottomContent}
+          </View>
+        )}
       </View>
     </Modal>
   );
-
 }

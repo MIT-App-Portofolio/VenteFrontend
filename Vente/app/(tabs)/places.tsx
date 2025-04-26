@@ -1,6 +1,6 @@
 import { EventPlace, EventPlaceEvent, useApi } from "@/api";
-import { useEffect, useRef, useState } from "react";
-import { useRouter } from 'expo-router';
+import { useEffect, useState } from "react";
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Animated, Dimensions, TouchableOpacity, View, Image, ScrollView, StyleSheet, Linking } from "react-native";
 import { HorizontallyAligned } from "@/components/HorizontallyAligned";
 import { ThemedText, ViewMoreThemedText } from "@/components/ThemedText";
@@ -14,7 +14,10 @@ import { dateOnlyDisplay } from "@/dateDisplay";
 import { Feather } from '@expo/vector-icons';
 
 export default function Places() {
-  const { api, userProfile } = useApi();
+  const { api } = useApi();
+
+  const { selectedExitId } = useLocalSearchParams<{ selectedExitId: string }>();
+
   const router = useRouter();
 
   const [loading, setLoading] = useState(false);
@@ -32,14 +35,14 @@ export default function Places() {
   useEffect(() => {
     const f = async () => {
       setLoading(true);
-      const places = await api.queryEventPlaces();
+      const places = await api.queryEventPlaces(parseInt(selectedExitId));
       if (places) {
         setEventPlaces(places);
       }
       setLoading(false);
     };
     f()
-  }, [userProfile?.eventStatus]);
+  }, [selectedExitId]);
 
 
   const renderEventPlace = ({ item }: { item: EventPlace }) => (

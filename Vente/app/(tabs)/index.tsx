@@ -1,26 +1,27 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView, Linking, TextInput, Animated, Image, FlatList, RefreshControl } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import { MarginItem } from '@/components/MarginItem';
 import { ThemedText } from '@/components/ThemedText';
 import { BtnPrimary, BtnSecondary } from '@/components/Buttons';
 import { HorizontallyAligned } from '@/components/HorizontallyAligned';
 import { CenterAligned } from '@/components/CenterAligned';
-import { useApi } from '@/api';
+import { Exit, ExitUserQuery, useApi } from '@/api';
 import { Redirect, useRootNavigationState, useRouter } from 'expo-router';
-import { Profile } from '@/api';
 import { Feather, FontAwesome } from '@expo/vector-icons';
 import { StyledGenderFilter } from '@/components/GenderPicker';
 import { StyledModal } from '@/components/StyledModal';
 import { redirectStore } from '@/redirect_storage';
 import FastImage from 'react-native-fast-image';
-import { dateShortDisplay } from '@/dateDisplay';
+import { dateListDisplay, dateShortDisplay } from '@/dateDisplay';
+import DropDownPicker from 'react-native-dropdown-picker';
 
 export const pfpSize = 250;
 
 export default function Users() {
   const router = useRouter();
 
-  const { api, userProfile } = useApi();
+  const { api, exits, userProfile } = useApi();
 
   // State management
   const [loading, setLoading] = useState(false);
@@ -28,7 +29,7 @@ export default function Users() {
   const [page, setPage] = useState(0);
   const [lastUserFetchEmpty, setLastUserFetchEmpty] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
+  const [selectedProfile, setSelectedProfile] = useState<ExitUserQuery | null>(null);
   const [isUserModalVisible, setIsUserModalVisible] = useState(false);
   const [userFlagVisible, setUserFlagVisible] = useState(false);
   const [userFlagLoading, setUserFlagLoading] = useState(false);
@@ -38,37 +39,39 @@ export default function Users() {
   const [ageRangeMin, setAgeRangeMin] = useState<number | null>(null);
   const [ageRangeMax, setAgeRangeMax] = useState<number | null>(null);
 
+  const [selectedExitId, setSelectedExitId] = useState<number | null>(null);
+
+  const [exitPickerOpen, setExitPickerOpen] = useState(false);
+
   const scrollY = useRef(new Animated.Value(0)).current;
 
   const isFetching = useRef(false);
 
+  const flatListRef = useRef<FlatList<string>>(null);
+
+  // Set initial selected exit when exits are loaded
+  useEffect(() => {
+    if (exits?.length == 0) {
+      setSelectedExitId(null);
+    }
+    if (exits && exits.length > 0 && !selectedExitId) {
+      setSelectedExitId(exits[0].id);
+    }
+  }, [exits]);
+
   // Fetch visitors with proper error handling and loading states
   const fetchVisitors = useCallback(async (pageNum: number, shouldReset: boolean = false) => {
-    if (isFetching.current) return;
+    if (isFetching.current || !selectedExitId) return;
     isFetching.current = true;
     setLoading(true);
 
     try {
-      const newVisitors = await api.queryVisitors(pageNum, genderFilter, ageRangeMin, ageRangeMax);
-
+      const newVisitors = await api.queryVisitors(selectedExitId, pageNum, genderFilter, ageRangeMin, ageRangeMax);
       if (!newVisitors || newVisitors.length === 0) {
         setLastUserFetchEmpty(true);
       } else {
         // Fetch profile pictures for all new visitors
         await Promise.all(newVisitors.map(visitor => api.fetchPfp(visitor)));
-
-        // Fetch profile pictures for users they go with
-        await Promise.all(newVisitors.map(async visitor => {
-          const profile = api.getUserUnstable(visitor);
-          if (profile?.eventStatus?.with) {
-            await Promise.all(profile.eventStatus.with.map(async withUser => {
-              if (!api.hasUser(withUser)) {
-                await api.getUser(withUser);
-                await api.fetchPfp(withUser);
-              }
-            }));
-          }
-        }));
 
         setVisitors(prev => shouldReset ? newVisitors : [...prev, ...newVisitors]);
       }
@@ -79,18 +82,25 @@ export default function Users() {
       setLoading(false);
       isFetching.current = false;
     }
-  }, [api, genderFilter, ageRangeMin, ageRangeMax]);
+  }, [api, selectedExitId, genderFilter, ageRangeMin, ageRangeMax]);
 
   const initialFetch = useCallback(() => {
+    scrollToTop();
     setPage(0);
     setLastUserFetchEmpty(false);
     fetchVisitors(0, true);
   }, [fetchVisitors]);
 
-  // Initial fetch and fetch on event status change
+  // Initial fetch and fetch on exit change
   useEffect(() => {
-    initialFetch();
-  }, [userProfile?.eventStatus]);
+    if (selectedExitId) {
+      initialFetch();
+    }
+  }, [selectedExitId]);
+
+  const scrollToTop = () => {
+    flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+  }
 
   const pageChangeFetch = useCallback(() => {
     if (page > 0) {
@@ -125,7 +135,7 @@ export default function Users() {
     { useNativeDriver: false }
   );
 
-  const handleProfileClick = (profile: Profile) => {
+  const handleProfileClick = (profile: ExitUserQuery) => {
     setSelectedProfile(profile);
     setIsUserModalVisible(true);
   };
@@ -153,18 +163,18 @@ export default function Users() {
     extrapolate: 'clamp',
   });
 
-  if (!userProfile?.eventStatus.active) {
+  if (!selectedExitId || exits?.length == 0) {
     return (
       <CenterAligned>
-        <ThemedText>No estas registrado en ningún evento.</ThemedText>
+        <ThemedText>Aun no sabemos cuando sales</ThemedText>
         <BtnPrimary title='Ir a calendario' onClick={() => router.push('/calendar')}></BtnPrimary>
       </CenterAligned>
     );
   }
 
   const renderVisitor = ({ item }: { item: string }) => {
-    var visitor = api.getUserUnstable(item);
-    var pfpUrl = api.getPfpUnstable(item);
+    var visitor = api.getUserCached(item) as ExitUserQuery;
+    var pfpUrl = api.getPfpFromCache(item);
 
     if (visitor == null) {
       return null;
@@ -201,7 +211,7 @@ export default function Users() {
             alignItems: 'center',
           }}>
             <Feather name='calendar' size={16} color='white' />
-            <ThemedText>{dateShortDisplay(new Date(visitor.eventStatus.time!))}</ThemedText>
+            <ThemedText>{visitor.dates.length == 1 ? dateShortDisplay(visitor.dates[0]) : visitor.dates.length + " fechas"}</ThemedText>
           </View>
 
           <View style={{
@@ -233,7 +243,7 @@ export default function Users() {
   };
 
   const renderFooter = () => {
-    if (!loading) return null;
+    if (!loading) return <View style={{ height: 50 }} />;
     return (
       <View style={styles.loadingContainer}>
         <ThemedText>Cargando mas...</ThemedText>
@@ -243,6 +253,44 @@ export default function Users() {
 
   return (
     <HorizontallyAligned>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 10 }}>
+        <DropDownPicker
+          open={exitPickerOpen}
+          style={{
+            backgroundColor: 'black',
+            width: 150,
+            alignSelf: 'flex-start',
+            borderWidth: 1,
+            borderColor: '#333',
+            borderRadius: 15,
+          }}
+          labelStyle={{
+            color: 'white',
+            fontSize: 16
+          }}
+          dropDownContainerStyle={{
+            backgroundColor: 'black',
+            width: 150,
+            borderColor: '#333',
+            borderRadius: 15
+          }}
+          listItemLabelStyle={{
+            color: 'white',
+          }}
+          setOpen={setExitPickerOpen}
+          value={selectedExitId}
+          setValue={setSelectedExitId}
+          items={exits?.map(exit => ({
+            label: exit.name,
+            value: exit.id
+          })) || []}
+        />
+
+        <TouchableOpacity>
+          <Feather name='send' size={24} color='white' />
+        </TouchableOpacity>
+      </View>
+
       <Animated.View style={{
         backgroundColor: 'black',
         marginTop: 10,
@@ -250,7 +298,7 @@ export default function Users() {
         width: '100%',
         height: buttonHeight,
       }}>
-        <TouchableOpacity onPress={() => router.push("/places")} style={{
+        <TouchableOpacity onPress={() => router.push("/places?selectedExitId=" + selectedExitId)} style={{
           width: '100%',
           height: '100%',
         }}>
@@ -267,6 +315,7 @@ export default function Users() {
       </Animated.View>
 
       <FlatList
+        ref={flatListRef}
         data={visitors}
         renderItem={renderVisitor}
         keyExtractor={(item) => item}
@@ -276,7 +325,7 @@ export default function Users() {
         scrollEventThrottle={16}
         ListHeaderComponent={
           <>
-            <ThemedText type='title' style={{ alignSelf: 'center', marginTop: 10 }}>¿Quien sale a {api.getOwnLocationName(userProfile)}?</ThemedText>
+            <ThemedText type='title' style={{ alignSelf: 'center', marginTop: 10 }}>¿Quien sale a {api.getLocationName(exits?.find(e => e.id == selectedExitId)?.locationId || '')}?</ThemedText>
             <View style={{ flexDirection: 'row', justifyContent: 'center', width: '100%', marginTop: 10, marginBottom: 10 }}>
               <BtnPrimary title='Filtrar usuarios' onClick={() => setIsFilterModalVisible(true)} />
             </View>
@@ -330,7 +379,7 @@ export default function Users() {
       {
         selectedProfile &&
         (
-          <StyledModal isModalVisible={isUserModalVisible} setIsModalVisible={setIsUserModalVisible} includeButton={!userFlagVisible} topRightElement={(userFlagVisible || selectedProfile.userName == userProfile.userName) ? undefined : {
+          <StyledModal isModalVisible={isUserModalVisible} setIsModalVisible={setIsUserModalVisible} includeButton={!userFlagVisible} topRightElement={(userFlagVisible || selectedProfile.userName == userProfile?.userName) ? undefined : {
             icon: "flag",
             onPress: flagPress,
           }}>
@@ -371,7 +420,7 @@ export default function Users() {
               ) : (
                 <ScrollView style={styles.modalContent}>
                   <View style={{ position: 'relative' }}>
-                    <FastImage source={{ uri: api.getPfpUnstable(selectedProfile.userName) }} style={styles.modalProfilePicture} />
+                    <FastImage source={{ uri: api.getPfpFromCache(selectedProfile.userName) }} style={styles.modalProfilePicture} />
                     {selectedProfile.note && (
                       <View style={{
                         position: 'absolute',
@@ -410,7 +459,7 @@ export default function Users() {
                       alignItems: 'center',
                     }}>
                       <Feather name='calendar' size={16} color='white' />
-                      <ThemedText>{dateShortDisplay(new Date(selectedProfile.eventStatus.time!))}</ThemedText>
+                      <ThemedText>{dateListDisplay(selectedProfile.dates)}</ThemedText>
                     </View>
                   </View>
 
@@ -425,21 +474,17 @@ export default function Users() {
                     </View>
                   )}
 
-                  {selectedProfile.eventStatus.with && selectedProfile.eventStatus.with.length > 0 && (
+                  {selectedProfile.with && selectedProfile.with.length > 0 && (
                     <ThemedText style={{ marginTop: 10 }}>Va con:</ThemedText>
                   )}
 
                   {/* Render profiles of users that go with the selected profile */}
                   <View style={styles.invitedUsersContainer}>
-                    {selectedProfile.eventStatus.with?.map((username) => {
-                      const user = api.getUserUnstable(username);
-
-                      if (!user) return null;
-
+                    {selectedProfile.with?.map((friend) => {
                       return (
-                        <View key={username} style={styles.invitedUserCard}>
-                          <FastImage source={{ uri: api.getPfpUnstable(username) }} style={styles.invitedUserProfilePicture} />
-                          <ThemedText>{user.name || `@${user.userName}`}</ThemedText>
+                        <View key={"friend_" + friend.displayName} style={styles.invitedUserCard}>
+                          <FastImage source={{ uri: friend.pfpUrl }} style={styles.invitedUserProfilePicture} />
+                          <ThemedText>{friend.displayName}</ThemedText>
                         </View>
                       );
                     })}

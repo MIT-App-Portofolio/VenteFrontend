@@ -29,6 +29,8 @@ export function dateOnlyDisplay(date: Date): string {
 }
 
 export function dateTimeShortDisplay(date: Date): string {
+  date = new Date(date);
+
   const dd: string = String(date.getDate()).padStart(2, '0');
   const mm: string = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
   const HH: string = String(date.getHours()).padStart(2, '0');
@@ -37,7 +39,47 @@ export function dateTimeShortDisplay(date: Date): string {
   return `${dd}/${mm} ${HH}:${MM}`;
 }
 
+export function dateListDisplay(dates: Date[]): string {
+  if (!dates || dates.length === 0) return '';
+
+  // Sort dates chronologically
+  dates.sort((a, b) => a.getTime() - b.getTime());
+
+  const ranges: string[] = [];
+  let rangeStart = dates[0];
+  let rangeEnd = dates[0];
+
+  for (let i = 1; i <= dates.length; i++) {
+    const currentDate = dates[i];
+    const prevDate = dates[i - 1];
+
+    // Check if we're at the end or if dates are not consecutive
+    if (i === dates.length ||
+      currentDate.getTime() - prevDate.getTime() > 24 * 60 * 60 * 1000) {
+
+      if (rangeStart === rangeEnd) {
+        // Single date
+        ranges.push(dateShortDisplay(rangeStart));
+      } else {
+        // Date range
+        ranges.push(`${dateShortDisplay(rangeStart)}-${dateShortDisplay(rangeEnd)}`);
+      }
+
+      if (i < dates.length) {
+        rangeStart = currentDate;
+        rangeEnd = currentDate;
+      }
+    } else {
+      rangeEnd = currentDate;
+    }
+  }
+
+  return ranges.join(', ');
+}
+
 export function dateShortDisplay(date: Date): string {
+  date = new Date(date);
+
   const dd: string = String(date.getDate()).padStart(2, '0');
   const mm: string = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
 
@@ -45,6 +87,8 @@ export function dateShortDisplay(date: Date): string {
 }
 
 export function timeShortDisplay(date: Date): string {
+  date = new Date(date);
+
   const HH: string = String(date.getHours()).padStart(2, '0');
   const MM: string = String(date.getMinutes()).padStart(2, '0');
 
@@ -52,5 +96,7 @@ export function timeShortDisplay(date: Date): string {
 }
 
 export function dateDisplay(date: Date): string {
+  date = new Date(date);
+
   return date.toLocaleDateString("es");
 }

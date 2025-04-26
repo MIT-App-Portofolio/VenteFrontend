@@ -1,10 +1,9 @@
 import { EventLocation } from '@/api';
 import { useState, useRef } from 'react';
-import { TouchableOpacity, ScrollView, View, ActivityIndicator } from 'react-native';
+import { TouchableOpacity, ScrollView, View, ActivityIndicator, Image } from 'react-native';
 import { BtnPrimary } from './Buttons';
 import { MarginItem } from './MarginItem';
 import { StyledModal } from './StyledModal';
-import FastImage from 'react-native-fast-image';
 import { ThemedText } from './ThemedText';
 import * as Location from 'expo-location';
 import * as geolib from 'geolib';
@@ -87,7 +86,7 @@ export function StyledLocationPicker({ locations, location, setLocation, setIsDi
             <ScrollView style={{ flex: 1 }}>
               {filteredLocations?.map((l, _1, _2) =>
                 <TouchableOpacity key={l.id} style={{ width: '100%', height: 100, borderRadius: 15, marginTop: 10 }} onPress={() => { setLocation(l.id); setShowPicker(false); setIsDirty(true); }}>
-                  <FastImage source={{ uri: l.pictureUrl }} style={{ width: '100%', height: '100%', borderRadius: 15, opacity: 0.8 }} />
+                  <Image source={{ uri: l.pictureUrl }} style={{ width: '100%', height: '100%', borderRadius: 15, opacity: 0.8 }} />
                   <ThemedText type='subtitle' style={{
                     position: 'absolute',
                     bottom: 10,

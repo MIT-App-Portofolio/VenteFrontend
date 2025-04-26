@@ -22,7 +22,6 @@ import { dateShortDisplay, timeShortDisplay } from '@/dateDisplay';
 import { SharedAlbum } from '@/api';
 import * as MediaLibrary from 'expo-media-library';
 import * as Sharing from 'expo-sharing';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system';
 
 const { height } = Dimensions.get('window');
@@ -54,8 +53,11 @@ export default function Profile() {
   const [customNote, setCustomNote] = useState(userProfile?.note);
 
   useEffect(() => {
-    api.getAlbums();
-  }, [userProfile?.eventStatus]);
+    const interval = setInterval(() => {
+      api.getAlbums();
+    }, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   const schema = yup.object().shape({
     name: yup.string().max(35, "El nombre no puede ser mas largo de 35 caracteres"),
@@ -426,7 +428,7 @@ export default function Profile() {
                 <View key={picture.id} style={styles.albumPictureContainer}>
                   <View style={styles.pictureHeader}>
                     <FastImage
-                      source={{ uri: api.getPfpUnstable(picture.uploader) }}
+                      source={{ uri: api.getPfpFromCache(picture.uploader) }}
                       style={styles.picturePfp}
                     />
                     <View style={{ marginLeft: 10 }}>
@@ -546,25 +548,6 @@ export default function Profile() {
                     <ThemedText style={{ color: 'gray' }}>@{userProfile?.userName}</ThemedText>
                   </View>
 
-                  {
-                    (userProfile?.eventStatus.time || userProfile?.years) &&
-                    <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8, marginTop: 5 }}>
-                      {userProfile?.years &&
-                        <ThemedText>{userProfile.years} años</ThemedText>
-                      }
-
-                      {userProfile?.eventStatus.time &&
-                        <View style={{
-                          flexDirection: 'row',
-                          gap: 2,
-                          alignItems: 'center',
-                        }}>
-                          <Feather name='calendar' size={16} color='white' />
-                          <ThemedText>{dateShortDisplay(new Date(userProfile?.eventStatus.time!))}</ThemedText>
-                        </View>
-                      }
-                    </View>
-                  }
 
                   {userProfile?.description &&
                     <ThemedText style={{ marginTop: 5 }}>{userProfile?.description}</ThemedText>

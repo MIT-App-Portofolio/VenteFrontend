@@ -30,15 +30,34 @@ export type Profile = {
   name?: string,
   igHandle?: string,
   description?: string,
-  eventStatus: EventStatus,
 };
 
-export type EventStatus = {
-  active: boolean,
-  time?: Date,
-  with?: string[],
-  locationId?: string
-}
+export type Exit = {
+  id: number,
+  locationId: string,
+  name: string,
+  leader: string,
+  dates: Date[]
+  members?: string[],
+  awaitingInvite?: string[],
+};
+
+export type ExitUserQuery = {
+  userName: string,
+  gender: number,
+  dates: Date[],
+  with: ExitUserFriendQuery[],
+  note?: string,
+  years?: number,
+  name?: string,
+  igHandle?: string,
+  description?: string,
+};
+
+export type ExitUserFriendQuery = {
+  displayName: string,
+  pfpUrl: string,
+};
 
 export type EventLocation = {
   id: string,
@@ -100,16 +119,28 @@ export type OwnPictures = {
   pictures: AlbumPicture[];
 }
 
+type ApiError = {
+  response?: {
+    status: number;
+    data: any;
+  };
+};
+
+type RegisterError = {
+  code: string;
+};
+
 const ApiContext = createContext<{
   api: Api,
   userProfile: Profile | null,
   userPfp: string | null,
-  inviteStatus: InviteStatus | null
-  groupStatus: GroupStatus | null
+  exits: Exit[] | null
+  invitedExits: Exit[] | null
   customOffers: CustomOffer[] | null
   ownPictures: OwnPictures | null
   sharedAlbums: SharedAlbum[] | null
   currentAlbumId: number | null
+  exitAlbumAvailable: boolean
 } | null>(null);
 
 export const useApi = () => {
@@ -124,24 +155,26 @@ export const ApiProvider = ({ children }: { children: ReactNode }) => {
   const [api, setApiInstance] = useState<Api | null>(null);
   const [userProfile, setUserProfile] = useState<Profile | null>(null);
   const [userPfp, setUserPfp] = useState<string | null>(null);
-  const [inviteStatus, setInviteStatus] = useState<InviteStatus | null>(null);
-  const [groupStatus, setGroupStatus] = useState<GroupStatus | null>(null);
   const [customOffers, setCustomOffers] = useState<CustomOffer[] | null>(null);
   const [ownPictures, setOwnPictures] = useState<OwnPictures | null>(null);
   const [sharedAlbums, setSharedAlbums] = useState<SharedAlbum[] | null>(null);
   const [currentAlbumId, setCurrentAlbumId] = useState<number | null>(null);
+  const [exits, setExits] = useState<Exit[] | null>(null);
+  const [invitedExits, setInvitedExits] = useState<Exit[] | null>(null);
+  const [exitAlbumAvailable, setExitAlbumAvailable] = useState<boolean>(false);
 
   useEffect(() => {
     const initializeApi = async () => {
       const instance = new Api(
         setUserProfile,
         setUserPfp,
-        setInviteStatus,
-        setGroupStatus,
         setCustomOffers,
         setOwnPictures,
         setSharedAlbums,
-        setCurrentAlbumId
+        setCurrentAlbumId,
+        setExits,
+        setInvitedExits,
+        setExitAlbumAvailable
       );
       var url = "";
 
@@ -180,12 +213,13 @@ export const ApiProvider = ({ children }: { children: ReactNode }) => {
       api,
       userProfile,
       userPfp,
-      inviteStatus,
-      groupStatus,
       customOffers,
       ownPictures,
       sharedAlbums,
-      currentAlbumId
+      currentAlbumId,
+      exits,
+      invitedExits,
+      exitAlbumAvailable
     }}>
       {children}
     </ApiContext.Provider>
@@ -196,40 +230,44 @@ export class Api {
   public locations: EventLocation[] | null;
 
   private axios: AxiosInstance | null;
-  private usersDb: { [key: string]: Profile } = {};
+  private usersQueryDb: { [key: string]: ExitUserQuery } = {};
+  private accountAccessDb: { [key: string]: Profile } = {};
   private pfpDb: { [key: string]: string } = {};
   private username: string | null;
 
   private setUserProfile: React.Dispatch<React.SetStateAction<Profile | null>>;
-  private setInviteStatus: React.Dispatch<React.SetStateAction<InviteStatus | null>>;
   private setUserPfp: React.Dispatch<React.SetStateAction<string | null>>;
-  private setGroupStatus: React.Dispatch<React.SetStateAction<GroupStatus | null>>;
   private setCustomOffers: React.Dispatch<React.SetStateAction<CustomOffer[] | null>>;
   private setOwnPictures: React.Dispatch<React.SetStateAction<OwnPictures | null>>;
   private setSharedAlbums: React.Dispatch<React.SetStateAction<SharedAlbum[] | null>>;
   private setCurrentAlbumId: React.Dispatch<React.SetStateAction<number | null>>;
+  private setExits: React.Dispatch<React.SetStateAction<Exit[] | null>>;
+  private setInvitedExits: React.Dispatch<React.SetStateAction<Exit[] | null>>;
+  private setExitAlbumAvailable: React.Dispatch<React.SetStateAction<boolean>>;
 
   constructor(
     setUserProfile: React.Dispatch<React.SetStateAction<Profile | null>>,
     setUserPfp: React.Dispatch<React.SetStateAction<string | null>>,
-    setInviteStatus: React.Dispatch<React.SetStateAction<InviteStatus | null>>,
-    setGroupStatus: React.Dispatch<React.SetStateAction<GroupStatus | null>>,
     setCustomOffers: React.Dispatch<React.SetStateAction<CustomOffer[] | null>>,
     setOwnPictures: React.Dispatch<React.SetStateAction<OwnPictures | null>>,
     setSharedAlbums: React.Dispatch<React.SetStateAction<SharedAlbum[] | null>>,
-    setCurrentAlbumId: React.Dispatch<React.SetStateAction<number | null>>
+    setCurrentAlbumId: React.Dispatch<React.SetStateAction<number | null>>,
+    setExits: React.Dispatch<React.SetStateAction<Exit[] | null>>,
+    setInvitedExits: React.Dispatch<React.SetStateAction<Exit[] | null>>,
+    setExitAlbumAvailable: React.Dispatch<React.SetStateAction<boolean>>
   ) {
     this.locations = null;
     this.axios = null;
     this.username = null;
     this.setUserProfile = setUserProfile;
     this.setUserPfp = setUserPfp;
-    this.setInviteStatus = setInviteStatus;
-    this.setGroupStatus = setGroupStatus;
     this.setCustomOffers = setCustomOffers;
     this.setOwnPictures = setOwnPictures;
     this.setSharedAlbums = setSharedAlbums;
     this.setCurrentAlbumId = setCurrentAlbumId;
+    this.setExits = setExits;
+    this.setInvitedExits = setInvitedExits;
+    this.setExitAlbumAvailable = setExitAlbumAvailable;
   }
 
   public async init(url: string) {
@@ -237,26 +275,22 @@ export class Api {
   }
 
   public hasUser(username: string) {
-    return this.usersDb[username] !== undefined;
+    return this.accountAccessDb[username] !== undefined || this.usersQueryDb[username] !== undefined;
   }
 
   public async getUser(username: string) {
-    if (this.usersDb[username]) {
-      return this.usersDb[username];
+    if (this.accountAccessDb[username]) {
+      return this.accountAccessDb[username];
     }
 
     try {
       const response = await this.axios!.get('/api/account/profile?username=' + username);
       const profile: Profile = response.data;
-      this.usersDb[username] = profile;
+      this.accountAccessDb[username] = profile;
       return profile;
     } catch {
       return null;
     }
-  }
-
-  public getOwnLocationName(userProfile: Profile): string | undefined {
-    return this.locations?.find(l => l.id == userProfile.eventStatus.locationId)?.name;
   }
 
   public getLocationName(locationId: string): string | undefined {
@@ -264,8 +298,12 @@ export class Api {
   }
 
   // Assumes user is already in the db
-  public getUserUnstable(username: string) {
-    return this.usersDb[username];
+  public getUserCached(username: string): Profile | ExitUserQuery {
+    if (this.accountAccessDb[username]) {
+      return this.accountAccessDb[username];
+    }
+
+    return this.usersQueryDb[username];
   }
 
   public async isAffiliate() {
@@ -287,12 +325,11 @@ export class Api {
       this.setUserProfile(profile);
 
       await this.fetchUserPfp();
-      await this.getGroupStatus();
-      await this.getInviteStatus();
 
       return AuthResult.Authenticated;
-    } catch (e) {
-      console.log('user info: ' + e);
+    } catch (error) {
+      console.log('user info: ' + error);
+      const e = error as ApiError;
       if (e.response && e.response.status === 401) {
         return AuthResult.Unauthenticated;
       }
@@ -376,20 +413,20 @@ export class Api {
   }
 
   // Assumes pfp is already in db
-  public getPfpUnstable(userName: string) {
+  public getPfpFromCache(userName: string) {
     return this.pfpDb[userName];
   }
 
   public async updateProfilePicture(uri: string) {
     const formData = new FormData();
 
-    // I don't know why this is necessary, but it is. react native fetch blob is weird works on web but not on android
     if (Platform.OS === 'android' || Platform.OS === 'ios') {
-      formData.append('file', {
+      const file = {
         uri: uri,
         name: 'file',
         type: 'image/jpeg',
-      });
+      } as unknown as Blob;
+      formData.append('file', file);
     } else {
       const response = await fetch(uri);
       const blob = await response.blob();
@@ -461,7 +498,8 @@ export class Api {
 
       const token = response.data;
       await AsyncStorage.setItem('authToken', token);
-    } catch (e) {
+    } catch (error) {
+      const e = error as ApiError;
       if (e.response && e.response.status == 400) {
         return [false, "Correo o contraseña incorrecta."];
       }
@@ -516,7 +554,8 @@ export class Api {
 
       const token = response.data;
       await AsyncStorage.setItem('authToken', token);
-    } catch (e) {
+    } catch (error) {
+      const e = error as ApiError;
       if (e.response && e.response.status == 400) {
         return [false, "Correo o contraseña incorrecta."];
       }
@@ -567,8 +606,9 @@ export class Api {
       const response = await this.axios!.post('/api/account/login', loginData);
       const token = response.data;
       await AsyncStorage.setItem('authToken', token);
-    } catch (e) {
-      console.log('login: ' + e);
+    } catch (error) {
+      console.log('login: ' + error);
+      const e = error as ApiError;
 
       if (e.response && e.response.status == 400) {
         return [false, "Correo o contraseña incorrecta."];
@@ -628,97 +668,143 @@ export class Api {
     return await this.getUserInfo() == AuthResult.Authenticated;
   }
 
-  public async getInviteStatus() {
+  public async getExits() {
     try {
-      const response = await this.axios!.get('/api/invite_status');
-      this.setInviteStatus(response.data);
-    }
-    catch (e) {
-      console.log('invite status: ' + e);
-    }
-  }
+      const response = await this.axios!.get('/api/exit/get_exits');
 
-  public async acceptInvite() {
-    try {
-      await this.axios!.post('/api/accept_invite');
+      response.data.forEach((exit: any) => {
+        exit.dates = exit.dates.map((d: string) => new Date(d));
+      });
+
+      this.setExits(response.data);
     } catch (e) {
-      console.log('accept invite: ' + e);
-      return false;
+      console.log('get exits: ' + e);
     }
-    return await this.getUserInfo() == AuthResult.Authenticated;
   }
 
-  public async declineInvite() {
+  public async getInvitationExits() {
     try {
-      await this.axios!.post('/api/decline_invite');
+      const response = await this.axios!.get('/api/exit/get_invites');
+      response.data.forEach((exit: any) => {
+        exit.dates = exit.dates.map((d: string) => new Date(d));
+      });
+      this.setInvitedExits(response.data);
+
+    } catch (e) {
+      console.log('get invitation exits: ' + e);
+    }
+  }
+
+  public async acceptInvite(exitId: number): Promise<[boolean, string | null]> {
+    try {
+      await this.axios!.post('/api/exit/accept_invite?id=' + exitId);
+    } catch (error) {
+      console.log('accept invite: ' + error);
+      const e = error as ApiError;
+      return [false, e.response?.data === "date_overlap" ? "Ya tienes una escapada en esta fecha" : "Error al aceptar la invitación"];
+    }
+
+    await this.getInvitationExits();
+    await this.getExits();
+    await this.exitAlbumAvailable();
+
+    return [true, null];
+  }
+
+  public async declineInvite(exitId: number) {
+    try {
+      await this.axios!.post('/api/exit/decline_invite?id=' + exitId);
     } catch (e) {
       console.log('decline invite: ' + e);
       return false;
     }
-    return await this.getUserInfo() == AuthResult.Authenticated;
+
+    await this.getInvitationExits();
+
+    return true;
   }
 
-  public async getGroupStatus() {
+  public async registerExit(name: string | null, location: EventLocation, dates: Date[]) {
     try {
-      const response = await this.axios!.get('/api/group_status');
-      this.setGroupStatus(response.data);
-    } catch (e) {
-      console.log('group status: ' + e);
+      await this.axios!.post('/api/exit/register', {
+        name: name,
+        locationId: location.id,
+        dates: dates.map(d => d.toISOString())
+      });
+    } catch (error) {
+      console.log('register exit: ' + error);
+      const e = error as ApiError;
+      return [false, e.response?.data === "date_overlap" ? "Ya tienes una escapada en esta fecha" : "Error al registrar la escapada"];
     }
+
+    await this.getExits();
+    await this.exitAlbumAvailable();
+
+    return [true, null];
   }
 
-  public async registerEvent(location: EventLocation, date: Date) {
+  public async cancelExit(exitId: number) {
     try {
-      await this.axios!.post('/api/register_event?location=' + location.id + '&time=' + date.toISOString());
+      await this.axios!.post('/api/exit/cancel?id=' + exitId);
     } catch (e) {
-      console.log('register event: ' + e);
+      console.log('cancel exit: ' + e);
       return false;
     }
-    return await this.getUserInfo() == AuthResult.Authenticated;
+
+    await this.getExits();
+    await this.exitAlbumAvailable();
+
+    return true;
   }
 
-  public async cancelEvent() {
+  public async inviteUser(exitId: number, username: string): Promise<[boolean, string | null]> {
     try {
-      await this.axios!.post('/api/cancel_event');
-    } catch (e) {
-      console.log('cancel event: ' + e);
-      return false;
+      await this.axios!.post('/api/exit/invite?id=' + exitId + '&userName=' + username)
+    } catch (error) {
+      console.log('invite user: ' + error);
+      const e = error as ApiError;
+      var message = "Ha sucedido un error desconocido";
+      if (e.response?.data == "user_already_in_exit") {
+        message = "El usuario ya está en la escapada";
+      } else if (e.response?.data == "user_already_invited") {
+        message = "El usuario ya tiene una invitación a esta escapada";
+      } else if (e.response?.data == "user_not_found") {
+        message = "El usuario no existe";
+      }
+
+      return [false, message];
     }
-    return await this.getUserInfo() == AuthResult.Authenticated;
+
+    await this.getExits();
+
+    return [true, null];
   }
 
-  public async inviteUser(username: string) {
+  public async kickUser(exitId: number, username: string) {
     try {
-      await this.axios!.post('/api/invite_to_event?invited=' + username)
-    } catch (e) {
-      console.log('invite user: ' + e);
-      return false;
-    }
-    return await this.getUserInfo() == AuthResult.Authenticated;
-  }
-
-  public async kickUser(username: string) {
-    try {
-      await this.axios!.post('/api/kick_from_event?kicked=' + username)
+      await this.axios!.post('/api/exit/kick?id=' + exitId + '&userName=' + username)
     } catch (e) {
       console.log('kick user: ' + e);
       return false;
     }
-    return await this.getUserInfo() == AuthResult.Authenticated;
+
+    await this.getExits();
+
+    return true;
   }
 
-  public async queryVisitors(page: number, gender: number | null, ageRangeMin: number | null, ageRangeMax: number | null): Promise<string[] | null> {
+  public async queryVisitors(exitId: number, page: number, gender: number | null, ageRangeMin: number | null, ageRangeMax: number | null): Promise<string[] | null> {
     try {
-      var query = '/api/query_visitors?page=' + page;
+      var query = '/api/exit/query_visitors?id=' + exitId + '&page=' + page;
       if (gender != null) query += '&gender=' + gender;
       if (ageRangeMin != null) query += '&ageRangeMin=' + ageRangeMin;
       if (ageRangeMax != null) query += '&ageRangeMax=' + ageRangeMax;
 
       const response = await this.axios!.get(query);
-      const profiles: Profile[] = response.data;
+      const profiles: ExitUserQuery[] = response.data;
 
       profiles.forEach(profile => {
-        this.usersDb[profile.userName] = profile;
+        this.usersQueryDb[profile.userName] = profile;
       });
 
       return profiles.map(profile => profile.userName);
@@ -728,9 +814,9 @@ export class Api {
     }
   }
 
-  public async queryEventPlaces(): Promise<EventPlace[] | null> {
+  public async queryEventPlaces(exitId: number): Promise<EventPlace[] | null> {
     try {
-      return (await this.axios?.get('/api/query_event_places'))!.data;
+      return (await this.axios?.get('/api/exit/query_event_places?id=' + exitId))!.data;
     } catch (e) {
       console.log('query event places: ' + e);
       return null;
@@ -769,14 +855,16 @@ export class Api {
     AsyncStorage.removeItem('authToken');
   }
 
-  private translateRegisterError(e: any) {
+  private translateRegisterError(e: unknown) {
     var errorMessage = "Ha sucedido un error desconocido";
-    if (e.response) {
-      if (e.response.data == "User must be at least 16 years old.") {
+    const error = e as ApiError;
+    if (error.response) {
+      if (error.response.data == "User must be at least 16 years old.") {
         errorMessage = "Tiene que tener al menos 16 años";
       } else {
         try {
-          e.response.data.forEach(element => {
+          const errors = error.response.data as RegisterError[];
+          errors.forEach((element: RegisterError) => {
             if (element.code == 'DuplicateUserName') {
               errorMessage = "Ya hay alguien con este nombre de usuario";
             } else if (element.code == 'DuplicateEmail') {
@@ -810,9 +898,18 @@ export class Api {
     return instance;
   }
 
+  public async exitAlbumAvailable() {
+    try {
+      const response = await this.axios!.get('/api/exit_album/allowed');
+      this.setExitAlbumAvailable(response.data);
+    } catch (e) {
+      console.log('exit album available: ' + e);
+    }
+  }
+
   public async getOwnPictures(): Promise<boolean> {
     try {
-      const response = await this.axios!.get('/api/album/get_own_pictures');
+      const response = await this.axios!.get('/api/exit_album/get_own_pictures');
       if (response.data) {
         const pictures = response.data.pictures.map((pic: any) => ({
           id: pic.id,
@@ -835,7 +932,7 @@ export class Api {
 
   public async getAlbums(): Promise<boolean> {
     try {
-      const response = await this.axios!.get('/api/album/get_albums');
+      const response = await this.axios!.get('/api/exit_album/get_albums');
       const albums = response.data.map((album: any) => ({
         id: album.id,
         locationId: album.locationId,
@@ -858,11 +955,12 @@ export class Api {
     const formData = new FormData();
 
     if (Platform.OS === 'android' || Platform.OS === 'ios') {
-      formData.append('file', {
+      const file = {
         uri: uri,
         name: 'file',
         type: 'image/jpeg',
-      });
+      } as unknown as Blob;
+      formData.append('file', file);
     } else {
       const response = await fetch(uri);
       const blob = await response.blob();
@@ -871,11 +969,10 @@ export class Api {
     }
 
     try {
-      const response = await this.axios!.post('/api/album/upload_picture', formData, {
+      const response = await this.axios!.post('/api/exit_album/upload_picture', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
-
       });
       this.setCurrentAlbumId(response.data);
       return true;
@@ -887,7 +984,7 @@ export class Api {
 
   public async deletePicture(id: number): Promise<boolean> {
     try {
-      await this.axios!.post('/api/album/delete_picture?id=' + id);
+      await this.axios!.post('/api/exit_album/delete_picture?id=' + id);
       return true;
     } catch (e) {
       console.log('delete picture: ' + e);
@@ -900,7 +997,7 @@ export class Api {
       const token = await AsyncStorage.getItem('authToken');
       if (!token) return null;
 
-      const response = await fetch(`${this.axios!.defaults.baseURL}/api/album/access_picture/${albumId}/${pictureId}`, {
+      const response = await fetch(`${this.axios!.defaults.baseURL}/api/exit_album/access_picture/${albumId}/${pictureId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -923,7 +1020,7 @@ export class Api {
       const token = await AsyncStorage.getItem('authToken');
       if (!token) return null;
 
-      const url = `${this.axios!.defaults.baseURL}/api/album/access_picture/${albumId}/${pictureId}`;
+      const url = `${this.axios!.defaults.baseURL}/api/exit_album/access_picture/${albumId}/${pictureId}`;
 
       return (
         <FastImage

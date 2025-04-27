@@ -3,8 +3,11 @@ import axios, { AxiosInstance } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FullScreenLoading } from './components/FullScreenLoading';
 import { Platform } from 'react-native';
-import { date } from 'yup';
 import FastImage from 'react-native-fast-image';
+import * as signalR from '@microsoft/signalr';
+import 'react-native-get-random-values';
+import { v4 as uuidv4 } from 'uuid';
+import * as Notifications from 'expo-notifications';
 
 export enum AuthResult {
   UnknownError,
@@ -119,6 +122,22 @@ export type OwnPictures = {
   pictures: AlbumPicture[];
 }
 
+export type MessageType = "Incoming" | "Outgoing";
+export type MessageContentType = "Text" | "Voice";
+
+export type Message = {
+  // Server sent
+  id: number | string,
+  user: string,
+  read: boolean,
+  type: MessageType,
+  messageType: MessageContentType,
+  textContent?: string,
+  timestamp: Date,
+  // Client side only
+  waitingForAck?: boolean,
+}
+
 type ApiError = {
   response?: {
     status: number;
@@ -139,6 +158,8 @@ const ApiContext = createContext<{
   customOffers: CustomOffer[] | null
   ownPictures: OwnPictures | null
   sharedAlbums: SharedAlbum[] | null
+  messageSummaries: Message[] | null
+  allMessages: { [key: string]: Message[] } | null
   currentAlbumId: number | null
   exitAlbumAvailable: boolean
 } | null>(null);
@@ -162,6 +183,8 @@ export const ApiProvider = ({ children }: { children: ReactNode }) => {
   const [exits, setExits] = useState<Exit[] | null>(null);
   const [invitedExits, setInvitedExits] = useState<Exit[] | null>(null);
   const [exitAlbumAvailable, setExitAlbumAvailable] = useState<boolean>(false);
+  const [messageSummaries, setMessageSummaries] = useState<Message[] | null>(null);
+  const [allMessages, setAllMessages] = useState<{ [key: string]: Message[] } | null>(null);
 
   useEffect(() => {
     const initializeApi = async () => {
@@ -174,7 +197,9 @@ export const ApiProvider = ({ children }: { children: ReactNode }) => {
         setCurrentAlbumId,
         setExits,
         setInvitedExits,
-        setExitAlbumAvailable
+        setExitAlbumAvailable,
+        setMessageSummaries,
+        setAllMessages
       );
       var url = "";
 
@@ -217,6 +242,8 @@ export const ApiProvider = ({ children }: { children: ReactNode }) => {
       ownPictures,
       sharedAlbums,
       currentAlbumId,
+      messageSummaries,
+      allMessages,
       exits,
       invitedExits,
       exitAlbumAvailable
@@ -230,10 +257,14 @@ export class Api {
   public locations: EventLocation[] | null;
 
   private axios: AxiosInstance | null;
+  private messageConnection: signalR.HubConnection | null;
+
   private usersQueryDb: { [key: string]: ExitUserQuery } = {};
   private accountAccessDb: { [key: string]: Profile } = {};
   private pfpDb: { [key: string]: string } = {};
   private username: string | null;
+
+  public openedDm: string | null;
 
   private setUserProfile: React.Dispatch<React.SetStateAction<Profile | null>>;
   private setUserPfp: React.Dispatch<React.SetStateAction<string | null>>;
@@ -244,6 +275,8 @@ export class Api {
   private setExits: React.Dispatch<React.SetStateAction<Exit[] | null>>;
   private setInvitedExits: React.Dispatch<React.SetStateAction<Exit[] | null>>;
   private setExitAlbumAvailable: React.Dispatch<React.SetStateAction<boolean>>;
+  private setMessageSummaries: React.Dispatch<React.SetStateAction<Message[] | null>>;
+  private setAllMessages: React.Dispatch<React.SetStateAction<{ [key: string]: Message[] } | null>>;
 
   constructor(
     setUserProfile: React.Dispatch<React.SetStateAction<Profile | null>>,
@@ -254,10 +287,14 @@ export class Api {
     setCurrentAlbumId: React.Dispatch<React.SetStateAction<number | null>>,
     setExits: React.Dispatch<React.SetStateAction<Exit[] | null>>,
     setInvitedExits: React.Dispatch<React.SetStateAction<Exit[] | null>>,
-    setExitAlbumAvailable: React.Dispatch<React.SetStateAction<boolean>>
+    setExitAlbumAvailable: React.Dispatch<React.SetStateAction<boolean>>,
+    setMessageSummaries: React.Dispatch<React.SetStateAction<Message[] | null>>,
+    setAllMessages: React.Dispatch<React.SetStateAction<{ [key: string]: Message[] } | null>>
   ) {
     this.locations = null;
     this.axios = null;
+    this.messageConnection = null;
+    this.openedDm = null;
     this.username = null;
     this.setUserProfile = setUserProfile;
     this.setUserPfp = setUserPfp;
@@ -268,10 +305,111 @@ export class Api {
     this.setExits = setExits;
     this.setInvitedExits = setInvitedExits;
     this.setExitAlbumAvailable = setExitAlbumAvailable;
+    this.setMessageSummaries = setMessageSummaries;
+    this.setAllMessages = setAllMessages;
   }
 
   public async init(url: string) {
     this.axios = await this.axios_instance(url);
+
+    // Check if we have an auth token and initialize messaging if we do
+    const token = await AsyncStorage.getItem('authToken');
+    if (token) {
+      await this.initializeMessagingConnection(url);
+    }
+  }
+
+  private async initializeMessagingConnection(url: string) {
+    if (this.messageConnection) {
+      await this.messageConnection.stop();
+    }
+
+    const token = await AsyncStorage.getItem('authToken');
+
+    this.messageConnection = new signalR.HubConnectionBuilder()
+      .withUrl(url + "/chathub?access_token=" + token)
+      .build();
+
+    this.messageConnection.on("ReceiveMessage", (message: Message) => {
+      console.log("ReceiveMessage", message);
+      this.setAllMessages(messages => ({
+        ...messages,
+        [message.user]: [message, ...(messages?.[message.user] || [])]
+      }));
+
+      if (this.openedDm === message.user) {
+        this.messageConnection?.invoke("MarkRead", message.user);
+      } else {
+        // Show notification if user is not in the chat
+        Notifications.scheduleNotificationAsync({
+          content: {
+            title: "New Message",
+            body: message.textContent || "You have a new message",
+            data: {
+              notification_type: "message",
+              from_user: message.user
+            }
+          },
+          trigger: null
+        });
+      }
+
+      this.getMessageSummaries();
+    });
+
+    this.messageConnection.on("MessageRead", (user: string) => {
+      this.setAllMessages(messages => {
+        if (!messages) return null;
+        return {
+          ...messages,
+          [user]: messages[user]?.map(m => ({ ...m, read: true })) || []
+        };
+      });
+
+      this.getMessageSummaries();
+    });
+
+    this.messageConnection.on("MessageAck", (withUser: string, tempId: string, id: string) => {
+      // Find message with tempId and set waitingForAck to false, alongside proper id
+      this.setAllMessages(messages => {
+        if (!messages) return null;
+        if (!messages[withUser]) return messages;
+
+        return {
+          ...messages,
+          [withUser]: messages[withUser].map(m =>
+            m.id === tempId ? { ...m, id, waitingForAck: false } : m
+          )
+        };
+      });
+    });
+
+    try {
+      await this.messageConnection.start();
+    } catch (e) {
+      console.log('Failed to start messaging connection:', e);
+    }
+  }
+
+  public async stopMessagingConnection() {
+    if (this.messageConnection) {
+      try {
+        await this.messageConnection.stop();
+        this.messageConnection = null;
+      } catch (e) {
+        console.log('Failed to stop messaging connection:', e);
+      }
+    }
+  }
+
+  public async checkAndInitializeMessaging() {
+    const token = await AsyncStorage.getItem('authToken');
+    if (token && !this.messageConnection) {
+      const url = this.axios?.defaults.baseURL;
+      if (url) {
+        await this.initializeMessagingConnection(url);
+      }
+    }
   }
 
   public hasUser(username: string) {
@@ -279,6 +417,11 @@ export class Api {
   }
 
   public async getUser(username: string) {
+    // query db overlaps with account access db, with extra info so it's safer to access from here.
+    if (this.usersQueryDb[username]) {
+      return this.usersQueryDb[username];
+    }
+
     if (this.accountAccessDb[username]) {
       return this.accountAccessDb[username];
     }
@@ -299,16 +442,18 @@ export class Api {
 
   // Assumes user is already in the db
   public getUserCached(username: string): Profile | ExitUserQuery {
-    if (this.accountAccessDb[username]) {
-      return this.accountAccessDb[username];
+    if (this.usersQueryDb[username]) {
+      return this.usersQueryDb[username];
     }
 
-    return this.usersQueryDb[username];
+    return this.accountAccessDb[username];
   }
 
   public async isAffiliate() {
     return (await this.axios?.get('/api/venue/is_affiliate'))!.data === true;
   }
+
+  //#region Authentication
 
   public async getUserInfo() {
     try {
@@ -480,6 +625,7 @@ export class Api {
 
       const token = response.data;
       await AsyncStorage.setItem('authToken', token);
+      await this.checkAndInitializeMessaging();
     } catch (e) {
       console.log('google register: ' + e);
       return [false, this.translateRegisterError(e)];
@@ -498,6 +644,7 @@ export class Api {
 
       const token = response.data;
       await AsyncStorage.setItem('authToken', token);
+      await this.checkAndInitializeMessaging();
     } catch (error) {
       const e = error as ApiError;
       if (e.response && e.response.status == 400) {
@@ -536,6 +683,7 @@ export class Api {
 
       const token = response.data;
       await AsyncStorage.setItem('authToken', token);
+      await this.checkAndInitializeMessaging();
     } catch (e) {
       console.log('apple register: ' + e);
       return [false, this.translateRegisterError(e)];
@@ -554,6 +702,7 @@ export class Api {
 
       const token = response.data;
       await AsyncStorage.setItem('authToken', token);
+      await this.checkAndInitializeMessaging();
     } catch (error) {
       const e = error as ApiError;
       if (e.response && e.response.status == 400) {
@@ -583,6 +732,7 @@ export class Api {
       const response = await this.axios!.post('/api/account/register', registerData);
       const token = response.data;
       await AsyncStorage.setItem('authToken', token);
+      await this.checkAndInitializeMessaging();
     } catch (e) {
       console.log('register: ' + e);
 
@@ -648,6 +798,10 @@ export class Api {
     return await this.getUserInfo() == AuthResult.Authenticated;
   }
 
+  //#endregion
+
+  //#region Notes
+
   public async updateNote(note: string) {
     try {
       await this.axios!.post('/api/account/set_custom_note?note=' + note);
@@ -667,6 +821,10 @@ export class Api {
     }
     return await this.getUserInfo() == AuthResult.Authenticated;
   }
+
+  //#endregion
+
+  //#region Exits
 
   public async getExits() {
     try {
@@ -823,6 +981,10 @@ export class Api {
     }
   }
 
+  //#endregion
+
+  //#region Safety
+
   public async report(username: string) {
     try {
       await this.axios!.post('/api/safety/report?username=' + username);
@@ -853,50 +1015,12 @@ export class Api {
 
   public logout() {
     AsyncStorage.removeItem('authToken');
+    this.stopMessagingConnection();
   }
 
-  private translateRegisterError(e: unknown) {
-    var errorMessage = "Ha sucedido un error desconocido";
-    const error = e as ApiError;
-    if (error.response) {
-      if (error.response.data == "User must be at least 16 years old.") {
-        errorMessage = "Tiene que tener al menos 16 años";
-      } else {
-        try {
-          const errors = error.response.data as RegisterError[];
-          errors.forEach((element: RegisterError) => {
-            if (element.code == 'DuplicateUserName') {
-              errorMessage = "Ya hay alguien con este nombre de usuario";
-            } else if (element.code == 'DuplicateEmail') {
-              errorMessage = "Ya hay alguien con este email";
-            } else if (element.code == 'InvalidUserName') {
-              errorMessage = "Nombre de usuario invalido";
-            } else if (element.code == 'InvalidEmail') {
-              errorMessage = "Correo invalido";
-            }
-          });
-        } catch { }
-      }
-    }
-    return errorMessage;
-  }
+  //#endregion
 
-  private async axios_instance(url: string) {
-    var instance = axios.create({
-      withCredentials: true,
-      baseURL: url
-    });
-
-    instance.interceptors.request.use(async (config) => {
-      const token = await AsyncStorage.getItem('authToken');
-      if (token) {
-        config.headers['Authorization'] = `Bearer ${token}`;
-      }
-      return config;
-    });
-
-    return instance;
-  }
+  //#region Albums
 
   public async exitAlbumAvailable() {
     try {
@@ -1041,5 +1165,119 @@ export class Api {
       console.log('get picture stream: ' + e);
       return null;
     }
+  }
+
+  //#endregion
+
+  //#region Messages
+
+  public setOpenedDm(username: string | null) {
+    this.openedDm = username;
+  }
+
+
+  public async getMessageSummaries() {
+    try {
+      const response = await this.axios!.get('/api/messages/get_messages');
+      this.setMessageSummaries(response.data);
+    } catch (e) {
+      console.log('get message summaries: ' + e);
+    }
+  }
+
+  public async getUserMessages(username: string, lastUserMessageId: number | null | undefined) {
+    try {
+      var query = '/api/messages/from_user?username=' + username;
+      if (lastUserMessageId) query += '&lastMessageId=' + lastUserMessageId;
+      const response = await this.axios!.get(query);
+      this.setAllMessages(messages => ({
+        ...messages,
+        [username]: [...(messages?.[username] || []), ...response.data],
+      }));
+
+    } catch (e) {
+      console.log('get user messages: ' + e);
+    }
+  }
+
+  public async sendMessage(username: string, message: string) {
+    try {
+      const tempId = uuidv4();
+      this.setAllMessages(messages => ({
+        ...messages,
+        [username]: [{
+          id: tempId,
+          user: username,
+          read: false,
+          type: "Outgoing",
+          messageType: "Text",
+          textContent: message,
+          timestamp: new Date(),
+          waitingForAck: true
+        }, ...(messages?.[username] || [])]
+      }));
+
+      await this.messageConnection!.invoke('SendDm', username, message, tempId);
+    } catch (e) {
+      console.log('send message: ' + e);
+    }
+  }
+
+  public async markRead(username: string) {
+    try {
+      await this.messageConnection!.invoke('MarkRead', username);
+      this.setMessageSummaries(messages => messages?.map(message => ({
+        ...message,
+        read: message.read || message.user === username
+      })) || []);
+
+    } catch (e) {
+      console.log('mark read: ' + e);
+    }
+  }
+
+  //#endregion
+
+  private async axios_instance(url: string) {
+    var instance = axios.create({
+      withCredentials: true,
+      baseURL: url
+    });
+
+    instance.interceptors.request.use(async (config) => {
+      const token = await AsyncStorage.getItem('authToken');
+      if (token) {
+        config.headers['Authorization'] = `Bearer ${token}`;
+      }
+      return config;
+    });
+
+    return instance;
+  }
+
+  private translateRegisterError(e: unknown) {
+    var errorMessage = "Ha sucedido un error desconocido";
+    const error = e as ApiError;
+    if (error.response) {
+      if (error.response.data == "User must be at least 16 years old.") {
+        errorMessage = "Tiene que tener al menos 16 años";
+      } else {
+        try {
+          const errors = error.response.data as RegisterError[];
+          errors.forEach((element: RegisterError) => {
+            if (element.code == 'DuplicateUserName') {
+              errorMessage = "Ya hay alguien con este nombre de usuario";
+            } else if (element.code == 'DuplicateEmail') {
+              errorMessage = "Ya hay alguien con este email";
+            } else if (element.code == 'InvalidUserName') {
+              errorMessage = "Nombre de usuario invalido";
+            } else if (element.code == 'InvalidEmail') {
+              errorMessage = "Correo invalido";
+            }
+          });
+        } catch { }
+      }
+    }
+    return errorMessage;
   }
 }

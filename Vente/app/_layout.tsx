@@ -130,6 +130,7 @@ function Inner() {
           await api.getExits();
           await api.getInvitationExits();
           await api.exitAlbumAvailable();
+          await api.getMessageSummaries();
         }
       }
 

@@ -20,6 +20,7 @@
     "@expo/vector-icons": "^14.0.2",
     "@hookform/resolvers": "^3.9.1",
     "@invertase/react-native-apple-authentication": "^2.4.0",
+    "@microsoft/signalr": "^8.0.7",
     "@react-native-async-storage/async-storage": "^2.1.0",
     "@react-native-firebase/app": "^21.7.2",
     "@react-native-firebase/messaging": "^21.7.2",
@@ -60,6 +61,7 @@
     "react-native-dropdown-picker": "^5.4.6",
     "react-native-fast-image": "^8.6.3",
     "react-native-gesture-handler": "~2.20.2",
+    "react-native-get-random-values": "^1.11.0",
     "react-native-image-crop-picker": "^0.42.0",
     "react-native-qrcode-svg": "^6.3.15",
     "react-native-reanimated": "~3.16.1",
@@ -70,6 +72,7 @@
     "react-native-toast-message": "^2.3.0",
     "react-native-ui-datepicker": "^3.1.2",
     "react-native-web": "~0.19.13",
+    "uuid": "^11.1.0",
     "yup": "^1.6.1"
   },
   "devDependencies": {

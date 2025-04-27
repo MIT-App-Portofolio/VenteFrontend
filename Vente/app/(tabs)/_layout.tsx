@@ -20,7 +20,7 @@ export default function TabLayout() {
 
   return (
     <Tabs
-      screenOptions={{
+      screenOptions={({ route }) => ({
         tabBarActiveTintColor: 'white',
         headerShown: false,
         tabBarButton: HapticTab,
@@ -29,11 +29,13 @@ export default function TabLayout() {
           ios: {
             // Use a transparent background on iOS to show the blur effect
             position: 'absolute',
+            display: route.name === 'messages' ? 'none' : 'flex',
           },
           default: {
+            display: route.name === 'messages' ? 'none' : 'flex',
           },
         }),
-      }}>
+      })}>
       <Tabs.Screen
         name="index"
         options={{
@@ -43,6 +45,12 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="places"
+        options={{
+          href: null
+        }}
+      />
+      <Tabs.Screen
+        name="messages"
         options={{
           href: null
         }}

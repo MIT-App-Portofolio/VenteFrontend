@@ -1,12 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView, Linking, TextInput, Animated, Image, FlatList, RefreshControl } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Linking, TextInput, Animated, Image, FlatList, RefreshControl, SafeAreaView } from 'react-native';
 import { MarginItem } from '@/components/MarginItem';
 import { ThemedText } from '@/components/ThemedText';
 import { BtnPrimary, BtnSecondary } from '@/components/Buttons';
 import { HorizontallyAligned } from '@/components/HorizontallyAligned';
 import { CenterAligned } from '@/components/CenterAligned';
-import { Exit, ExitUserQuery, useApi } from '@/api';
+import { ExitUserQuery, useApi } from '@/api';
 import { Redirect, useRootNavigationState, useRouter } from 'expo-router';
 import { Feather, FontAwesome } from '@expo/vector-icons';
 import { StyledGenderFilter } from '@/components/GenderPicker';
@@ -21,7 +20,7 @@ export const pfpSize = 250;
 export default function Users() {
   const router = useRouter();
 
-  const { api, exits, userProfile } = useApi();
+  const { api, exits, userProfile, messageSummaries } = useApi();
 
   // State management
   const [loading, setLoading] = useState(false);
@@ -165,10 +164,37 @@ export default function Users() {
 
   if (!selectedExitId || exits?.length == 0) {
     return (
-      <CenterAligned>
-        <ThemedText>Aun no sabemos cuando sales</ThemedText>
-        <BtnPrimary title='Ir a calendario' onClick={() => router.push('/calendar')}></BtnPrimary>
-      </CenterAligned>
+      <SafeAreaView style={{ flex: 1 }}>
+        <View style={{ width: '100%', alignItems: 'flex-end', paddingHorizontal: 10 }}>
+          <TouchableOpacity onPress={() => router.push("/messages")}>
+            <View style={{ position: 'relative' }}>
+              <Feather name='send' size={24} color='white' />
+              {messageSummaries && messageSummaries.filter(msg => msg.read === false && msg.type === 'Incoming').length > 0 && (
+                <View style={{
+                  position: 'absolute',
+                  top: -5,
+                  right: -5,
+                  backgroundColor: 'red',
+                  borderRadius: 10,
+                  minWidth: 15,
+                  height: 15,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  paddingHorizontal: 4,
+                }}>
+                  <ThemedText style={{ fontSize: 10, lineHeight: 15, textAlign: 'center' }}>{messageSummaries.filter(msg => msg.read === false && msg.type === 'Incoming').length}</ThemedText>
+                </View>
+              )}
+            </View>
+          </TouchableOpacity>
+        </View>
+
+        <CenterAligned>
+          <ThemedText>Aun no sabemos cuando sales</ThemedText>
+          <BtnPrimary title='Ir a calendario' onClick={() => router.push('/calendar')}></BtnPrimary>
+
+        </CenterAligned>
+      </SafeAreaView>
     );
   }
 
@@ -286,8 +312,26 @@ export default function Users() {
           })) || []}
         />
 
-        <TouchableOpacity>
-          <Feather name='send' size={24} color='white' />
+        <TouchableOpacity onPress={() => router.push("/messages")}>
+          <View style={{ position: 'relative' }}>
+            <Feather name='send' size={24} color='white' />
+            {messageSummaries && messageSummaries.filter(msg => !msg.read).length > 0 && (
+              <View style={{
+                position: 'absolute',
+                top: -5,
+                right: -5,
+                backgroundColor: 'red',
+                borderRadius: 10,
+                minWidth: 20,
+                height: 20,
+                justifyContent: 'center',
+                alignItems: 'center',
+                paddingHorizontal: 4,
+              }}>
+                <ThemedText style={{ fontSize: 12 }}>{messageSummaries.filter(msg => !msg.read).length}</ThemedText>
+              </View>
+            )}
+          </View>
         </TouchableOpacity>
       </View>
 
@@ -489,6 +533,8 @@ export default function Users() {
                       );
                     })}
                   </View>
+
+                  <BtnPrimary title='Abrir DM' onClick={() => { router.push(`/messages?selectedUser=${selectedProfile.userName}`); setSelectedProfile(null); }} />
                 </ScrollView>
               )
             }

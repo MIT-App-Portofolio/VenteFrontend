@@ -141,6 +141,13 @@ export type Message = {
   waitingForAck?: boolean,
 }
 
+export type Notification = {
+  type: string;
+  read: boolean;
+  message: string;
+  referenceUsername?: string;
+};
+
 type ApiError = {
   response?: {
     status: number;
@@ -1284,6 +1291,11 @@ export class Api {
 
   public async markNotificationsAsRead() {
     try {
+      this.setNotifications(notifications => notifications?.map(notification => ({
+        ...notification,
+        read: true
+      })) || []);
+
       await this.axios!.post('/api/notifications/mark_read');
     } catch (e) {
       console.log('mark notifications as read: ' + e);

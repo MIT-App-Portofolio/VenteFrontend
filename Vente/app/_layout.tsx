@@ -90,6 +90,9 @@ function Inner() {
             case "offer":
               await api.getCustomOffers();
               break;
+            case "notification":
+              await api.getNotifications();
+              break;
             default:
               break;
           }
@@ -131,6 +134,7 @@ function Inner() {
           await api.getInvitationExits();
           await api.exitAlbumAvailable();
           await api.getMessageSummaries();
+          await api.getNotifications();
         }
       }
 

@@ -21,7 +21,7 @@ export const pfpSize = 250;
 export default function Users() {
   const router = useRouter();
 
-  const { api, exits, userProfile, messageSummaries } = useApi();
+  const { api, exits, userProfile, messageSummaries, notifications } = useApi();
 
   // State management
   const [loading, setLoading] = useState(false);
@@ -240,14 +240,24 @@ export default function Users() {
     return (
       <SafeAreaView style={{ flex: 1 }}>
         <View style={{ width: '100%', alignItems: 'flex-end', paddingHorizontal: 10 }}>
-          <TouchableOpacity onPress={() => router.push("/messages")}>
-            <View style={{ position: 'relative' }}>
-              <Feather name='send' size={24} color='white' />
-              {messageSummaries && messageSummaries.filter(msg => msg.read === false && msg.type === 'Incoming').length > 0 && (
-                <Badge value={messageSummaries.filter(msg => msg.read === false && msg.type === 'Incoming').length} containerStyle={{ position: 'absolute', top: 5, left: 60 }} />
-              )}
-            </View>
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 20 }}>
+            <TouchableOpacity onPress={() => router.push("/notifications")}>
+              <View style={{ position: 'relative' }}>
+                <Feather name='bell' size={24} color='white' />
+                {notifications && notifications.filter(notif => !notif.read).length > 0 && (
+                  <Badge value={notifications.filter(notif => !notif.read).length} containerStyle={{ position: 'absolute', top: -5, right: -5 }} />
+                )}
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push("/messages")}>
+              <View style={{ position: 'relative' }}>
+                <Feather name='send' size={24} color='white' />
+                {messageSummaries && messageSummaries.filter(msg => msg.read === false && msg.type === 'Incoming').length > 0 && (
+                  <Badge value={messageSummaries.filter(msg => msg.read === false && msg.type === 'Incoming').length} containerStyle={{ position: 'absolute', top: -5, right: -5 }} />
+                )}
+              </View>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <CenterAligned>
@@ -353,7 +363,7 @@ export default function Users() {
 
   return (
     <HorizontallyAligned>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 10 }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20 }}>
         <DropDownPicker
           open={exitPickerOpen}
           style={{
@@ -386,14 +396,24 @@ export default function Users() {
           })) || []}
         />
 
-        <TouchableOpacity onPress={() => router.push("/messages")}>
-          <View style={{ position: 'relative' }}>
-            <Feather name='send' size={24} color='white' />
-            {messageSummaries && messageSummaries.filter(msg => msg.read === false && msg.type === 'Incoming').length > 0 && (
-              <Badge value={messageSummaries.filter(msg => msg.read === false && msg.type === 'Incoming').length} containerStyle={{ position: 'absolute', top: 5, left: 60 }} />
-            )}
-          </View>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', gap: 20 }}>
+          <TouchableOpacity onPress={() => { router.push("/notifications"); api.markNotificationsAsRead() }}>
+            <View style={{ position: 'relative' }}>
+              <Feather name='bell' size={24} color='white' />
+              {notifications && notifications.filter(notif => !notif.read).length > 0 && (
+                <Badge value={notifications.filter(notif => !notif.read).length} containerStyle={{ position: 'absolute', top: -5, right: -5 }} />
+              )}
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push("/messages")}>
+            <View style={{ position: 'relative' }}>
+              <Feather name='send' size={24} color='white' />
+              {messageSummaries && messageSummaries.filter(msg => msg.read === false && msg.type === 'Incoming').length > 0 && (
+                <Badge value={messageSummaries.filter(msg => msg.read === false && msg.type === 'Incoming').length} containerStyle={{ position: 'absolute', top: -5, right: -5 }} />
+              )}
+            </View>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <Animated.View style={{

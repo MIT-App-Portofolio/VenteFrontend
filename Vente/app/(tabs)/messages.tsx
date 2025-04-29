@@ -1,4 +1,4 @@
-import { View, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, PanResponder, Animated } from "react-native";
+import { View, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, PanResponder, Animated, Keyboard } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useApi } from "../../api";
 import { useEffect, useRef, useState } from "react";
@@ -29,6 +29,8 @@ export default function Messages() {
   const loadingMore = useRef(false);
 
   const MAX_ONELINE_CHARS = 28; // heuristic: adjust as needed
+  const [scrollOffset, setScrollOffset] = useState(0);
+  const SCROLL_THRESHOLD = 30; // pixels to scroll before dismissing keyboard
 
   useEffect(() => {
     setLoading(true);
@@ -94,7 +96,7 @@ export default function Messages() {
     await api.getMessageSummaries();
   };
 
-  const renderMessage = ({ item }: { item: Message }) => {
+  const renderMessage = ({ item, index }: { item: Message, index: number }) => {
     const isOutgoing = item.type === "Outgoing";
     // show read status if this is the last message
     const isLastMessage = isOutgoing && allMessages?.[selectedUser!]?.[0]?.id === item.id;
@@ -102,8 +104,13 @@ export default function Messages() {
     const textContent = item.textContent || "";
     const oneLine = (textContent.length + timeStr.length + 2) <= MAX_ONELINE_CHARS;
 
+    // Check if previous message was from the same sender
+    const prevMessage = allMessages?.[selectedUser!]?.[index + 1];
+    const isSameSender = prevMessage && prevMessage.type === item.type;
+    const messageSpacing = isSameSender ? -1 : 8;
+
     return (
-      <View style={{ flexDirection: 'column', justifyContent: isOutgoing ? 'flex-end' : 'flex-start', gap: 0, marginBottom: 8 }}>
+      <View style={{ flexDirection: 'column', justifyContent: isOutgoing ? 'flex-end' : 'flex-start', gap: 0, marginTop: messageSpacing }}>
         <View style={[
           styles.messageContainer,
           isOutgoing ? styles.outgoingMessage : styles.incomingMessage,
@@ -133,6 +140,17 @@ export default function Messages() {
         <ActivityIndicator size="small" color="#007AFF" />
       </View>
     );
+  };
+
+  const handleScroll = (event: any) => {
+    const currentOffset = event.nativeEvent.contentOffset.y;
+    const diff = currentOffset - scrollOffset;
+
+    // Since the list is inverted, we check for positive diff (scrolling down)
+    if (diff > SCROLL_THRESHOLD) {
+      Keyboard.dismiss();
+    }
+    setScrollOffset(currentOffset);
   };
 
   return (
@@ -171,6 +189,8 @@ export default function Messages() {
                 inverted
                 style={styles.messagesList}
                 ListFooterComponent={ListFooterComponent}
+                onScroll={handleScroll}
+                scrollEventThrottle={16}
               />
 
               <View style={styles.inputContainer}>

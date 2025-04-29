@@ -450,18 +450,20 @@ export default function Users() {
           onScroll={handleScroll}
           scrollEventThrottle={16}
           ListHeaderComponent={
-            <>
-              <ThemedText type='title' style={{ alignSelf: 'center', marginTop: 10 }}>¿Quien sale a {api.getLocationName(exits?.find(e => e.id == selectedExitId)?.locationId || '')}?</ThemedText>
-              <View style={{ flexDirection: 'row', justifyContent: 'center', width: '100%', marginTop: 10, marginBottom: 10 }}>
+            <View style={{ width: '100%', alignItems: 'center' }}>
+              <View style={{ width: '100%', maxWidth: 500, paddingHorizontal: 10 }}>
+                <ThemedText type='title' style={{ textAlign: 'center', marginTop: 10 }}>¿Quien sale a {api.getLocationName(exits?.find(e => e.id == selectedExitId)?.locationId || '')}?</ThemedText>
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'center', width: '100%', maxWidth: 500, marginTop: 10, marginBottom: 10 }}>
                 <BtnPrimary title='Filtrar usuarios' onClick={() => setIsFilterModalVisible(true)} />
               </View>
-            </>
+            </View>
           }
           ListFooterComponent={renderFooter}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={refresh} />
           }
-          contentContainerStyle={{ paddingBottom: 50 }}
+          contentContainerStyle={{ paddingBottom: 50, alignItems: 'center' }}
           showsVerticalScrollIndicator={false}
         />
 

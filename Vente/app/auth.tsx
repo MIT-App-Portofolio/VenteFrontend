@@ -419,7 +419,7 @@ const Register: React.FC<AuthPageProps> = ({ onLogin }) => {
             <StyledGenderPicker gender={watch("gender")} control={control} errorsGender={errors.gender} />
           </MarginItem>
 
-          <StyledDatePicker date={birthDate} setDate={setBirthDate} title='Fecha de nacimiento' />
+          <StyledDatePicker pastOnly date={birthDate} setDate={setBirthDate} title='Fecha de nacimiento' />
 
           <TosAccept accepted={termsAccepted} setAccepted={setTermsAccepted} />
 
@@ -526,7 +526,7 @@ const GoogleRegister: React.FC<ThirdPartyRegisterProps> = ({ onLogin, id }) => {
             <StyledGenderPicker gender={watch("gender")} control={control} errorsGender={errors.gender} />
           </MarginItem>
 
-          <StyledDatePicker date={birthDate} setDate={setBirthDate} title='Fecha de nacimiento' />
+          <StyledDatePicker pastOnly date={birthDate} setDate={setBirthDate} title='Fecha de nacimiento' />
 
           <TosAccept accepted={termsAccepted} setAccepted={setTermsAccepted} />
 
@@ -630,7 +630,7 @@ const AppleRegister: React.FC<ThirdPartyRegisterProps> = ({ onLogin, id }) => {
             <StyledGenderPicker gender={watch("gender")} control={control} errorsGender={errors.gender} />
           </MarginItem>
 
-          <StyledDatePicker date={birthDate} setDate={setBirthDate} title="Fecha de nacimiento" />
+          <StyledDatePicker pastOnly date={birthDate} setDate={setBirthDate} title="Fecha de nacimiento" />
 
           <TosAccept accepted={termsAccepted} setAccepted={setTermsAccepted} />
 

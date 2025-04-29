@@ -344,7 +344,15 @@ export class Api {
 
     this.messageConnection = new signalR.HubConnectionBuilder()
       .withUrl(url + "/chathub?access_token=" + token)
+      .withAutomaticReconnect([0, 2000, 5000, 10000, 20000])
       .build();
+
+    this.messageConnection.onclose(async (error) => {
+      console.log('Connection closed:', error);
+      if (error) {
+        await this.reconnectMessaging();
+      }
+    });
 
     this.messageConnection.on("ReceiveMessage", (message: Message) => {
       console.log("ReceiveMessage", message);
@@ -356,11 +364,10 @@ export class Api {
       if (this.openedDm === message.user) {
         this.messageConnection?.invoke("MarkRead", message.user);
       } else {
-        // Show notification if user is not in the chat
         Notifications.scheduleNotificationAsync({
           content: {
-            title: "New Message",
-            body: message.textContent || "You have a new message",
+            title: message.user + " te ha enviado un mensaje",
+            body: message.textContent || message.messageType === "Voice" ? "Mensaje de voz" : "Mensaje desconocido",
             data: {
               notification_type: "message",
               from_user: message.user
@@ -386,7 +393,6 @@ export class Api {
     });
 
     this.messageConnection.on("MessageAck", (withUser: string, tempId: string, id: string) => {
-      // Find message with tempId and set waitingForAck to false, alongside proper id
       this.setAllMessages(messages => {
         if (!messages) return null;
         if (!messages[withUser]) return messages;
@@ -407,6 +413,31 @@ export class Api {
     }
   }
 
+  private async reconnectMessaging() {
+    try {
+      const url = this.axios?.defaults.baseURL;
+      if (url) {
+        await this.initializeMessagingConnection(url);
+      }
+    } catch (e) {
+      console.log('Failed to reconnect messaging:', e);
+    }
+  }
+
+  public async checkAndInitializeMessaging() {
+    const token = await AsyncStorage.getItem('authToken');
+    if (token) {
+      const url = this.axios?.defaults.baseURL;
+      if (url) {
+        if (this.messageConnection && this.messageConnection.state !== signalR.HubConnectionState.Connected) {
+          await this.reconnectMessaging();
+        } else if (!this.messageConnection) {
+          await this.initializeMessagingConnection(url);
+        }
+      }
+    }
+  }
+
   public async stopMessagingConnection() {
     if (this.messageConnection) {
       try {
@@ -414,16 +445,6 @@ export class Api {
         this.messageConnection = null;
       } catch (e) {
         console.log('Failed to stop messaging connection:', e);
-      }
-    }
-  }
-
-  public async checkAndInitializeMessaging() {
-    const token = await AsyncStorage.getItem('authToken');
-    if (token && !this.messageConnection) {
-      const url = this.axios?.defaults.baseURL;
-      if (url) {
-        await this.initializeMessagingConnection(url);
       }
     }
   }

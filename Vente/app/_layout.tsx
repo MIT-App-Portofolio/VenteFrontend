@@ -104,6 +104,8 @@ function Inner() {
       // start and we need to check the invite status once again.
       AppState.addEventListener('change', async (nextAppState) => {
         if (appState.match(/inactive|background/) && nextAppState === 'active') {
+          // Reconnect messaging when app comes to foreground
+          await api.checkAndInitializeMessaging();
           await api.getInvitationExits();
         }
         setAppState(nextAppState);

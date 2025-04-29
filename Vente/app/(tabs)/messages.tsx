@@ -1,4 +1,4 @@
-import { View, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
+import { View, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, PanResponder, Animated } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useApi } from "../../api";
 import { useEffect, useRef, useState } from "react";
@@ -9,14 +9,15 @@ import { BtnPrimary, BtnSecondary } from "@/components/Buttons";
 import React from "react";
 import { Feather, FontAwesome } from '@expo/vector-icons';
 import FastImage from "react-native-fast-image";
-import { router, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { StyledModal } from "@/components/StyledModal";
 import { Linking } from 'react-native';
 
 export default function Messages() {
   const { selectedUser } = useLocalSearchParams<{ selectedUser?: string }>();
-
   const { api, messageSummaries, allMessages, userProfile } = useApi();
+  const router = useRouter();
+
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);

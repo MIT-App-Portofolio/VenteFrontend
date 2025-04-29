@@ -91,6 +91,7 @@ export default function Notifications() {
           <FlatList
             data={notifications}
             renderItem={renderNotification}
+            contentContainerStyle={{ marginBottom: 20 }}
             keyExtractor={(_, index) => index.toString()}
             onEndReached={() => {
               // Mark all notifications as read when reaching the end

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView, Linking, TextInput, Animated, Image, FlatList, RefreshControl, SafeAreaView } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Linking, TextInput, Animated, Image, FlatList, RefreshControl, SafeAreaView, PanResponder, Dimensions } from 'react-native';
 import { MarginItem } from '@/components/MarginItem';
 import { ThemedText } from '@/components/ThemedText';
 import { BtnPrimary, BtnSecondary } from '@/components/Buttons';
@@ -236,28 +236,34 @@ export default function Users() {
     extrapolate: 'clamp',
   });
 
+  const renderBadges = () => {
+    return (
+      <View style={{ flexDirection: 'row', gap: 20 }}>
+        <TouchableOpacity onPress={() => router.push("/notifications")}>
+          <View style={{ position: 'relative' }}>
+            <Feather name='bell' size={24} color='white' />
+            {notifications && notifications.filter(notif => !notif.read).length > 0 && (
+              <Badge value={notifications.filter(notif => !notif.read).length} containerStyle={{ position: 'absolute', top: -5, right: -5 }} badgeStyle={{ backgroundColor: 'red', borderWidth: 0 }} textStyle={{ color: 'white' }} status='error' />
+            )}
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push("/messages")}>
+          <View style={{ position: 'relative' }}>
+            <Feather name='send' size={24} color='white' />
+            {messageSummaries && messageSummaries.filter(msg => msg.read === false && msg.type === 'Incoming').length > 0 && (
+              <Badge value={messageSummaries.filter(msg => msg.read === false && msg.type === 'Incoming').length} containerStyle={{ position: 'absolute', top: -5, right: -5 }} badgeStyle={{ backgroundColor: 'red', borderWidth: 0 }} textStyle={{ color: 'white' }} status='error' />
+            )}
+          </View>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
   if (!selectedExitId || exits?.length == 0) {
     return (
       <SafeAreaView style={{ flex: 1 }}>
         <View style={{ width: '100%', alignItems: 'flex-end', paddingHorizontal: 10 }}>
-          <View style={{ flexDirection: 'row', gap: 20 }}>
-            <TouchableOpacity onPress={() => router.push("/notifications")}>
-              <View style={{ position: 'relative' }}>
-                <Feather name='bell' size={24} color='white' />
-                {notifications && notifications.filter(notif => !notif.read).length > 0 && (
-                  <Badge value={notifications.filter(notif => !notif.read).length} containerStyle={{ position: 'absolute', top: -5, right: -5 }} />
-                )}
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.push("/messages")}>
-              <View style={{ position: 'relative' }}>
-                <Feather name='send' size={24} color='white' />
-                {messageSummaries && messageSummaries.filter(msg => msg.read === false && msg.type === 'Incoming').length > 0 && (
-                  <Badge value={messageSummaries.filter(msg => msg.read === false && msg.type === 'Incoming').length} containerStyle={{ position: 'absolute', top: -5, right: -5 }} />
-                )}
-              </View>
-            </TouchableOpacity>
-          </View>
+          {renderBadges()}
         </View>
 
         <CenterAligned>
@@ -362,280 +368,276 @@ export default function Users() {
   };
 
   return (
-    <HorizontallyAligned>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20 }}>
-        <DropDownPicker
-          open={exitPickerOpen}
+    <SafeAreaView style={{ flex: 1 }}>
+      <View style={{ flex: 1, alignItems: 'center' }}>
+        <View
           style={{
-            backgroundColor: 'black',
-            width: 150,
-            alignSelf: 'flex-start',
-            borderWidth: 1,
-            borderColor: '#333',
-            borderRadius: 15,
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingHorizontal: 10,
+            width: '100%',
+            maxWidth: '100%',
           }}
-          labelStyle={{
-            color: 'white',
-            fontSize: 16
-          }}
-          dropDownContainerStyle={{
-            backgroundColor: 'black',
-            width: 150,
-            borderColor: '#333',
-            borderRadius: 15
-          }}
-          listItemLabelStyle={{
-            color: 'white',
-          }}
-          setOpen={setExitPickerOpen}
-          value={selectedExitId}
-          setValue={setSelectedExitId}
-          items={exits?.map(exit => ({
-            label: exit.name,
-            value: exit.id
-          })) || []}
+        >
+          <View style={{ flex: 1 }}>
+            <DropDownPicker
+              open={exitPickerOpen}
+              style={{
+                backgroundColor: 'black',
+                width: 150,
+                alignSelf: 'flex-start',
+                borderWidth: 1,
+                borderColor: '#333',
+                borderRadius: 15,
+              }}
+              labelStyle={{
+                color: 'white',
+                fontSize: 16
+              }}
+              dropDownContainerStyle={{
+                backgroundColor: 'black',
+                width: 150,
+                borderColor: '#333',
+                borderRadius: 15
+              }}
+              listItemLabelStyle={{
+                color: 'white',
+              }}
+              setOpen={setExitPickerOpen}
+              value={selectedExitId}
+              setValue={setSelectedExitId}
+              items={exits?.map(exit => ({
+                label: exit.name,
+                value: exit.id
+              })) || []}
+            />
+          </View>
+          <View style={{ marginLeft: 16 }}>
+            {renderBadges()}
+          </View>
+        </View>
+
+        <Animated.View style={{
+          backgroundColor: 'black',
+          marginTop: 10,
+          borderRadius: 15,
+          width: '100%',
+          height: buttonHeight,
+        }}>
+          <TouchableOpacity onPress={() => router.push("/places?selectedExitId=" + selectedExitId)} style={{
+            width: '100%',
+            height: '100%',
+          }}>
+            <Image source={require('../../assets/images/club.jpeg')} style={{ width: '100%', height: '100%', borderRadius: 15, opacity: 0.4 }} />
+            <ThemedText style={{
+              position: 'absolute',
+              bottom: 10,
+              left: 10,
+              textTransform: 'uppercase'
+            }}>
+              Bares, clubs y discos
+            </ThemedText>
+          </TouchableOpacity>
+        </Animated.View>
+
+        <FlatList
+          ref={flatListRef}
+          data={visitors}
+          renderItem={renderVisitor}
+          keyExtractor={(item) => item}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.5}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          ListHeaderComponent={
+            <>
+              <ThemedText type='title' style={{ alignSelf: 'center', marginTop: 10 }}>¿Quien sale a {api.getLocationName(exits?.find(e => e.id == selectedExitId)?.locationId || '')}?</ThemedText>
+              <View style={{ flexDirection: 'row', justifyContent: 'center', width: '100%', marginTop: 10, marginBottom: 10 }}>
+                <BtnPrimary title='Filtrar usuarios' onClick={() => setIsFilterModalVisible(true)} />
+              </View>
+            </>
+          }
+          ListFooterComponent={renderFooter}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={refresh} />
+          }
+          contentContainerStyle={{ paddingBottom: 50 }}
+          showsVerticalScrollIndicator={false}
         />
 
-        <View style={{ flexDirection: 'row', gap: 20 }}>
-          <TouchableOpacity onPress={() => { router.push("/notifications"); api.markNotificationsAsRead() }}>
-            <View style={{ position: 'relative' }}>
-              <Feather name='bell' size={24} color='white' />
-              {notifications && notifications.filter(notif => !notif.read).length > 0 && (
-                <Badge value={notifications.filter(notif => !notif.read).length} containerStyle={{ position: 'absolute', top: -5, right: -5 }} />
-              )}
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.push("/messages")}>
-            <View style={{ position: 'relative' }}>
-              <Feather name='send' size={24} color='white' />
-              {messageSummaries && messageSummaries.filter(msg => msg.read === false && msg.type === 'Incoming').length > 0 && (
-                <Badge value={messageSummaries.filter(msg => msg.read === false && msg.type === 'Incoming').length} containerStyle={{ position: 'absolute', top: -5, right: -5 }} />
-              )}
-            </View>
-          </TouchableOpacity>
-        </View>
-      </View>
+        {/* Filter modal */}
+        <StyledModal isModalVisible={isFilterModalVisible} setIsModalVisible={setIsFilterModalVisible} includeButton={false}>
+          <ThemedText type="title">Filtrar</ThemedText>
 
-      <Animated.View style={{
-        backgroundColor: 'black',
-        marginTop: 10,
-        borderRadius: 15,
-        width: '100%',
-        height: buttonHeight,
-      }}>
-        <TouchableOpacity onPress={() => router.push("/places?selectedExitId=" + selectedExitId)} style={{
-          width: '100%',
-          height: '100%',
-        }}>
-          <Image source={require('../../assets/images/club.jpeg')} style={{ width: '100%', height: '100%', borderRadius: 15, opacity: 0.4 }} />
-          <ThemedText style={{
-            position: 'absolute',
-            bottom: 10,
-            left: 10,
-            textTransform: 'uppercase'
-          }}>
-            Bares, clubs y discos
-          </ThemedText>
-        </TouchableOpacity>
-      </Animated.View>
+          <ThemedText type="subtitle" style={{ marginTop: 20 }}>Genero</ThemedText>
+          <StyledGenderFilter gender={genderFilter} setGender={setGenderFilter} />
 
-      <FlatList
-        ref={flatListRef}
-        data={visitors}
-        renderItem={renderVisitor}
-        keyExtractor={(item) => item}
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.5}
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
-        ListHeaderComponent={
-          <>
-            <ThemedText type='title' style={{ alignSelf: 'center', marginTop: 10 }}>¿Quien sale a {api.getLocationName(exits?.find(e => e.id == selectedExitId)?.locationId || '')}?</ThemedText>
-            <View style={{ flexDirection: 'row', justifyContent: 'center', width: '100%', marginTop: 10, marginBottom: 10 }}>
-              <BtnPrimary title='Filtrar usuarios' onClick={() => setIsFilterModalVisible(true)} />
-            </View>
-          </>
-        }
-        ListFooterComponent={renderFooter}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={refresh} />
-        }
-        contentContainerStyle={{ paddingBottom: 50 }}
-        showsVerticalScrollIndicator={false}
-      />
+          <ThemedText type="subtitle" style={{ marginTop: 20 }}>Rango de edad</ThemedText>
+          <View style={styles.modalRow}>
+            <TextInput
+              placeholder="Min"
+              keyboardType="numeric"
+              placeholderTextColor='gray'
+              value={ageRangeMin?.toString() || ''}
+              onChangeText={(text) => setAgeRangeMin(text ? parseInt(text) : null)}
+              style={styles.modalInput}
+            />
+            <ThemedText style={{ color: 'white', fontSize: 25 }}>-</ThemedText>
+            <TextInput
+              placeholder="Max"
+              keyboardType="numeric"
+              placeholderTextColor='gray'
+              value={ageRangeMax?.toString() || ''}
+              onChangeText={(text) => setAgeRangeMax(text ? parseInt(text) : null)}
+              style={styles.modalInput}
+            />
+          </View>
 
-      {/* Filter modal */}
-      <StyledModal isModalVisible={isFilterModalVisible} setIsModalVisible={setIsFilterModalVisible} includeButton={false}>
-        <ThemedText type="title">Filtrar</ThemedText>
+          <MarginItem>
+            <BtnPrimary title="Aplicar filtro" onClick={applyFilter} />
+          </MarginItem>
+          <MarginItem>
+            <BtnSecondary title="Cerrar" onClick={() => setIsFilterModalVisible(false)} />
+          </MarginItem>
+        </StyledModal>
 
-        <ThemedText type="subtitle" style={{ marginTop: 20 }}>Genero</ThemedText>
-        <StyledGenderFilter gender={genderFilter} setGender={setGenderFilter} />
-
-        <ThemedText type="subtitle" style={{ marginTop: 20 }}>Rango de edad</ThemedText>
-        <View style={styles.modalRow}>
-          <TextInput
-            placeholder="Min"
-            keyboardType="numeric"
-            placeholderTextColor='gray'
-            value={ageRangeMin?.toString() || ''}
-            onChangeText={(text) => setAgeRangeMin(text ? parseInt(text) : null)}
-            style={styles.modalInput}
-          />
-          <ThemedText style={{ color: 'white', fontSize: 25 }}>-</ThemedText>
-          <TextInput
-            placeholder="Max"
-            keyboardType="numeric"
-            placeholderTextColor='gray'
-            value={ageRangeMax?.toString() || ''}
-            onChangeText={(text) => setAgeRangeMax(text ? parseInt(text) : null)}
-            style={styles.modalInput}
-          />
-        </View>
-
-        <MarginItem>
-          <BtnPrimary title="Aplicar filtro" onClick={applyFilter} />
-        </MarginItem>
-        <MarginItem>
-          <BtnSecondary title="Cerrar" onClick={() => setIsFilterModalVisible(false)} />
-        </MarginItem>
-      </StyledModal>
-
-      {/* Profile modal */}
-      {
-        selectedProfile &&
-        (
-          <StyledModal isModalVisible={isUserModalVisible} setIsModalVisible={setIsUserModalVisible} includeButton={!userFlagVisible} topRightElement={(userFlagVisible || selectedProfile.userName == userProfile?.userName) ? undefined : {
-            icon: "flag",
-            onPress: flagPress,
-          }}>
-            {
-              userFlagVisible ? (
-                <View style={{ flex: 1, flexDirection: 'column', gap: 10 }}>
-                  {
-                    userFlagMessage ? (
-                      <ThemedText>{userFlagMessage}</ThemedText>
-                    ) : (
-                      <View style={{ flexDirection: 'column', gap: 5 }}>
-                        <BtnPrimary title='Reportar usuario' disabled={userFlagLoading} onClick={
-                          async () => {
+        {/* Profile modal */}
+        {
+          selectedProfile &&
+          (
+            <StyledModal isModalVisible={isUserModalVisible} setIsModalVisible={setIsUserModalVisible} includeButton={!userFlagVisible} topRightElement={(userFlagVisible || selectedProfile.userName == userProfile?.userName) ? undefined : {
+              icon: "flag",
+              onPress: flagPress,
+            }}>
+              {
+                userFlagVisible ? (
+                  <View style={{ flex: 1, flexDirection: 'column', gap: 10 }}>
+                    {
+                      userFlagMessage ? (
+                        <ThemedText>{userFlagMessage}</ThemedText>
+                      ) : (
+                        <View style={{ flexDirection: 'column', gap: 5 }}>
+                          <BtnPrimary title='Reportar usuario' disabled={userFlagLoading} onClick={
+                            async () => {
+                              setUserFlagLoading(true);
+                              const success = await api.report(selectedProfile.userName);
+                              if (success) {
+                                setUserFlagMessage('Usuario reportado');
+                              } else {
+                                setUserFlagMessage('Algo fue mal...');
+                              }
+                              setUserFlagLoading(false);
+                            }} />
+                          <BtnPrimary title='Bloquear usuario' disabled={userFlagLoading} onClick={async () => {
                             setUserFlagLoading(true);
-                            const success = await api.report(selectedProfile.userName);
+                            const success = await api.block(selectedProfile.userName);
                             if (success) {
-                              setUserFlagMessage('Usuario reportado');
+                              setUserFlagMessage('Usuario bloqueado. Refresque la pagina de usuarios.');
                             } else {
                               setUserFlagMessage('Algo fue mal...');
                             }
                             setUserFlagLoading(false);
                           }} />
-                        <BtnPrimary title='Bloquear usuario' disabled={userFlagLoading} onClick={async () => {
-                          setUserFlagLoading(true);
-                          const success = await api.block(selectedProfile.userName);
-                          if (success) {
-                            setUserFlagMessage('Usuario bloqueado. Refresque la pagina de usuarios.');
-                          } else {
-                            setUserFlagMessage('Algo fue mal...');
-                          }
-                          setUserFlagLoading(false);
-                        }} />
-                      </View>
-                    )
-                  }
-                  <BtnSecondary title={userFlagMessage ? "Cerrar" : "Cancelar"} onClick={() => setUserFlagVisible(false)} />
-                </View>
-              ) : (
-                <ScrollView style={styles.modalContent}>
-                  <View style={{ position: 'relative' }}>
-                    <FastImage source={{ uri: api.getPfpFromCache(selectedProfile.userName) }} style={styles.modalProfilePicture} />
-                    {selectedProfile.note && (
+                        </View>
+                      )
+                    }
+                    <BtnSecondary title={userFlagMessage ? "Cerrar" : "Cancelar"} onClick={() => setUserFlagVisible(false)} />
+                  </View>
+                ) : (
+                  <ScrollView style={styles.modalContent}>
+                    <View style={{ position: 'relative' }}>
+                      <FastImage source={{ uri: api.getPfpFromCache(selectedProfile.userName) }} style={styles.modalProfilePicture} />
+                      {selectedProfile.note && (
+                        <View style={{
+                          position: 'absolute',
+                          top: -10,
+                          right: -10,
+                          backgroundColor: '#2A2A2A',
+                          padding: 10,
+                          borderRadius: 10,
+                          borderWidth: 1,
+                          borderColor: '#3A3A3A',
+                        }}>
+                          <ThemedText style={{ fontSize: 14, maxWidth: 140 }}>
+                            {selectedProfile.note}
+                          </ThemedText>
+                        </View>
+                      )}
+                      <TouchableOpacity
+                        style={[styles.likeButton, { position: 'absolute', bottom: 10, right: 10 }]}
+                        onPress={async (e) => {
+                          e.stopPropagation();
+                          handleLike(selectedProfile.userName, selectedProfile.exitId, !likedUsers.has(selectedProfile.userName));
+                        }}
+                      >
+                        {likedUsers.has(selectedProfile.userName) ? (
+                          <FontAwesome name="heart" size={20} color="#FF4444" />
+                        ) : (
+                          <FontAwesome name="heart-o" size={20} color="white" />
+                        )}
+                      </TouchableOpacity>
+                    </View>
+
+                    <View style={{ flexDirection: 'column', alignItems: 'flex-start', marginTop: 10 }}>
+                      {
+                        selectedProfile.name &&
+                        <ThemedText style={{ marginRight: 10 }} type="title">{selectedProfile.name}</ThemedText>
+                      }
+
+                      <ThemedText style={{ color: 'gray' }}>@{selectedProfile.userName}</ThemedText>
+                    </View>
+
+                    <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8 }}>
+                      {selectedProfile.years &&
+                        <ThemedText style={{ marginTop: 10 }}>{selectedProfile.years} años</ThemedText>
+                      }
+
                       <View style={{
-                        position: 'absolute',
-                        top: -10,
-                        right: -10,
-                        backgroundColor: '#2A2A2A',
-                        padding: 10,
-                        borderRadius: 10,
-                        borderWidth: 1,
-                        borderColor: '#3A3A3A',
+                        flexDirection: 'row',
+                        gap: 2,
+                        alignItems: 'center',
                       }}>
-                        <ThemedText style={{ fontSize: 14, maxWidth: 140 }}>
-                          {selectedProfile.note}
+                        <Feather name='calendar' size={16} color='white' />
+                        <ThemedText>{dateListDisplay(selectedProfile.dates)}</ThemedText>
+                      </View>
+                    </View>
+
+                    <ThemedText style={{ marginTop: 5 }}>{selectedProfile.description}</ThemedText>
+
+                    {selectedProfile.igHandle && (
+                      <View style={styles.modalIgContainer}>
+                        <FontAwesome name="instagram" size={16} color="white" />
+                        <ThemedText type="link" style={{ marginLeft: 3 }} onPress={() => Linking.openURL(`https://www.instagram.com/${selectedProfile.igHandle}`)} numberOfLines={1} ellipsizeMode='tail'>
+                          {selectedProfile.igHandle}
                         </ThemedText>
                       </View>
                     )}
-                    <TouchableOpacity
-                      style={[styles.likeButton, { position: 'absolute', bottom: 10, right: 10 }]}
-                      onPress={async (e) => {
-                        e.stopPropagation();
-                        handleLike(selectedProfile.userName, selectedProfile.exitId, !likedUsers.has(selectedProfile.userName));
-                      }}
-                    >
-                      {likedUsers.has(selectedProfile.userName) ? (
-                        <FontAwesome name="heart" size={20} color="#FF4444" />
-                      ) : (
-                        <FontAwesome name="heart-o" size={20} color="white" />
-                      )}
-                    </TouchableOpacity>
-                  </View>
 
-                  <View style={{ flexDirection: 'column', alignItems: 'flex-start', marginTop: 10 }}>
-                    {
-                      selectedProfile.name &&
-                      <ThemedText style={{ marginRight: 10 }} type="title">{selectedProfile.name}</ThemedText>
-                    }
+                    {selectedProfile.with && selectedProfile.with.length > 0 && (
+                      <ThemedText style={{ marginTop: 10 }}>Va con:</ThemedText>
+                    )}
 
-                    <ThemedText style={{ color: 'gray' }}>@{selectedProfile.userName}</ThemedText>
-                  </View>
-
-                  <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8 }}>
-                    {selectedProfile.years &&
-                      <ThemedText style={{ marginTop: 10 }}>{selectedProfile.years} años</ThemedText>
-                    }
-
-                    <View style={{
-                      flexDirection: 'row',
-                      gap: 2,
-                      alignItems: 'center',
-                    }}>
-                      <Feather name='calendar' size={16} color='white' />
-                      <ThemedText>{dateListDisplay(selectedProfile.dates)}</ThemedText>
+                    {/* Render profiles of users that go with the selected profile */}
+                    <View style={styles.invitedUsersContainer}>
+                      {selectedProfile.with?.map((friend) => {
+                        return (
+                          <View key={"friend_" + friend.displayName} style={styles.invitedUserCard}>
+                            <FastImage source={{ uri: friend.pfpUrl }} style={styles.invitedUserProfilePicture} />
+                            <ThemedText>{friend.displayName}</ThemedText>
+                          </View>
+                        );
+                      })}
                     </View>
-                  </View>
 
-                  <ThemedText style={{ marginTop: 5 }}>{selectedProfile.description}</ThemedText>
-
-                  {selectedProfile.igHandle && (
-                    <View style={styles.modalIgContainer}>
-                      <FontAwesome name="instagram" size={16} color="white" />
-                      <ThemedText type="link" style={{ marginLeft: 3 }} onPress={() => Linking.openURL(`https://www.instagram.com/${selectedProfile.igHandle}`)} numberOfLines={1} ellipsizeMode='tail'>
-                        {selectedProfile.igHandle}
-                      </ThemedText>
-                    </View>
-                  )}
-
-                  {selectedProfile.with && selectedProfile.with.length > 0 && (
-                    <ThemedText style={{ marginTop: 10 }}>Va con:</ThemedText>
-                  )}
-
-                  {/* Render profiles of users that go with the selected profile */}
-                  <View style={styles.invitedUsersContainer}>
-                    {selectedProfile.with?.map((friend) => {
-                      return (
-                        <View key={"friend_" + friend.displayName} style={styles.invitedUserCard}>
-                          <FastImage source={{ uri: friend.pfpUrl }} style={styles.invitedUserProfilePicture} />
-                          <ThemedText>{friend.displayName}</ThemedText>
-                        </View>
-                      );
-                    })}
-                  </View>
-
-                  <BtnPrimary title='Mensaje' onClick={() => { router.push(`/messages?selectedUser=${selectedProfile.userName}`); setSelectedProfile(null); }} />
-                </ScrollView>
-              )
-            }
-          </StyledModal>
-        )
-      }
-    </HorizontallyAligned>
+                    <BtnPrimary title='Mensaje' onClick={() => { router.push(`/messages?selectedUser=${selectedProfile.userName}`); setSelectedProfile(null); }} />
+                  </ScrollView>
+                )
+              }
+            </StyledModal>
+          )
+        }
+      </View>
+    </SafeAreaView >
   );
 }
 

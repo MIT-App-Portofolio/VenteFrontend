@@ -14,6 +14,7 @@ import { redirectStore } from '@/redirect_storage';
 import FastImage from 'react-native-fast-image';
 import { dateListDisplay, dateShortDisplay } from '@/dateDisplay';
 import DropDownPicker from 'react-native-dropdown-picker';
+import { Badge } from 'react-native-elements/dist/badge/Badge';
 
 export const pfpSize = 250;
 
@@ -37,6 +38,7 @@ export default function Users() {
   const [genderFilter, setGenderFilter] = useState<number | null>(null);
   const [ageRangeMin, setAgeRangeMin] = useState<number | null>(null);
   const [ageRangeMax, setAgeRangeMax] = useState<number | null>(null);
+  const [likedUsers, setLikedUsers] = useState<Set<string>>(new Set());
 
   const [selectedExitId, setSelectedExitId] = useState<number | null>(null);
 
@@ -72,6 +74,18 @@ export default function Users() {
         // Fetch profile pictures for all new visitors
         await Promise.all(newVisitors.map(visitor => api.fetchPfp(visitor)));
 
+        // Update likedUsers state with likes from new visitors
+        setLikedUsers(prev => {
+          const newSet = new Set(prev);
+          newVisitors.forEach(visitor => {
+            const user = api.getUserCached(visitor) as ExitUserQuery;
+            if (user?.userLiked) {
+              newSet.add(user.userName);
+            }
+          });
+          return newSet;
+        });
+
         setVisitors(prev => shouldReset ? newVisitors : [...prev, ...newVisitors]);
       }
     } catch (error) {
@@ -93,9 +107,53 @@ export default function Users() {
   // Initial fetch and fetch on exit change
   useEffect(() => {
     if (selectedExitId) {
+      setLikedUsers(new Set()); // Reset likes when exit changes
       initialFetch();
     }
   }, [selectedExitId]);
+
+  // Reset on refresh
+  const refresh = useCallback(async () => {
+    setRefreshing(true);
+    setLastUserFetchEmpty(false);
+    setPage(0);
+    setLikedUsers(new Set()); // Reset likes on refresh
+    await fetchVisitors(0, true);
+    setRefreshing(false);
+  }, [fetchVisitors]);
+
+  // Reset on filter apply
+  const applyFilter = useCallback(async () => {
+    setPage(0);
+    setLastUserFetchEmpty(false);
+    setLikedUsers(new Set()); // Reset likes when filters change
+    await fetchVisitors(0, true);
+    setIsFilterModalVisible(false);
+  }, [fetchVisitors]);
+
+  // Reset on first load
+  useEffect(() => {
+    if (selectedExitId) {
+      setLikedUsers(new Set()); // Reset likes on first load
+      initialFetch();
+    }
+  }, [selectedExitId, initialFetch]);
+
+  // Reset when gender filter changes
+  useEffect(() => {
+    if (selectedExitId) {
+      setLikedUsers(new Set()); // Reset likes when gender filter changes
+      initialFetch();
+    }
+  }, [genderFilter, selectedExitId, initialFetch]);
+
+  // Reset when age range changes
+  useEffect(() => {
+    if (selectedExitId) {
+      setLikedUsers(new Set()); // Reset likes when age range changes
+      initialFetch();
+    }
+  }, [ageRangeMin, ageRangeMax, selectedExitId, initialFetch]);
 
   const scrollToTop = () => {
     flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
@@ -112,23 +170,6 @@ export default function Users() {
     pageChangeFetch();
   }, [page]);
 
-  // Pull to refresh
-  const refresh = useCallback(async () => {
-    setRefreshing(true);
-    setLastUserFetchEmpty(false);
-    setPage(0);
-    await fetchVisitors(0, true);
-    setRefreshing(false);
-  }, [fetchVisitors]);
-
-  // Apply filters
-  const applyFilter = useCallback(async () => {
-    setPage(0);
-    setLastUserFetchEmpty(false);
-    await fetchVisitors(0, true);
-    setIsFilterModalVisible(false);
-  }, [fetchVisitors]);
-
   const handleScroll = Animated.event(
     [{ nativeEvent: { contentOffset: { y: scrollY } } }],
     { useNativeDriver: false }
@@ -144,6 +185,39 @@ export default function Users() {
       setPage(prevPage => prevPage + 1);
     }
   }, [loading, lastUserFetchEmpty]);
+
+  const handleLike = useCallback(async (username: string, exitId: number, isLiked: boolean) => {
+    // Optimistically update UI
+    setLikedUsers(prev => {
+      const newSet = new Set(prev);
+      if (isLiked) {
+        newSet.add(username);
+      } else {
+        newSet.delete(username);
+      }
+      return newSet;
+    });
+
+    // Make API call in background
+    try {
+      if (isLiked) {
+        await api.likeProfile(username, exitId);
+      } else {
+        await api.unlikeProfile(username, exitId);
+      }
+    } catch (error) {
+      // Revert on error
+      setLikedUsers(prev => {
+        const newSet = new Set(prev);
+        if (isLiked) {
+          newSet.delete(username);
+        } else {
+          newSet.add(username);
+        }
+        return newSet;
+      });
+    }
+  }, [api, likedUsers]);
 
   const pendingRedirect = redirectStore.getPendingRedirect();
   const rootNavigationState = useRootNavigationState();
@@ -170,20 +244,7 @@ export default function Users() {
             <View style={{ position: 'relative' }}>
               <Feather name='send' size={24} color='white' />
               {messageSummaries && messageSummaries.filter(msg => msg.read === false && msg.type === 'Incoming').length > 0 && (
-                <View style={{
-                  position: 'absolute',
-                  top: -5,
-                  right: -5,
-                  backgroundColor: 'red',
-                  borderRadius: 10,
-                  minWidth: 15,
-                  height: 15,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  paddingHorizontal: 4,
-                }}>
-                  <ThemedText style={{ fontSize: 10, lineHeight: 15, textAlign: 'center' }}>{messageSummaries.filter(msg => msg.read === false && msg.type === 'Incoming').length}</ThemedText>
-                </View>
+                <Badge value={messageSummaries.filter(msg => msg.read === false && msg.type === 'Incoming').length} containerStyle={{ position: 'absolute', top: 5, left: 60 }} />
               )}
             </View>
           </TouchableOpacity>
@@ -192,7 +253,6 @@ export default function Users() {
         <CenterAligned>
           <ThemedText>Aun no sabemos cuando sales</ThemedText>
           <BtnPrimary title='Ir a calendario' onClick={() => router.push('/calendar')}></BtnPrimary>
-
         </CenterAligned>
       </SafeAreaView>
     );
@@ -207,6 +267,7 @@ export default function Users() {
     }
 
     const displayName = visitor.name || `@${visitor.userName}`;
+    const isLiked = likedUsers.has(visitor.userName);
 
     return (
       <TouchableOpacity style={styles.card} onPress={() => handleProfileClick(visitor!)}>
@@ -228,6 +289,19 @@ export default function Users() {
               </ThemedText>
             </View>
           )}
+          <TouchableOpacity
+            style={[styles.likeButton, { position: 'absolute', bottom: 10, right: 10 }]}
+            onPress={async (e) => {
+              e.stopPropagation();
+              handleLike(visitor.userName, visitor.exitId, !isLiked);
+            }}
+          >
+            {isLiked ? (
+              <FontAwesome name="heart" size={20} color="#FF4444" />
+            ) : (
+              <FontAwesome name="heart-o" size={20} color="white" />
+            )}
+          </TouchableOpacity>
         </View>
         <View style={{ alignItems: 'flex-start', flexDirection: 'column' }}>
           <ThemedText type="subtitle" style={{ marginTop: 5, maxWidth: pfpSize * 0.9 }} ellipsizeMode='tail' numberOfLines={2}>{displayName}</ThemedText>
@@ -258,8 +332,8 @@ export default function Users() {
               )
             }
           </View>
-        </View >
-      </TouchableOpacity >
+        </View>
+      </TouchableOpacity>
     );
   };
 
@@ -315,21 +389,8 @@ export default function Users() {
         <TouchableOpacity onPress={() => router.push("/messages")}>
           <View style={{ position: 'relative' }}>
             <Feather name='send' size={24} color='white' />
-            {messageSummaries && messageSummaries.filter(msg => !msg.read).length > 0 && (
-              <View style={{
-                position: 'absolute',
-                top: -5,
-                right: -5,
-                backgroundColor: 'red',
-                borderRadius: 10,
-                minWidth: 20,
-                height: 20,
-                justifyContent: 'center',
-                alignItems: 'center',
-                paddingHorizontal: 4,
-              }}>
-                <ThemedText style={{ fontSize: 12 }}>{messageSummaries.filter(msg => !msg.read).length}</ThemedText>
-              </View>
+            {messageSummaries && messageSummaries.filter(msg => msg.read === false && msg.type === 'Incoming').length > 0 && (
+              <Badge value={messageSummaries.filter(msg => msg.read === false && msg.type === 'Incoming').length} containerStyle={{ position: 'absolute', top: 5, left: 60 }} />
             )}
           </View>
         </TouchableOpacity>
@@ -481,6 +542,19 @@ export default function Users() {
                         </ThemedText>
                       </View>
                     )}
+                    <TouchableOpacity
+                      style={[styles.likeButton, { position: 'absolute', bottom: 10, right: 10 }]}
+                      onPress={async (e) => {
+                        e.stopPropagation();
+                        handleLike(selectedProfile.userName, selectedProfile.exitId, !likedUsers.has(selectedProfile.userName));
+                      }}
+                    >
+                      {likedUsers.has(selectedProfile.userName) ? (
+                        <FontAwesome name="heart" size={20} color="#FF4444" />
+                      ) : (
+                        <FontAwesome name="heart-o" size={20} color="white" />
+                      )}
+                    </TouchableOpacity>
                   </View>
 
                   <View style={{ flexDirection: 'column', alignItems: 'flex-start', marginTop: 10 }}>
@@ -534,7 +608,7 @@ export default function Users() {
                     })}
                   </View>
 
-                  <BtnPrimary title='Abrir DM' onClick={() => { router.push(`/messages?selectedUser=${selectedProfile.userName}`); setSelectedProfile(null); }} />
+                  <BtnPrimary title='Mensaje' onClick={() => { router.push(`/messages?selectedUser=${selectedProfile.userName}`); setSelectedProfile(null); }} />
                 </ScrollView>
               )
             }
@@ -676,5 +750,20 @@ export const styles = StyleSheet.create({
   loadingContainer: {
     paddingVertical: 20,
     alignItems: 'center',
+  },
+  likeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  likeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#3A3A3A',
   },
 });

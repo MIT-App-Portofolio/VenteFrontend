@@ -55,6 +55,9 @@ export type ExitUserQuery = {
   name?: string,
   igHandle?: string,
   description?: string,
+  exitId: number,
+  likes: number,
+  userLiked: boolean
 };
 
 export type ExitUserFriendQuery = {
@@ -162,6 +165,7 @@ const ApiContext = createContext<{
   allMessages: { [key: string]: Message[] } | null
   currentAlbumId: number | null
   exitAlbumAvailable: boolean
+  notifications: Notification[] | null
 } | null>(null);
 
 export const useApi = () => {
@@ -185,7 +189,7 @@ export const ApiProvider = ({ children }: { children: ReactNode }) => {
   const [exitAlbumAvailable, setExitAlbumAvailable] = useState<boolean>(false);
   const [messageSummaries, setMessageSummaries] = useState<Message[] | null>(null);
   const [allMessages, setAllMessages] = useState<{ [key: string]: Message[] } | null>(null);
-
+  const [notifications, setNotifications] = useState<Notification[] | null>(null);
   useEffect(() => {
     const initializeApi = async () => {
       const instance = new Api(
@@ -199,7 +203,8 @@ export const ApiProvider = ({ children }: { children: ReactNode }) => {
         setInvitedExits,
         setExitAlbumAvailable,
         setMessageSummaries,
-        setAllMessages
+        setAllMessages,
+        setNotifications
       );
       var url = "";
 
@@ -246,7 +251,8 @@ export const ApiProvider = ({ children }: { children: ReactNode }) => {
       allMessages,
       exits,
       invitedExits,
-      exitAlbumAvailable
+      exitAlbumAvailable,
+      notifications
     }}>
       {children}
     </ApiContext.Provider>
@@ -277,6 +283,7 @@ export class Api {
   private setExitAlbumAvailable: React.Dispatch<React.SetStateAction<boolean>>;
   private setMessageSummaries: React.Dispatch<React.SetStateAction<Message[] | null>>;
   private setAllMessages: React.Dispatch<React.SetStateAction<{ [key: string]: Message[] } | null>>;
+  private setNotifications: React.Dispatch<React.SetStateAction<Notification[] | null>>;
 
   constructor(
     setUserProfile: React.Dispatch<React.SetStateAction<Profile | null>>,
@@ -289,7 +296,8 @@ export class Api {
     setInvitedExits: React.Dispatch<React.SetStateAction<Exit[] | null>>,
     setExitAlbumAvailable: React.Dispatch<React.SetStateAction<boolean>>,
     setMessageSummaries: React.Dispatch<React.SetStateAction<Message[] | null>>,
-    setAllMessages: React.Dispatch<React.SetStateAction<{ [key: string]: Message[] } | null>>
+    setAllMessages: React.Dispatch<React.SetStateAction<{ [key: string]: Message[] } | null>>,
+    setNotifications: React.Dispatch<React.SetStateAction<Notification[] | null>>
   ) {
     this.locations = null;
     this.axios = null;
@@ -307,6 +315,7 @@ export class Api {
     this.setExitAlbumAvailable = setExitAlbumAvailable;
     this.setMessageSummaries = setMessageSummaries;
     this.setAllMessages = setAllMessages;
+    this.setNotifications = setNotifications;
   }
 
   public async init(url: string) {
@@ -1238,6 +1247,50 @@ export class Api {
 
   //#endregion
 
+  // #region Likes 
+
+  public async likeProfile(username: string, exitId: number) {
+    try {
+      this.usersQueryDb[username].userLiked = false;
+      this.usersQueryDb[username].likes--;
+      await this.axios!.post(`/api/like/like_profile?username=${encodeURIComponent(username)}&exitId=${encodeURIComponent(exitId)}`);
+    } catch (e) {
+      console.log('like profile: ' + e);
+    }
+  }
+
+  public async unlikeProfile(username: string, exitId: number) {
+    try {
+      this.usersQueryDb[username].userLiked = false;
+      this.usersQueryDb[username].likes--;
+      await this.axios!.post('/api/like/unlike_profile?username=' + username + '&exitId=' + exitId);
+    } catch (e) {
+      console.log('unlike profile: ' + e);
+    }
+  }
+
+  // #endregion
+
+  // #region Notifications
+
+  public async getNotifications() {
+    try {
+      const response = await this.axios!.get('/api/notifications/get_all');
+      this.setNotifications(response.data);
+    } catch (e) {
+      console.log('get notifications: ' + e);
+    }
+  }
+
+  public async markNotificationsAsRead() {
+    try {
+      await this.axios!.post('/api/notifications/mark_read');
+    } catch (e) {
+      console.log('mark notifications as read: ' + e);
+    }
+  }
+
+  // #endregion
   private async axios_instance(url: string) {
     var instance = axios.create({
       withCredentials: true,

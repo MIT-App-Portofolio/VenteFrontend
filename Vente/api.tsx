@@ -74,6 +74,8 @@ export type EventLocation = {
 };
 
 export type EventPlace = {
+  // Could be "Bar" or "Disco" for now, but depends on backend, so no hard-coding and important to prevent crashes for unknown values.
+  type: string;
   name: string,
   description?: string,
   imageUrls: string[],
@@ -198,6 +200,7 @@ export const ApiProvider = ({ children }: { children: ReactNode }) => {
   const [messageSummaries, setMessageSummaries] = useState<Message[] | null>(null);
   const [allMessages, setAllMessages] = useState<{ [key: string]: Message[] } | null>(null);
   const [notifications, setNotifications] = useState<Notification[] | null>(null);
+
   useEffect(() => {
     const initializeApi = async () => {
       const instance = new Api(

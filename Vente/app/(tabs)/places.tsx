@@ -12,6 +12,7 @@ import { BtnPrimary } from "@/components/Buttons";
 import FastImage from "react-native-fast-image";
 import { dateOnlyDisplay } from "@/dateDisplay";
 import { Feather } from '@expo/vector-icons';
+import { EventPlaceTypeBadge } from "@/components/EventPlaceTypeBadge";
 
 export default function Places() {
   const { api } = useApi();
@@ -52,11 +53,14 @@ export default function Places() {
     }}>
       <FastImage source={{ uri: item.imageUrls.length > 0 ? item.imageUrls[0] : undefined }} style={styles.profilePicture} />
       <ThemedText type='subtitle' style={{ marginTop: 3, maxWidth: pfpSize * 0.9 }} ellipsizeMode="tail" numberOfLines={1}>{item.name}</ThemedText>
-      {item.ageRequirement && (
-        <View style={{ flexDirection: 'row', alignItems: 'center', borderRadius: 5, borderColor: 'white', borderWidth: 1, paddingRight: 3, paddingLeft: 3, marginTop: 5 }}>
-          <ThemedText>+{item.ageRequirement}</ThemedText>
-        </View>
-      )}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 5 }}>
+        <EventPlaceTypeBadge type={item.type} />
+        {item.ageRequirement && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', borderRadius: 5, borderColor: 'white', borderWidth: 1, paddingRight: 3, paddingLeft: 3 }}>
+            <ThemedText>+{item.ageRequirement}</ThemedText>
+          </View>
+        )}
+      </View>
       <ThemedText>{item.priceRangeBegin}€ - {item.priceRangeEnd}€</ThemedText>
     </TouchableOpacity>
   );
@@ -140,16 +144,19 @@ export default function Places() {
 
                 <ThemedText type="title">{selectedEventPlace.name}</ThemedText>
 
-                {selectedEventPlace.ageRequirement && (
-                  <View style={{ alignSelf: 'flex-start', borderRadius: 5, borderColor: 'white', borderWidth: 1, paddingRight: 3, paddingLeft: 3, marginTop: 5 }}>
-                    <ThemedText>+{selectedEventPlace.ageRequirement}</ThemedText>
-                  </View>
-                )}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 5 }}>
+                  <EventPlaceTypeBadge type={selectedEventPlace.type} />
+                  {selectedEventPlace.ageRequirement && (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', borderRadius: 5, borderColor: 'white', borderWidth: 1, paddingRight: 3, paddingLeft: 3 }}>
+                      <ThemedText>+{selectedEventPlace.ageRequirement}</ThemedText>
+                    </View>
+                  )}
+                </View>
 
                 <ThemedText style={{ marginTop: 5 }}>{selectedEventPlace.priceRangeBegin}€ - {selectedEventPlace.priceRangeEnd}€</ThemedText>
 
                 <ViewMoreThemedText style={{ marginTop: 5 }} maxLines={3}>
-                  {selectedEventPlace.description}
+                  {selectedEventPlace.description || ''}
                 </ViewMoreThemedText>
 
                 {

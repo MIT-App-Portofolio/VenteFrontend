@@ -237,14 +237,17 @@ export default function Messages() {
                         <View style={styles.profileContainer}>
                           <FastImage source={{ uri: pfpUrl }} style={styles.profilePicture} />
                           <View style={styles.messageInfo}>
-                            <ThemedText type="subtitle">{displayName}</ThemedText>
-                            <ThemedText style={{ color: 'gray' }}>
+                            <View style={styles.nameContainer}>
+                              <ThemedText type="subtitle" style={!item.read && styles.unreadText}>{displayName}</ThemedText>
+                              {!item.read && <View style={styles.unreadDot} />}
+                            </View>
+                            <ThemedText style={[styles.messagePreview, !item.read && styles.unreadText]}>
                               {item.textContent && item.textContent.length > MAX_ONELINE_CHARS
                                 ? item.textContent.substring(0, MAX_ONELINE_CHARS) + '...'
                                 : item.textContent}
                             </ThemedText>
                           </View>
-                          <ThemedText style={{ color: 'gray', fontSize: 12 }}>
+                          <ThemedText style={[styles.messageTime, !item.read && styles.unreadText]}>
                             {timeShortDisplay(item.timestamp)}
                           </ThemedText>
                         </View>
@@ -436,7 +439,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#0095F6',
   },
   header: {
     flexDirection: 'row',
@@ -515,6 +518,13 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#333',
   },
+  messagePreview: {
+    color: 'gray',
+  },
+  unreadText: {
+    color: 'white',
+    fontWeight: '600',
+  },
   profileContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -580,5 +590,10 @@ const styles = StyleSheet.create({
   loadingMoreContainer: {
     paddingVertical: 10,
     alignItems: 'center',
+  },
+  nameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
 });

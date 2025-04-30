@@ -42,6 +42,8 @@ export function dateTimeShortDisplay(date: Date): string {
 export function dateListDisplay(dates: Date[]): string {
   if (!dates || dates.length === 0) return '';
 
+  dates = dates.map(date => new Date(date));
+
   // Sort dates chronologically
   dates.sort((a, b) => a.getTime() - b.getTime());
 

@@ -145,6 +145,7 @@ export type Notification = {
   type: string;
   read: boolean;
   message: string;
+  timestamp: Date;
   referenceUsername?: string;
 };
 
@@ -362,15 +363,25 @@ export class Api {
       }));
 
       if (this.openedDm === message.user) {
+        console.log("Marking message as read");
         this.messageConnection?.invoke("MarkRead", message.user);
       } else {
+        console.log("Sending notification for message", message);
+        let body = message.textContent;
+        if (message.messageType === "Voice") {
+          body = "Mensaje de voz";
+        } else if (message.textContent === null) {
+          body = "Mensaje desconocido";
+        }
+
         Notifications.scheduleNotificationAsync({
           content: {
             title: message.user + " te ha enviado un mensaje",
-            body: message.textContent || message.messageType === "Voice" ? "Mensaje de voz" : "Mensaje desconocido",
+            body: body,
             data: {
               notification_type: "message",
-              from_user: message.user
+              from_user: message.user,
+              link: "/messages?selectedUser=" + message.user
             }
           },
           trigger: null

@@ -11,6 +11,7 @@ import FastImage from "react-native-fast-image";
 import { router } from "expo-router";
 import { StyledModal } from "@/components/StyledModal";
 import { Linking } from 'react-native';
+import { timeShortDisplay, dateShortDisplay } from "../../dateDisplay";
 
 export default function Notifications() {
   const { api, notifications, userProfile } = useApi();
@@ -48,6 +49,10 @@ export default function Notifications() {
 
   const renderNotification = ({ item, index }: { item: Notification, index: number }) => {
     const hasReferenceUser = item.referenceUsername !== undefined;
+    const now = new Date();
+    const notificationDate = new Date(item.timestamp);
+    const isToday = now.toDateString() === notificationDate.toDateString();
+    const timestampDisplay = isToday ? timeShortDisplay(notificationDate) : dateShortDisplay(notificationDate);
 
     return (
       <TouchableOpacity
@@ -60,6 +65,7 @@ export default function Notifications() {
       >
         <View style={styles.notificationContent}>
           <ThemedText style={styles.notificationText}>{item.message}</ThemedText>
+          <ThemedText style={styles.timestampText}>{timestampDisplay}</ThemedText>
         </View>
         {hasReferenceUser && (
           <View style={styles.referenceUserContainer}>
@@ -253,6 +259,10 @@ const styles = StyleSheet.create({
   notificationText: {
     fontSize: 16,
     marginBottom: 4,
+  },
+  timestampText: {
+    fontSize: 12,
+    color: 'gray',
   },
   referenceUserContainer: {
     flexDirection: 'row',

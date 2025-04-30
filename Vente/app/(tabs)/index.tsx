@@ -10,7 +10,6 @@ import { Redirect, useRootNavigationState, useRouter } from 'expo-router';
 import { Feather, FontAwesome } from '@expo/vector-icons';
 import { StyledGenderFilter } from '@/components/GenderPicker';
 import { StyledModal } from '@/components/StyledModal';
-import { redirectStore } from '@/redirect_storage';
 import FastImage from 'react-native-fast-image';
 import { dateListDisplay, dateShortDisplay } from '@/dateDisplay';
 import DropDownPicker from 'react-native-dropdown-picker';
@@ -219,16 +218,6 @@ export default function Users() {
     }
   }, [api, likedUsers]);
 
-  const pendingRedirect = redirectStore.getPendingRedirect();
-  const rootNavigationState = useRootNavigationState();
-  if (pendingRedirect) {
-    if (!rootNavigationState?.key) {
-      return null;
-    }
-
-    return <Redirect href={pendingRedirect} />
-  }
-
   // View event places button interpolation
   const buttonHeight = scrollY.interpolate({
     inputRange: [0, 200],
@@ -239,7 +228,10 @@ export default function Users() {
   const renderBadges = () => {
     return (
       <View style={{ flexDirection: 'row', gap: 20 }}>
-        <TouchableOpacity onPress={() => router.push("/notifications")}>
+        <TouchableOpacity onPress={() => {
+          router.push("/notifications");
+          api.markNotificationsAsRead();
+        }}>
           <View style={{ position: 'relative' }}>
             <Feather name='bell' size={24} color='white' />
             {notifications && notifications.filter(notif => !notif.read).length > 0 && (

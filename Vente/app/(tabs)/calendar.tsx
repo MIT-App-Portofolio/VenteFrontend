@@ -451,7 +451,7 @@ export default function Calendar() {
 
   return (
     <SafeAreaView style={{ flex: 1, margin: 20 }} edges={['top', 'left', 'right']}>
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ justifyContent: 'space-between' }} horizontal={false}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ justifyContent: 'space-between', paddingBottom: 130 }} horizontal={false}>
         {invitedExits && invitedExits.length > 0 && (
           <View style={{ width: '100%' }}>
             <MarginItem>

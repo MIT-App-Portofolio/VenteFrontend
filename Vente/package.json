@@ -74,7 +74,8 @@
     "react-native-ui-datepicker": "^3.1.2",
     "react-native-web": "~0.19.13",
     "uuid": "^11.1.0",
-    "yup": "^1.6.1"
+    "yup": "^1.6.1",
+    "zustand": "^5.0.3"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

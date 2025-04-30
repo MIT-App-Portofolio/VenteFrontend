@@ -14,7 +14,7 @@ import { StyledDatePicker } from '@/components/StyledDatePicker';
 import { FullScreenLoading } from '@/components/FullScreenLoading';
 import { GoogleSignin, isSuccessResponse } from '@react-native-google-signin/google-signin';
 import { appleAuth, AppleButton } from '@invertase/react-native-apple-authentication';
-import { redirectStore } from '@/redirect_storage';
+import { useRedirectStore } from '@/redirect_storage';
 import { TosAccept } from '@/components/TosAccept';
 
 // Define the type for the props that LoginPage will accept
@@ -44,7 +44,7 @@ if (Platform.OS == 'android') {
   });
 }
 
-const profileUrl = 'profile';
+const profileUrl = '/profile';
 
 const Auth: React.FC<AuthPageProps> = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
@@ -309,6 +309,7 @@ const Register: React.FC<AuthPageProps> = ({ onLogin }) => {
   const [birthDate, setBirthDate] = useState<Date | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const { api } = useApi();
+  const { setRedirect } = useRedirectStore();
 
   const schema = yup.object().shape({
     username: ProperUsername(),
@@ -345,7 +346,7 @@ const Register: React.FC<AuthPageProps> = ({ onLogin }) => {
     setError(error);
     if (ok) {
       onLogin();
-      redirectStore.setPendingRedirect(profileUrl);
+      setRedirect(profileUrl);
     }
     setLoading(false);
   };
@@ -448,6 +449,7 @@ const GoogleRegister: React.FC<ThirdPartyRegisterProps> = ({ onLogin, id }) => {
   const [birthDate, setBirthDate] = useState<Date | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const { api } = useApi();
+  const { setRedirect } = useRedirectStore();
 
   const schema = yup.object().shape({
     username: ProperUsername(),
@@ -480,7 +482,7 @@ const GoogleRegister: React.FC<ThirdPartyRegisterProps> = ({ onLogin, id }) => {
     setError(error);
     if (ok) {
       onLogin();
-      redirectStore.setPendingRedirect(profileUrl);
+      setRedirect(profileUrl);
     }
     setLoading(false);
   };
@@ -550,6 +552,7 @@ const AppleRegister: React.FC<ThirdPartyRegisterProps> = ({ onLogin, id }) => {
   const [birthDate, setBirthDate] = useState<Date | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const { api } = useApi();
+  const { setRedirect } = useRedirectStore();
 
   const schema = yup.object().shape({
     username: ProperUsername(),
@@ -582,7 +585,7 @@ const AppleRegister: React.FC<ThirdPartyRegisterProps> = ({ onLogin, id }) => {
     setError(error);
     if (ok) {
       onLogin();
-      redirectStore.setPendingRedirect(profileUrl);
+      setRedirect(profileUrl);
     }
     setLoading(false);
   };

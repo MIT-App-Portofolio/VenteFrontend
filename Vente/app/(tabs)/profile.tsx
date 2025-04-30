@@ -14,7 +14,6 @@ import CropPicker from 'react-native-image-crop-picker';
 import * as ImagePicker from 'expo-image-picker';
 import { ImageManipulator, manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import FastImage from "react-native-fast-image";
-import { redirectStore } from "@/redirect_storage";
 import { Feather, Ionicons, FontAwesome } from "@expo/vector-icons";
 import emitter from "@/eventEmitter";
 import { StyledModal } from "@/components/StyledModal";
@@ -28,8 +27,6 @@ const { height } = Dimensions.get('window');
 const topBarPercentage = 0.13;
 
 export default function Profile() {
-  redirectStore.resetPendingRedirect();
-
   const { api, userPfp, userProfile, sharedAlbums } = useApi();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

@@ -1,4 +1,4 @@
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 import Toast from 'react-native-toast-message';
@@ -17,6 +17,16 @@ import { AppState, Platform, View } from 'react-native';
 import emitter from '@/eventEmitter';
 import Affiliate from './affiliate';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import { PushNotificationTrigger } from 'expo-notifications';
+import { useRedirectStore } from '@/redirect_storage';
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
 
 const toastConfig = {
   error: (props: any) => (
@@ -62,6 +72,18 @@ function Inner() {
     Inter_700Bold
   });
   const [appState, setAppState] = useState(AppState.currentState);
+  const { setRedirect } = useRedirectStore();
+
+  useEffect(() => {
+    Notifications.addNotificationResponseReceivedListener(async (response) => {
+      const link = (response.notification.request.trigger as PushNotificationTrigger)?.payload?.["link"];
+
+      if (link && typeof link === 'string') {
+        setRedirect(link);
+      }
+    });
+  }, []);
+
 
   // Notification setup
   useEffect(() => {

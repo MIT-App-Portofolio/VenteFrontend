@@ -1056,6 +1056,7 @@ export class Api {
     try {
       await this.axios!.post('/api/account/delete');
     } catch (e) {
+      console.log('delete account: ' + e);
       return false;
     }
     return true;
@@ -1323,11 +1324,6 @@ export class Api {
 
   public async markNotificationsAsRead() {
     try {
-      this.setNotifications(notifications => notifications?.map(notification => ({
-        ...notification,
-        read: true
-      })) || []);
-
       await this.axios!.post('/api/notifications/mark_read');
     } catch (e) {
       console.log('mark notifications as read: ' + e);

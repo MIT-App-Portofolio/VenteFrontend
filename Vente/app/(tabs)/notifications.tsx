@@ -64,7 +64,7 @@ export default function Notifications() {
         }}
       >
         <View style={styles.notificationContent}>
-          <ThemedText style={styles.notificationText}>{item.message}</ThemedText>
+          <ThemedText style={[styles.notificationText, !item.read && styles.unreadText]}>{item.message}</ThemedText>
           <ThemedText style={styles.timestampText}>{timestampDisplay}</ThemedText>
         </View>
         {hasReferenceUser && (
@@ -84,7 +84,13 @@ export default function Notifications() {
     <SafeAreaView style={{ flex: 1, backgroundColor: 'black' }} edges={['top', 'left', 'right']}>
       <View style={{ flex: 1 }}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.push('/')}>
+          <TouchableOpacity onPress={() => {
+            router.push('/');
+            // the only way to access this page is through index. and index marks the notifications as read on page open.
+            // however it doesn't refetch them, this is done so that this page can differentiate between read and unread notifications.
+            // after we exit, we must refetch notifs, to get proper state.
+            api.getNotifications();
+          }}>
             <ThemedText style={styles.backButton}>←</ThemedText>
           </TouchableOpacity>
           <ThemedText type="defaultSemiBold" style={{ flex: 1, textAlign: 'center', fontSize: 20 }}>
@@ -99,10 +105,6 @@ export default function Notifications() {
             renderItem={renderNotification}
             contentContainerStyle={{ marginBottom: 20 }}
             keyExtractor={(_, index) => index.toString()}
-            onEndReached={() => {
-              // Mark all notifications as read when reaching the end
-              api.markNotificationsAsRead();
-            }}
           />
         ) : (
           <View style={styles.emptyContainer}>
@@ -259,6 +261,10 @@ const styles = StyleSheet.create({
   notificationText: {
     fontSize: 16,
     marginBottom: 4,
+  },
+  unreadText: {
+    color: 'white',
+    fontWeight: '600',
   },
   timestampText: {
     fontSize: 12,

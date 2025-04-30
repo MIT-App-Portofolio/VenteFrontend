@@ -225,6 +225,7 @@ export default function Messages() {
                     const profile = api.getUserCached(item.user) as Profile;
                     const pfpUrl = api.getPfpFromCache(item.user);
                     const displayName = profile?.name || `@${item.user}`;
+                    const unread = item.read === false && item.type === "Incoming";
 
                     return (
                       <TouchableOpacity
@@ -238,10 +239,10 @@ export default function Messages() {
                           <FastImage source={{ uri: pfpUrl }} style={styles.profilePicture} />
                           <View style={styles.messageInfo}>
                             <View style={styles.nameContainer}>
-                              <ThemedText type="subtitle" style={!item.read && styles.unreadText}>{displayName}</ThemedText>
-                              {!item.read && <View style={styles.unreadDot} />}
+                              <ThemedText type="subtitle" style={unread && styles.unreadText}>{displayName}</ThemedText>
+                              {unread && <View style={styles.unreadDot} />}
                             </View>
-                            <ThemedText style={[styles.messagePreview, !item.read && styles.unreadText]}>
+                            <ThemedText style={[styles.messagePreview, unread && styles.unreadText]}>
                               {item.textContent && item.textContent.length > MAX_ONELINE_CHARS
                                 ? item.textContent.substring(0, MAX_ONELINE_CHARS) + '...'
                                 : item.textContent}

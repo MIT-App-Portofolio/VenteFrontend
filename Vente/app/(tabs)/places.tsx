@@ -176,17 +176,30 @@ export default function Places() {
                       <View style={{ marginTop: 10 }} key={index}>
                         <ThemedText type="subtitle">{dateOnlyDisplay(new Date(event.time))}</ThemedText>
 
-                        <View key={index} style={{ marginTop: 10, padding: 10, borderRadius: 5, borderWidth: 0.7, borderColor: '#ffffff7f', height: 150 }}>
+                        <View key={index} style={{ marginTop: 10, padding: 10, borderRadius: 5, borderWidth: 0.7, borderColor: '#ffffff7f' }}>
                           <TouchableOpacity onPress={() => {
                             setSelectedEvent(event);
                             setIsEventModalVisible(true);
-                          }} style={{ flex: 1, flexDirection: 'row', gap: 3 }}>
-                            <WidthFillingImage url={event.image} maxHeight={130} />
+                          }} style={{ flexDirection: 'row', gap: 10, alignItems: 'stretch' }}>
+                            <View style={{ flex: 1, maxWidth: 120, height: 120 }}>
+                              <FastImage
+                                source={{ uri: event.image }}
+                                style={{
+                                  width: '100%',
+                                  height: '100%',
+                                  borderRadius: 16,
+                                }}
+                                resizeMode="contain"
+                              />
+                            </View>
 
-                            <View style={{ flex: 3 }}>
-                              <ThemedText type="subtitle">{event.name}</ThemedText>
-                              <ThemedText style={{ flex: 1 }} numberOfLines={15} ellipsizeMode="tail">{event.description}</ThemedText>
-                              <ThemedText>{event.offers.length} {event.offers.length == 1 ? "oferta" : "ofertas"}</ThemedText>
+                            <View style={{ flex: 2, flexDirection: 'column', height: 120 }}>
+                              <ThemedText type="subtitle" numberOfLines={1} ellipsizeMode="tail">{event.name}</ThemedText>
+                              <ThemedText style={{ marginTop: 5, flexShrink: 1 }} numberOfLines={3} ellipsizeMode="tail">{event.description}</ThemedText>
+                              <View style={{ flex: 1 }} />
+                              <ThemedText style={{ marginTop: 5 }}>
+                                {event.offers.length} {event.offers.length == 1 ? "oferta" : "ofertas"}
+                              </ThemedText>
                             </View>
                           </TouchableOpacity>
                         </View>

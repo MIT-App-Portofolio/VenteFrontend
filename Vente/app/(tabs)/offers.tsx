@@ -4,7 +4,7 @@ import { HorizontallyAligned } from "@/components/HorizontallyAligned";
 import { ThemedText, ViewMoreThemedText } from "@/components/ThemedText";
 import { dateShortDisplay } from "@/dateDisplay";
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, TouchableOpacity, ScrollView, Animated, RefreshControl, Linking, Dimensions, Image } from "react-native";
+import { View, StyleSheet, TouchableOpacity, ScrollView, Animated, RefreshControl, Linking, Dimensions, Image, Platform } from "react-native";
 import FastImage from "react-native-fast-image";
 import { StyledModal } from "@/components/StyledModal";
 import { Feather } from '@expo/vector-icons';
@@ -249,7 +249,7 @@ export default function Offers() {
       {errorText ? (
         <ThemedText>{errorText}</ThemedText>
       ) : (
-        <View style={{ width: '100%' }}>
+        <View style={{ width: '100%', marginTop: Platform.OS === 'android' ? 30 : 0 }}>
           <Animated.ScrollView
             showsHorizontalScrollIndicator={false}
             horizontal={false}

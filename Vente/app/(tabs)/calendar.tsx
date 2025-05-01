@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, TouchableOpacity, FlatList, ScrollView, StyleSheet, ActivityIndicator, Image } from "react-native";
+import { View, TouchableOpacity, FlatList, ScrollView, StyleSheet, ActivityIndicator, Image, Platform } from "react-native";
 import { Exit, useApi } from "@/api";
 import { MarginItem } from '@/components/MarginItem';
 import { ErrorText, ThemedText } from '@/components/ThemedText';

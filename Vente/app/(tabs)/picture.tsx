@@ -1,6 +1,6 @@
 import { HorizontallyAligned } from "@/components/HorizontallyAligned";
 import { ThemedText } from "@/components/ThemedText";
-import { View, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from "react-native";
+import { View, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Platform } from "react-native";
 import { useApi } from "@/api";
 import { BtnPrimary, BtnSecondary } from "@/components/Buttons";
 import { FullScreenLoading } from "@/components/FullScreenLoading";
@@ -111,7 +111,7 @@ export default function Picture() {
       </StyledModal>
 
       <HorizontallyAligned>
-        <View style={{ flexDirection: 'column', justifyContent: 'space-between', paddingBottom: height * 0.08 }}>
+        <View style={{ flexDirection: 'column', justifyContent: 'space-between', paddingBottom: height * 0.08, marginTop: Platform.OS === 'android' ? 30 : 0 }}>
           <View>
             <ThemedText type="title" style={{ marginTop: 10, marginLeft: 10, textAlign: 'center' }}>Captura una memoria</ThemedText>
             <ThemedText style={{ marginTop: 10, marginLeft: 10, textAlign: 'center' }}>Estas fotos serán disponibles para tu y tu grupo después del evento.</ThemedText>

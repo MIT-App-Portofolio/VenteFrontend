@@ -1,7 +1,7 @@
 import { EventPlace, EventPlaceEvent, useApi } from "@/api";
 import { useEffect, useState } from "react";
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Animated, Dimensions, TouchableOpacity, View, Image, ScrollView, StyleSheet, Linking } from "react-native";
+import { Animated, Dimensions, TouchableOpacity, View, Image, ScrollView, StyleSheet, Linking, Platform } from "react-native";
 import { HorizontallyAligned } from "@/components/HorizontallyAligned";
 import { ThemedText, ViewMoreThemedText } from "@/components/ThemedText";
 import { CenterAligned } from "@/components/CenterAligned";
@@ -86,7 +86,7 @@ export default function Places() {
         horizontal={false}
         showsHorizontalScrollIndicator={false}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 50 }}
+        contentContainerStyle={{ paddingBottom: 50, marginTop: Platform.OS === 'android' ? 30 : 0 }}
         scrollEventThrottle={16}
       >
         <CenterAligned>

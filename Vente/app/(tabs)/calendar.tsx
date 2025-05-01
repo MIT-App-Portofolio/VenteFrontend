@@ -168,6 +168,7 @@ export default function Calendar() {
         text2: errorMessage || "No se pudo aceptar la invitación."
       });
     }
+    setIsInvitationModalVisible(false);
     setAcceptingInvites(prev => ({ ...prev, [exitId]: false }));
   };
 
@@ -181,6 +182,7 @@ export default function Calendar() {
         text2: "No se pudo rechazar la invitación."
       });
     }
+    setIsInvitationModalVisible(false);
     setDecliningInvites(prev => ({ ...prev, [exitId]: false }));
   };
 

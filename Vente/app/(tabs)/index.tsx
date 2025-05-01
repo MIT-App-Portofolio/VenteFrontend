@@ -443,7 +443,7 @@ export default function Users() {
           scrollEventThrottle={16}
           ListHeaderComponent={
             <View style={{ width: '100%', alignItems: 'center' }}>
-              <View style={{ width: '100%', maxWidth: 500, paddingHorizontal: 10 }}>
+              <View style={{ maxWidth: '100%', paddingHorizontal: 10 }}>
                 <ThemedText type='title' style={{ textAlign: 'center', marginTop: 10 }}>¿Quien sale a {api.getLocationName(exits?.find(e => e.id == selectedExitId)?.locationId || '')}?</ThemedText>
               </View>
               <View style={{ flexDirection: 'row', justifyContent: 'center', width: '100%', maxWidth: 500, marginTop: 10, marginBottom: 10 }}>
@@ -455,7 +455,7 @@ export default function Users() {
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={refresh} />
           }
-          contentContainerStyle={{ paddingBottom: 50, alignItems: 'center' }}
+          contentContainerStyle={{ paddingBottom: 50, alignItems: 'center', maxWidth: '100%' }}
           showsVerticalScrollIndicator={false}
         />
 
@@ -590,9 +590,10 @@ export default function Users() {
                         flexDirection: 'row',
                         gap: 2,
                         alignItems: 'center',
+                        maxWidth: '100%',
                       }}>
                         <Feather name='calendar' size={16} color='white' />
-                        <ThemedText>{dateListDisplay(selectedProfile.dates)}</ThemedText>
+                        <ThemedText style={{ maxWidth: '100%' }} ellipsizeMode='tail' numberOfLines={1}>{dateListDisplay(selectedProfile.dates)}</ThemedText>
                       </View>
                     </View>
 

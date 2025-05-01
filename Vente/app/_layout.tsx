@@ -1,5 +1,5 @@
 import { Stack, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import 'react-native-reanimated';
 import Toast from 'react-native-toast-message';
 
@@ -19,6 +19,7 @@ import Affiliate from './affiliate';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { PushNotificationTrigger } from 'expo-notifications';
 import { useRedirectStore } from '@/redirect_storage';
+import { MessageType } from '@microsoft/signalr';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -71,7 +72,7 @@ function Inner() {
     Inter_400Regular,
     Inter_700Bold
   });
-  const [appState, setAppState] = useState(AppState.currentState);
+  const appState = useRef(AppState.currentState);
   const { setRedirect } = useRedirectStore();
 
   useEffect(() => {
@@ -112,7 +113,7 @@ function Inner() {
             case "offer":
               await api.getCustomOffers();
               break;
-            case "notification":
+            case "like":
               await api.getNotifications();
               break;
             default:
@@ -121,16 +122,19 @@ function Inner() {
         }
       });
 
-      // This is needed to handle the unique case where a user has recently closed the app, 
-      // received an invite notification and reopened it, so we didn't have the time to rerender from 
-      // start and we need to check the invite status once again.
       AppState.addEventListener('change', async (nextAppState) => {
-        if (appState.match(/inactive|background/) && nextAppState === 'active') {
+        console.log(nextAppState);
+        if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
           // Reconnect messaging when app comes to foreground
+          api.resetMessages();
           await api.checkAndInitializeMessaging();
           await api.getInvitationExits();
+          await api.checkAndInitializeMessaging();
         }
-        setAppState(nextAppState);
+        if (appState.current == 'active' && nextAppState.match(/inactive|background/)) {
+          await api.stopMessagingConnection();
+        }
+        appState.current = nextAppState;
       });
     };
 

@@ -280,6 +280,7 @@ export class Api {
   private accountAccessDb: { [key: string]: Profile } = {};
   private pfpDb: { [key: string]: string } = {};
   private username: string | null;
+  private connectingToMessaging: boolean = false;
 
   public openedDm: string | null;
 
@@ -343,6 +344,8 @@ export class Api {
     if (this.messageConnection) {
       await this.messageConnection.stop();
     }
+
+    this.connectingToMessaging = true;
 
     const token = await AsyncStorage.getItem('authToken');
 
@@ -425,6 +428,8 @@ export class Api {
     } catch (e) {
       console.log('Failed to start messaging connection:', e);
     }
+
+    this.connectingToMessaging = false;
   }
 
   private async reconnectMessaging() {
@@ -439,8 +444,13 @@ export class Api {
   }
 
   public async checkAndInitializeMessaging() {
+    if (this.connectingToMessaging) {
+      return;
+    }
+
     const token = await AsyncStorage.getItem('authToken');
     if (token) {
+
       const url = this.axios?.defaults.baseURL;
       if (url) {
         if (this.messageConnection && this.messageConnection.state !== signalR.HubConnectionState.Connected) {
@@ -1227,6 +1237,9 @@ export class Api {
     this.openedDm = username;
   }
 
+  public resetMessages() {
+    this.setAllMessages(null);
+  }
 
   public async getMessageSummaries() {
     try {
@@ -1277,7 +1290,11 @@ export class Api {
 
   public async markRead(username: string) {
     try {
-      await this.messageConnection!.invoke('MarkRead', username);
+      while (!this.messageConnection || this.messageConnection.state !== signalR.HubConnectionState.Connected) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+
+      await this.messageConnection.invoke('MarkRead', username);
       this.setMessageSummaries(messages => messages?.map(message => ({
         ...message,
         read: message.read || message.user === username

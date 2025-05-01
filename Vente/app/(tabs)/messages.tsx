@@ -49,7 +49,7 @@ export default function Messages() {
     } else {
       api.setOpenedDm(null);
     }
-  }, [selectedUser]);
+  }, [selectedUser, allMessages]);
 
   useEffect(() => {
     // Fetch profile info and pfp for each user in messageSummaries (by username)

@@ -10,6 +10,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { Feather } from "@expo/vector-icons";
 import { timeShortDisplay } from "@/dateDisplay";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const { height } = Dimensions.get('window');
 
@@ -110,50 +111,48 @@ export default function Picture() {
         </View>
       </StyledModal>
 
-      <HorizontallyAligned>
-        <View style={{ flexDirection: 'column', justifyContent: 'space-between', paddingBottom: height * 0.08, marginTop: Platform.OS === 'android' ? 30 : 0 }}>
-          <View>
-            <ThemedText type="title" style={{ marginTop: 10, marginLeft: 10, textAlign: 'center' }}>Captura una memoria</ThemedText>
-            <ThemedText style={{ marginTop: 10, marginLeft: 10, textAlign: 'center' }}>Estas fotos serán disponibles para tu y tu grupo después del evento.</ThemedText>
-          </View>
-
-          {ownPictures == null || ownPictures?.pictures.length === 0 ? (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-              <ThemedText style={{ textAlign: 'center' }}>Aun no has sacado fotos.</ThemedText>
-            </View>
-          ) : (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              pagingEnabled
-            >
-              {ownPictures?.pictures.map((picture) => (
-                <View key={picture.id} style={[styles.pictureContainer, { width: Dimensions.get('window').width * 0.9 }]}>
-                  {pictureComponents[picture.id]}
-                  <View style={styles.pictureInfo}>
-                    <ThemedText>{timeShortDisplay(picture.time)}</ThemedText>
-                    <TouchableOpacity
-                      onPress={() => {
-                        setSelectedPicture(picture.id);
-                        setDeleteConfirmVisible(true);
-                      }}
-                    >
-                      <Feather name="trash-2" size={24} color="white" />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              ))}
-            </ScrollView>
-          )}
-
-          <View style={styles.cameraButton}>
-            <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'white', paddingHorizontal: 15, paddingVertical: 10, borderRadius: 25 }} onPress={takePicture}>
-              <Feather name="camera" size={24} color="black" />
-              <ThemedText style={{ color: 'black' }}>Tomar una foto</ThemedText>
-            </TouchableOpacity>
-          </View>
+      <SafeAreaView style={{ flexDirection: 'column', flex: 1, justifyContent: 'space-between', paddingBottom: Platform.OS == 'android' ? 20 : 100, marginTop: Platform.OS === 'android' ? 30 : 0 }} edges={['top', 'left', 'right']}>
+        <View>
+          <ThemedText type="title" style={{ marginTop: 10, marginLeft: 10, textAlign: 'center' }}>Captura una memoria</ThemedText>
+          <ThemedText style={{ marginTop: 10, marginLeft: 10, textAlign: 'center' }}>Estas fotos serán disponibles para tu y tu grupo después del evento.</ThemedText>
         </View>
-      </HorizontallyAligned>
+
+        {ownPictures == null || ownPictures?.pictures.length === 0 ? (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <ThemedText style={{ textAlign: 'center' }}>Aun no has sacado fotos.</ThemedText>
+          </View>
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            pagingEnabled
+          >
+            {ownPictures?.pictures.map((picture) => (
+              <View key={picture.id} style={[styles.pictureContainer, { width: Dimensions.get('window').width * 0.9 }]}>
+                {pictureComponents[picture.id]}
+                <View style={styles.pictureInfo}>
+                  <ThemedText>{timeShortDisplay(picture.time)}</ThemedText>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setSelectedPicture(picture.id);
+                      setDeleteConfirmVisible(true);
+                    }}
+                  >
+                    <Feather name="trash-2" size={24} color="white" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+          </ScrollView>
+        )}
+
+        <View style={styles.cameraButton}>
+          <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'white', paddingHorizontal: 15, paddingVertical: 10, borderRadius: 25 }} onPress={takePicture}>
+            <Feather name="camera" size={24} color="black" />
+            <ThemedText style={{ color: 'black' }}>Tomar una foto</ThemedText>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
     </>
   );
 }

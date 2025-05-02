@@ -452,8 +452,8 @@ export default function Calendar() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, margin: 20 }} edges={['top', 'left', 'right']}>
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ justifyContent: 'space-between', paddingBottom: 130 }} horizontal={false}>
+    <SafeAreaView style={{ flex: 1, margin: 20, justifyContent: 'space-between', paddingBottom: Platform.OS === 'android' ? 0 : 100 }} edges={['top', 'left', 'right']}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ justifyContent: 'space-between' }} horizontal={false}>
         {invitedExits && invitedExits.length > 0 && (
           <View style={{ width: '100%' }}>
             <MarginItem>
@@ -776,7 +776,7 @@ export default function Calendar() {
           })()}
         </StyledModal>
       </ScrollView>
-      <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 20, marginBottom: 80 }}>
+      <View>
         <BtnPrimary title="Crear escapada" onClick={() => {
           setIsCreateModalVisible(true);
           setCurrentStep('name');

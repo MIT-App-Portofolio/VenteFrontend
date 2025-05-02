@@ -104,9 +104,11 @@ export default function Places() {
                   <View style={{ flex: 2 }}>
                     <ThemedText type="title">{selectedEvent.name}</ThemedText>
                     <ThemedText type="subtitle">{dateOnlyDisplay(new Date(selectedEvent.time))}</ThemedText>
-                    <ViewMoreThemedText style={{ marginTop: 5 }} maxLines={6}>
-                      {selectedEvent.description}
-                    </ViewMoreThemedText>
+                    {selectedEvent.description && selectedEvent.description.length > 0 &&
+                      <ViewMoreThemedText style={{ marginTop: 5 }} maxLines={6}>
+                        {selectedEvent.description}
+                      </ViewMoreThemedText>
+                    }
                   </View>
                 </View>
 
@@ -155,9 +157,12 @@ export default function Places() {
 
                 <ThemedText style={{ marginTop: 5 }}>{selectedEventPlace.priceRangeBegin}€ - {selectedEventPlace.priceRangeEnd}€</ThemedText>
 
-                <ViewMoreThemedText style={{ marginTop: 5 }} maxLines={3}>
-                  {selectedEventPlace.description || ''}
-                </ViewMoreThemedText>
+                {selectedEventPlace.description && selectedEventPlace.description.length > 0 &&
+                  <ViewMoreThemedText style={{ marginTop: 5 }} maxLines={3}>
+                    {selectedEventPlace.description}
+                  </ViewMoreThemedText>
+                }
+
 
                 {
                   selectedEventPlace.googleMapsLink && (
@@ -268,7 +273,7 @@ const styles = StyleSheet.create({
   loadingText: usersPageStyles.loadingText,
   backButton: {
     position: 'absolute',
-    top: 10,
+    top: Platform.OS === 'android' ? 30 : 10,
     left: 10,
     zIndex: 1,
     padding: 10,

@@ -253,7 +253,7 @@ export default function Users() {
 
   if (!selectedExitId || exits?.length == 0) {
     return (
-      <SafeAreaView style={{ flex: 1 }}>
+      <SafeAreaView style={{ flex: 1, marginTop: Platform.OS === 'android' ? 30 : 0 }}>
         <View style={{ width: '100%', alignItems: 'flex-end', paddingHorizontal: 10 }}>
           {renderBadges()}
         </View>

@@ -543,14 +543,18 @@ export default function Profile() {
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <ThemedText type="subtitle">{userProfile.name}</ThemedText>
                         {userProfile?.verified && (
-                          <FontAwesome name="check-circle" size={16} color="#1DA1F2" style={{ marginLeft: 4 }} />
+                          <View style={{ backgroundColor: '#1DA1F2', borderRadius: 10, padding: 2, marginLeft: 4 }}>
+                            <Ionicons name="checkmark" size={14} color="white" />
+                          </View>
                         )}
                       </View>
                     )}
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                       <ThemedText style={{ color: 'gray' }}>@{userProfile?.userName}</ThemedText>
                       {(userProfile?.verified && !userProfile?.name) && (
-                        <FontAwesome name="check-circle" size={16} color="#1DA1F2" style={{ marginLeft: 4 }} />
+                        <View style={{ backgroundColor: '#1DA1F2', borderRadius: 10, padding: 2, marginLeft: 4 }}>
+                          <Ionicons name="checkmark" size={14} color="white" />
+                        </View>
                       )}
                     </View>
                   </View>

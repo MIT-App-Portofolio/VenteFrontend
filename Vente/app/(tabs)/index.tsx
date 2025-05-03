@@ -7,7 +7,7 @@ import { HorizontallyAligned } from '@/components/HorizontallyAligned';
 import { CenterAligned } from '@/components/CenterAligned';
 import { ExitUserQuery, useApi } from '@/api';
 import { Redirect, useRootNavigationState, useRouter } from 'expo-router';
-import { Feather, FontAwesome } from '@expo/vector-icons';
+import { Feather, FontAwesome, Ionicons } from '@expo/vector-icons';
 import { StyledGenderFilter } from '@/components/GenderPicker';
 import { StyledModal } from '@/components/StyledModal';
 import FastImage from 'react-native-fast-image';
@@ -315,7 +315,9 @@ export default function Users() {
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <ThemedText type="subtitle" style={{ marginTop: 5, maxWidth: pfpSize * 0.9 }} ellipsizeMode='tail' numberOfLines={2}>{displayName}</ThemedText>
             {visitor.verified && (
-              <FontAwesome name="check-circle" size={16} color="#1DA1F2" style={{ marginLeft: 4 }} />
+              <View style={{ backgroundColor: '#1DA1F2', borderRadius: 10, padding: 2, marginLeft: 4 }}>
+                <Ionicons name="checkmark" size={14} color="white" />
+              </View>
             )}
           </View>
           <View style={{
@@ -583,7 +585,9 @@ export default function Users() {
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                           <ThemedText style={{ marginRight: 10 }} type="title">{selectedProfile.name}</ThemedText>
                           {selectedProfile.verified && (
-                            <FontAwesome name="check-circle" size={16} color="#1DA1F2" style={{ marginLeft: 4 }} />
+                            <View style={{ backgroundColor: '#1DA1F2', borderRadius: 10, padding: 2, marginLeft: 4 }}>
+                              <Ionicons name="checkmark" size={14} color="white" />
+                            </View>
                           )}
                         </View>
                       }
@@ -591,7 +595,9 @@ export default function Users() {
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <ThemedText style={{ color: 'gray' }}>@{selectedProfile.userName}</ThemedText>
                         {(selectedProfile.verified && !selectedProfile.name) && (
-                          <FontAwesome name="check-circle" size={16} color="#1DA1F2" style={{ marginLeft: 4 }} />
+                          <View style={{ backgroundColor: '#1DA1F2', borderRadius: 10, padding: 2, marginLeft: 4 }}>
+                            <Ionicons name="checkmark" size={14} color="white" />
+                          </View>
                         )}
                       </View>
                     </View>

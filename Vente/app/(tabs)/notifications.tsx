@@ -12,6 +12,7 @@ import { router } from "expo-router";
 import { StyledModal } from "@/components/StyledModal";
 import { Linking } from 'react-native';
 import { timeShortDisplay, dateShortDisplay } from "../../dateDisplay";
+import { Ionicons } from '@expo/vector-icons';
 
 export default function Notifications() {
   const { api, notifications, userProfile } = useApi();
@@ -187,14 +188,18 @@ export default function Notifications() {
                         {selectedProfile.name}
                       </ThemedText>
                       {selectedProfile.verified && (
-                        <FontAwesome name="check-circle" size={16} color="#1DA1F2" style={{ marginLeft: 4 }} />
+                        <View style={{ backgroundColor: '#1DA1F2', borderRadius: 10, padding: 2, marginLeft: 4 }}>
+                          <Ionicons name="checkmark" size={16} color="white" />
+                        </View>
                       )}
                     </View>
                   )}
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <ThemedText style={{ color: 'gray' }}>@{selectedProfile.userName}</ThemedText>
                     {(selectedProfile.verified && !selectedProfile.name) && (
-                      <FontAwesome name="check-circle" size={16} color="#1DA1F2" style={{ marginLeft: 4 }} />
+                      <View style={{ backgroundColor: '#1DA1F2', borderRadius: 10, padding: 2, marginLeft: 4 }}>
+                        <Ionicons name="checkmark" size={16} color="white" />
+                      </View>
                     )}
                   </View>
                 </View>

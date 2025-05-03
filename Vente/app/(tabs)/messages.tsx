@@ -12,6 +12,7 @@ import FastImage from "react-native-fast-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StyledModal } from "@/components/StyledModal";
 import { Linking } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function Messages() {
   const { selectedUser } = useLocalSearchParams<{ selectedUser?: string }>();
@@ -177,7 +178,9 @@ export default function Messages() {
                   <View style={styles.profileHeaderText}>
                     <ThemedText type="defaultSemiBold">{api.getUserCached(selectedUser)?.name || `@${selectedUser}`}</ThemedText>
                     {api.getUserCached(selectedUser)?.verified && (
-                      <FontAwesome name="check-circle" size={16} color="#1DA1F2" style={{ marginLeft: 4 }} />
+                      <View style={{ backgroundColor: '#1DA1F2', borderRadius: 10, padding: 2, marginLeft: 4 }}>
+                        <Ionicons name="checkmark" size={14} color="white" />
+                      </View>
                     )}
                   </View>
                   <Feather name="chevron-right" size={24} color="white" />
@@ -343,7 +346,9 @@ export default function Messages() {
                           {selectedProfile.name}
                         </ThemedText>
                         {selectedProfile.verified && (
-                          <FontAwesome name="check-circle" size={16} color="#1DA1F2" style={{ marginLeft: 4 }} />
+                          <View style={{ backgroundColor: '#1DA1F2', borderRadius: 10, padding: 2, marginLeft: 4 }}>
+                            <Ionicons name="checkmark" size={16} color="white" />
+                          </View>
                         )}
                       </View>
                     )}
@@ -351,7 +356,9 @@ export default function Messages() {
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                       <ThemedText style={{ color: 'gray' }}>@{selectedProfile.userName}</ThemedText>
                       {(selectedProfile.verified && !selectedProfile.name) && (
-                        <FontAwesome name="check-circle" size={16} color="#1DA1F2" style={{ marginLeft: 4 }} />
+                        <View style={{ backgroundColor: '#1DA1F2', borderRadius: 10, padding: 2, marginLeft: 4 }}>
+                          <Ionicons name="checkmark" size={16} color="white" />
+                        </View>
                       )}
                     </View>
                   </View>

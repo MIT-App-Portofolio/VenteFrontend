@@ -539,10 +539,20 @@ export default function Profile() {
                   </View>
 
                   <View style={{ flexDirection: 'column', alignItems: 'flex-start', marginTop: 10 }}>
-                    {userProfile?.name &&
-                      <ThemedText style={{ marginRight: 10 }} type="title">{userProfile.name}</ThemedText>
-                    }
-                    <ThemedText style={{ color: 'gray' }}>@{userProfile?.userName}</ThemedText>
+                    {userProfile?.name && (
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <ThemedText type="subtitle">{userProfile.name}</ThemedText>
+                        {userProfile?.verified && (
+                          <FontAwesome name="check-circle" size={16} color="#1DA1F2" style={{ marginLeft: 4 }} />
+                        )}
+                      </View>
+                    )}
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <ThemedText style={{ color: 'gray' }}>@{userProfile?.userName}</ThemedText>
+                      {(userProfile?.verified && !userProfile?.name) && (
+                        <FontAwesome name="check-circle" size={16} color="#1DA1F2" style={{ marginLeft: 4 }} />
+                      )}
+                    </View>
                   </View>
 
 

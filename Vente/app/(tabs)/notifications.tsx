@@ -182,11 +182,21 @@ export default function Notifications() {
 
                 <View style={{ flexDirection: 'column', alignItems: 'flex-start', marginTop: 10 }}>
                   {selectedProfile.name && (
-                    <ThemedText style={{ marginRight: 10 }} type="title">
-                      {selectedProfile.name}
-                    </ThemedText>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <ThemedText style={{ marginRight: 10 }} type="title">
+                        {selectedProfile.name}
+                      </ThemedText>
+                      {selectedProfile.verified && (
+                        <FontAwesome name="check-circle" size={16} color="#1DA1F2" style={{ marginLeft: 4 }} />
+                      )}
+                    </View>
                   )}
-                  <ThemedText style={{ color: 'gray' }}>@{selectedProfile.userName}</ThemedText>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <ThemedText style={{ color: 'gray' }}>@{selectedProfile.userName}</ThemedText>
+                    {(selectedProfile.verified && !selectedProfile.name) && (
+                      <FontAwesome name="check-circle" size={16} color="#1DA1F2" style={{ marginLeft: 4 }} />
+                    )}
+                  </View>
                 </View>
 
                 {selectedProfile.years && (

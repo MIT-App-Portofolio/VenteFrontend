@@ -33,6 +33,7 @@ export type Profile = {
   name?: string,
   igHandle?: string,
   description?: string,
+  verified: boolean,
 };
 
 export type Exit = {
@@ -57,7 +58,8 @@ export type ExitUserQuery = {
   description?: string,
   exitId: number,
   likes: number,
-  userLiked: boolean
+  userLiked: boolean,
+  verified: boolean,
 };
 
 export type ExitUserFriendQuery = {

@@ -312,7 +312,12 @@ export default function Users() {
           </TouchableOpacity>
         </View>
         <View style={{ alignItems: 'flex-start', flexDirection: 'column' }}>
-          <ThemedText type="subtitle" style={{ marginTop: 5, maxWidth: pfpSize * 0.9 }} ellipsizeMode='tail' numberOfLines={2}>{displayName}</ThemedText>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <ThemedText type="subtitle" style={{ marginTop: 5, maxWidth: pfpSize * 0.9 }} ellipsizeMode='tail' numberOfLines={2}>{displayName}</ThemedText>
+            {visitor.verified && (
+              <FontAwesome name="check-circle" size={16} color="#1DA1F2" style={{ marginLeft: 4 }} />
+            )}
+          </View>
           <View style={{
             flexDirection: 'row',
             gap: 2,
@@ -575,10 +580,20 @@ export default function Users() {
                     <View style={{ flexDirection: 'column', alignItems: 'flex-start', marginTop: 10 }}>
                       {
                         selectedProfile.name &&
-                        <ThemedText style={{ marginRight: 10 }} type="title">{selectedProfile.name}</ThemedText>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <ThemedText style={{ marginRight: 10 }} type="title">{selectedProfile.name}</ThemedText>
+                          {selectedProfile.verified && (
+                            <FontAwesome name="check-circle" size={16} color="#1DA1F2" style={{ marginLeft: 4 }} />
+                          )}
+                        </View>
                       }
 
-                      <ThemedText style={{ color: 'gray' }}>@{selectedProfile.userName}</ThemedText>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <ThemedText style={{ color: 'gray' }}>@{selectedProfile.userName}</ThemedText>
+                        {(selectedProfile.verified && !selectedProfile.name) && (
+                          <FontAwesome name="check-circle" size={16} color="#1DA1F2" style={{ marginLeft: 4 }} />
+                        )}
+                      </View>
                     </View>
 
                     <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8 }}>
@@ -624,7 +639,10 @@ export default function Users() {
                       })}
                     </View>
 
-                    <BtnPrimary title='Mensaje' onClick={() => { router.push(`/messages?selectedUser=${selectedProfile.userName}`); setSelectedProfile(null); }} />
+
+                    {selectedProfile.userName != userProfile?.userName &&
+                      <BtnPrimary title='Mensaje' onClick={() => { router.push(`/messages?selectedUser=${selectedProfile.userName}`); setSelectedProfile(null); }} />
+                    }
                   </ScrollView>
                 )
               }

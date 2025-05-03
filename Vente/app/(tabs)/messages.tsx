@@ -176,6 +176,9 @@ export default function Messages() {
                   <FastImage source={{ uri: api.getPfpFromCache(selectedUser) }} style={styles.chatProfilePicture} />
                   <View style={styles.profileHeaderText}>
                     <ThemedText type="defaultSemiBold">{api.getUserCached(selectedUser)?.name || `@${selectedUser}`}</ThemedText>
+                    {api.getUserCached(selectedUser)?.verified && (
+                      <FontAwesome name="check-circle" size={16} color="#1DA1F2" style={{ marginLeft: 4 }} />
+                    )}
                   </View>
                   <Feather name="chevron-right" size={24} color="white" />
                 </TouchableOpacity>
@@ -335,11 +338,22 @@ export default function Messages() {
 
                   <View style={{ flexDirection: 'column', alignItems: 'flex-start', marginTop: 10 }}>
                     {selectedProfile.name && (
-                      <ThemedText style={{ marginRight: 10 }} type="title">
-                        {selectedProfile.name}
-                      </ThemedText>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <ThemedText style={{ marginRight: 10 }} type="title">
+                          {selectedProfile.name}
+                        </ThemedText>
+                        {selectedProfile.verified && (
+                          <FontAwesome name="check-circle" size={16} color="#1DA1F2" style={{ marginLeft: 4 }} />
+                        )}
+                      </View>
                     )}
-                    <ThemedText style={{ color: 'gray' }}>@{selectedProfile.userName}</ThemedText>
+
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <ThemedText style={{ color: 'gray' }}>@{selectedProfile.userName}</ThemedText>
+                      {(selectedProfile.verified && !selectedProfile.name) && (
+                        <FontAwesome name="check-circle" size={16} color="#1DA1F2" style={{ marginLeft: 4 }} />
+                      )}
+                    </View>
                   </View>
 
                   {selectedProfile.years && (
@@ -586,6 +600,8 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   profileHeaderText: {
+    flexDirection: 'row',
+    alignItems: "center",
     flex: 1,
   },
   loadingMoreContainer: {

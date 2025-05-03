@@ -109,8 +109,15 @@ export default function Places() {
                         {selectedEvent.description}
                       </ViewMoreThemedText>
                     }
+
                   </View>
                 </View>
+
+                {selectedEvent.purchaseLink && (
+                  <View style={{ marginTop: 10 }}>
+                    <BtnPrimary title="Comprar entradas" onClick={() => { Linking.openURL(selectedEvent.purchaseLink!) }} />
+                  </View>
+                )}
 
                 {selectedEvent.offers.length > 0 &&
                   <View style={styles.offersContainer}>

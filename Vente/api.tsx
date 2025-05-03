@@ -93,7 +93,8 @@ export type EventPlaceEvent = {
   description: string,
   image?: string,
   time: Date,
-  offers: EventPlaceOffer[]
+  offers: EventPlaceOffer[],
+  purchaseLink?: string,
 }
 
 export type EventPlaceOffer = {

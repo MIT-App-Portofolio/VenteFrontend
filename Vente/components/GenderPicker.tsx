@@ -114,7 +114,7 @@ export function StyledGenderFilter({ gender, setGender }: GenderFilterProps) {
 
   if (ios) {
     let title = "";
-    if (gender == null) title = "Qualquier";
+    if (gender == null) title = "Cualquier";
     if (gender == 0) title = "Hombre";
     if (gender == 1) title = "Mujer";
 
@@ -144,7 +144,7 @@ export function StyledGenderFilter({ gender, setGender }: GenderFilterProps) {
               itemStyle={{ color: 'white' }}
               style={{ color: 'white', marginBottom: 20, backgroundColor: 'black' }}
             >
-              <Picker.Item label="Qualquier" value={"0"} />
+              <Picker.Item label="Cualquier" value={"0"} />
               <Picker.Item label="Hombre" value={"1"} />
               <Picker.Item label="Mujer" value={"2"} />
             </Picker>
@@ -165,7 +165,7 @@ export function StyledGenderFilter({ gender, setGender }: GenderFilterProps) {
       onValueChange={setGender}
       style={{ color: 'white', marginBottom: 20, backgroundColor: 'black' }}
     >
-      <Picker.Item label="Qualquier" value={null} />
+      <Picker.Item label="Cualquier" value={null} />
       <Picker.Item label="Hombre" value={0} />
       <Picker.Item label="Mujer" value={1} />
     </Picker>

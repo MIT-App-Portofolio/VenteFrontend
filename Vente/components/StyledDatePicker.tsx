@@ -23,10 +23,18 @@ export function StyledDatePicker({ date, setDate, title, setIsDirty, futureOnly,
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [tempDate, setTempDate] = useState<Date | null>(date);
 
-  maxDate = maxDate ?? (pastOnly === true ? new Date() : undefined);
-  minDate = minDate ?? (futureOnly === true ? new Date() : undefined);
 
   const defaultStyles = useDefaultStyles();
+
+  const now = new Date();
+  const localYear = now.getFullYear();
+  const localMonth = now.getMonth(); // 0-based
+  const localDate = now.getDate();
+
+  const utcMidnight = new Date(Date.UTC(localYear, localMonth, localDate, 0, 0, 0));
+
+  maxDate = maxDate ?? (pastOnly === true ? utcMidnight : undefined);
+  minDate = minDate ?? (futureOnly === true ? utcMidnight : undefined);
 
   return (
     <MarginItem>
@@ -72,11 +80,13 @@ export function StyledDatePicker({ date, setDate, title, setIsDirty, futureOnly,
                 selected: { backgroundColor: 'white' },
                 selected_label: { color: 'black' },
               }}
+              timeZone="UTC"
               mode="single"
               minDate={minDate}
               maxDate={maxDate}
-              date={tempDate ?? new Date()}
+              date={tempDate ?? utcMidnight}
               onChange={({ date }) => {
+                console.log(date as Date)
                 setTempDate(date as Date);
               }}
             />
@@ -84,6 +94,7 @@ export function StyledDatePicker({ date, setDate, title, setIsDirty, futureOnly,
 
           <BtnPrimary title="Guardar" onClick={() => {
             if (setIsDirty) setIsDirty(true);
+
             if (tempDate) {
               setDate(tempDate);
             } else {
@@ -121,8 +132,15 @@ export function StyledMultipleDatesPicker({
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [tempDates, setTempDates] = useState<Date[] | null>(dates);
 
-  maxDate = maxDate ?? (pastOnly === true ? new Date() : undefined);
-  minDate = minDate ?? (futureOnly === true ? new Date() : undefined);
+  const now = new Date();
+  const localYear = now.getFullYear();
+  const localMonth = now.getMonth(); // 0-based
+  const localDate = now.getDate();
+
+  const utcMidnight = new Date(Date.UTC(localYear, localMonth, localDate, 0, 0, 0));
+
+  maxDate = maxDate ?? (pastOnly === true ? utcMidnight : undefined);
+  minDate = minDate ?? (futureOnly === true ? utcMidnight : undefined);
 
   const defaultStyles = useDefaultStyles();
 

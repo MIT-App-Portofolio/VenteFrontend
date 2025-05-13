@@ -951,7 +951,8 @@ export class Api {
       await this.axios!.post('/api/exit/register', {
         name: name,
         locationId: location.id,
-        dates: dates.map(d => d.toISOString())
+        dates: dates.map(d => d.toISOString()),
+        noTzTransform: true
       });
     } catch (error) {
       console.log('register exit: ' + error);

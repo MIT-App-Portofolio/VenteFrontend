@@ -68,6 +68,13 @@
     <array>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
     </array>
+    <key>SKAdNetworkItems</key>
+    <array>
+      <dict>
+        <key>SKAdNetworkIdentifier</key>
+        <string>su67r6k2v3.skadnetwork</string>
+      </dict>
+    </array>
     <key>UILaunchStoryboardName</key>
     <string>SplashScreen</string>
     <key>UIRequiredDeviceCapabilities</key>

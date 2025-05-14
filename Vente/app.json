@@ -30,6 +30,11 @@
               "com.googleusercontent.apps.504803014413-k3b72t4tnsbinalp2ks8f4028rt87qbf"
             ]
           }
+        ],
+        "SKAdNetworkItems": [
+          {
+            "SKAdNetworkIdentifier": "su67r6k2v3.skadnetwork"
+          }
         ]
       },
       "supportsTablet": false,

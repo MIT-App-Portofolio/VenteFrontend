@@ -20,7 +20,7 @@ export const pfpSize = 250;
 export default function Users() {
   const router = useRouter();
 
-  const { api, exits, userProfile, messageSummaries, notifications, friends, outgoingSolicitations } = useApi();
+  const { api, exits, userProfile, messageSummaries, notifications, friends, outgoingSolicitations, customOffers } = useApi();
 
   // State management
   const [loading, setLoading] = useState(false);
@@ -264,6 +264,16 @@ export default function Users() {
   const renderBadges = () => {
     return (
       <View style={{ flexDirection: 'row', gap: 20 }}>
+        <TouchableOpacity onPress={() => {
+          router.push("/offers");
+        }}>
+          <View style={{ position: 'relative' }}>
+            <Feather name='tag' size={24} color='white' />
+            {customOffers && customOffers.length > 0 && (
+              <Badge value={customOffers.length} containerStyle={{ position: 'absolute', top: -5, right: -5 }} badgeStyle={{ backgroundColor: 'red', borderWidth: 0 }} textStyle={{ color: 'white' }} status='error' />
+            )}
+          </View>
+        </TouchableOpacity>
         <TouchableOpacity onPress={() => {
           router.push("/notifications");
           api.markNotificationsAsRead();

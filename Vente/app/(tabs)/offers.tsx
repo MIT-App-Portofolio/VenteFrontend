@@ -257,6 +257,14 @@ export default function Offers() {
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
             contentContainerStyle={{ paddingBottom: 50, width: '100%' }}
           >
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', marginBottom: 10 }}>
+              <TouchableOpacity onPress={() => {
+                router.push('/');
+              }}>
+                <ThemedText style={styles.backButton}>←</ThemedText>
+              </TouchableOpacity>
+            </View>
+
             <ThemedText type='title' style={{ alignSelf: 'flex-start', marginTop: 10 }}>Ofertas disponibles</ThemedText>
 
             <View style={{ width: '100%', alignSelf: 'center', marginTop: 20 }}>
@@ -316,9 +324,10 @@ export default function Offers() {
           >
             {renderModalContent()}
           </StyledModal>
-        </View>
-      )}
-    </HorizontallyAligned>
+        </View >
+      )
+      }
+    </HorizontallyAligned >
   );
 }
 
@@ -446,5 +455,9 @@ const styles = StyleSheet.create({
   loadingContainer: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  backButton: {
+    fontSize: 24,
+    color: 'white',
   },
 });

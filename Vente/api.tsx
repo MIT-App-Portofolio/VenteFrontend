@@ -1401,6 +1401,9 @@ export class Api {
   public async searchUsers(query: string): Promise<SearchUser[]> {
     try {
       const response = await this.axios!.get(`/api/user_search?q=${encodeURIComponent(query)}`);
+      response.data.forEach((user: any) => {
+        this.pfpDb[user.username] = user.pfpUrl;
+      });
       return response.data;
     } catch (e) {
       console.log('search users: ' + e);
@@ -1411,6 +1414,9 @@ export class Api {
   public async searchUsersFriendPriority(query: string): Promise<SearchUser[]> {
     try {
       const response = await this.axios!.get(`/api/user_search_friends?q=${encodeURIComponent(query)}`);
+      response.data.forEach((user: any) => {
+        this.pfpDb[user.username] = user.pfpUrl;
+      });
       return response.data;
     } catch (e) {
       console.log('search users friend priority: ' + e);

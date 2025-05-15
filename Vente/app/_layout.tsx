@@ -104,6 +104,12 @@ function Inner() {
       messaging().onMessage(async (notification) => {
         if (notification.data) {
           switch (notification.data.notification_type) {
+            case "follow":
+              await api.getIncomingSolicitations();
+              break;
+            case "follow_accept":
+              await api.getFriends();
+              break;
             case "invite":
               await api.getInvitationExits();
               break;
@@ -158,11 +164,15 @@ function Inner() {
         if (auth == AuthResult.Authenticated) {
           const affiliateStatus = await api.isAffiliate();
           setIsAffiliate(affiliateStatus);
-          await api.getExits();
-          await api.getInvitationExits();
-          await api.exitAlbumAvailable();
-          await api.getMessageSummaries();
-          await api.getNotifications();
+          await Promise.all([
+            api.getExits(),
+            api.getInvitationExits(),
+            api.exitAlbumAvailable(),
+            api.getMessageSummaries(),
+            api.getNotifications(),
+            api.getOutgoingSolicitations(),
+            api.getIncomingSolicitations(),
+          ]);
         }
       }
 

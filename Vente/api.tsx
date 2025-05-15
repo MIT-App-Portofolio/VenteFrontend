@@ -130,6 +130,19 @@ export type OwnPictures = {
   pictures: AlbumPicture[];
 }
 
+export type SearchUser = {
+  username: string,
+  pfpUrl: string,
+}
+
+export type FriendStatus = {
+  username: string,
+  name: string,
+  pfpUrl: string,
+  dates: Date[],
+  locationId: string,
+}
+
 export type MessageType = "Incoming" | "Outgoing";
 export type MessageContentType = "Text" | "Voice";
 
@@ -179,6 +192,10 @@ const ApiContext = createContext<{
   currentAlbumId: number | null
   exitAlbumAvailable: boolean
   notifications: Notification[] | null
+  outgoingSolicitations: SearchUser[] | null
+  incomingSolicitations: SearchUser[] | null
+  friends: SearchUser[] | null
+  statuses: FriendStatus[] | null
 } | null>(null);
 
 export const useApi = () => {
@@ -203,6 +220,10 @@ export const ApiProvider = ({ children }: { children: ReactNode }) => {
   const [messageSummaries, setMessageSummaries] = useState<Message[] | null>(null);
   const [allMessages, setAllMessages] = useState<{ [key: string]: Message[] } | null>(null);
   const [notifications, setNotifications] = useState<Notification[] | null>(null);
+  const [outgoingSolicitations, setOutgoingSolicitations] = useState<SearchUser[] | null>(null);
+  const [incomingSolicitations, setIncomingSolicitations] = useState<SearchUser[] | null>(null);
+  const [friends, setFriends] = useState<SearchUser[] | null>(null);
+  const [statuses, setStatuses] = useState<FriendStatus[] | null>(null);
 
   useEffect(() => {
     const initializeApi = async () => {
@@ -218,7 +239,11 @@ export const ApiProvider = ({ children }: { children: ReactNode }) => {
         setExitAlbumAvailable,
         setMessageSummaries,
         setAllMessages,
-        setNotifications
+        setNotifications,
+        setOutgoingSolicitations,
+        setIncomingSolicitations,
+        setFriends,
+        setStatuses
       );
       var url = "";
 
@@ -266,7 +291,11 @@ export const ApiProvider = ({ children }: { children: ReactNode }) => {
       exits,
       invitedExits,
       exitAlbumAvailable,
-      notifications
+      notifications,
+      outgoingSolicitations,
+      incomingSolicitations,
+      friends,
+      statuses
     }}>
       {children}
     </ApiContext.Provider>
@@ -299,7 +328,10 @@ export class Api {
   private setMessageSummaries: React.Dispatch<React.SetStateAction<Message[] | null>>;
   private setAllMessages: React.Dispatch<React.SetStateAction<{ [key: string]: Message[] } | null>>;
   private setNotifications: React.Dispatch<React.SetStateAction<Notification[] | null>>;
-
+  private setOutgoingSolicitations: React.Dispatch<React.SetStateAction<SearchUser[] | null>>;
+  private setIncomingSolicitations: React.Dispatch<React.SetStateAction<SearchUser[] | null>>;
+  private setFriends: React.Dispatch<React.SetStateAction<SearchUser[] | null>>;
+  private setStatuses: React.Dispatch<React.SetStateAction<FriendStatus[] | null>>;
   constructor(
     setUserProfile: React.Dispatch<React.SetStateAction<Profile | null>>,
     setUserPfp: React.Dispatch<React.SetStateAction<string | null>>,
@@ -312,7 +344,11 @@ export class Api {
     setExitAlbumAvailable: React.Dispatch<React.SetStateAction<boolean>>,
     setMessageSummaries: React.Dispatch<React.SetStateAction<Message[] | null>>,
     setAllMessages: React.Dispatch<React.SetStateAction<{ [key: string]: Message[] } | null>>,
-    setNotifications: React.Dispatch<React.SetStateAction<Notification[] | null>>
+    setNotifications: React.Dispatch<React.SetStateAction<Notification[] | null>>,
+    setOutgoingSolicitations: React.Dispatch<React.SetStateAction<SearchUser[] | null>>,
+    setIncomingSolicitations: React.Dispatch<React.SetStateAction<SearchUser[] | null>>,
+    setFriends: React.Dispatch<React.SetStateAction<SearchUser[] | null>>,
+    setStatuses: React.Dispatch<React.SetStateAction<FriendStatus[] | null>>
   ) {
     this.locations = null;
     this.axios = null;
@@ -331,6 +367,10 @@ export class Api {
     this.setMessageSummaries = setMessageSummaries;
     this.setAllMessages = setAllMessages;
     this.setNotifications = setNotifications;
+    this.setOutgoingSolicitations = setOutgoingSolicitations;
+    this.setIncomingSolicitations = setIncomingSolicitations;
+    this.setFriends = setFriends;
+    this.setStatuses = setStatuses;
   }
 
   public async init(url: string) {
@@ -1355,6 +1395,97 @@ export class Api {
   }
 
   // #endregion
+
+  // #region Searching
+
+  public async searchUsers(query: string): Promise<SearchUser[]> {
+    try {
+      const response = await this.axios!.get(`/api/user_search?q=${encodeURIComponent(query)}`);
+      return response.data;
+    } catch (e) {
+      console.log('search users: ' + e);
+      return [];
+    }
+  }
+
+  // #endregion
+
+  // #region Following
+  public async getFriends() {
+    try {
+      const response = await this.axios!.get('/api/follow/friends');
+      this.setFriends(response.data);
+    } catch (e) {
+      console.log('get friends: ' + e);
+    }
+  }
+
+  public async followUser(username: string) {
+    try {
+      await this.axios!.post(`/api/follow/follow?username=${encodeURIComponent(username)}`);
+    } catch (e) {
+      console.log('follow user: ' + e);
+    }
+  }
+
+  public async unfollowUser(username: string) {
+    try {
+      await this.axios!.post(`/api/follow/unfollow?username=${encodeURIComponent(username)}`);
+    } catch (e) {
+      console.log('unfollow user: ' + e);
+    }
+  }
+
+  public async getOutgoingSolicitations() {
+    try {
+      const response = await this.axios!.get('/api/follow/get_outgoing_solicitations');
+      this.setOutgoingSolicitations(response.data);
+    } catch (e) {
+      console.log('get outgoing solicitations: ' + e);
+    }
+  }
+
+  public async getIncomingSolicitations() {
+    try {
+      const response = await this.axios!.get('/api/follow/get_incoming_solicitations');
+      this.setIncomingSolicitations(response.data);
+    } catch (e) {
+      console.log('get incoming solicitations: ' + e);
+    }
+  }
+
+  public async acceptSolicitation(username: string) {
+    try {
+      await this.axios!.post(`/api/follow/accept?username=${encodeURIComponent(username)}`);
+      this.setOutgoingSolicitations(solicitations => solicitations?.filter(solicitation => solicitation.username !== username) || []);
+    } catch (e) {
+      console.log('accept solicitation: ' + e);
+    }
+  }
+
+  public async rejectSolicitation(username: string) {
+    try {
+      await this.axios!.post(`/api/follow/reject?username=${encodeURIComponent(username)}`);
+      this.setIncomingSolicitations(solicitations => solicitations?.filter(solicitation => solicitation.username !== username) || []);
+    } catch (e) {
+      console.log('reject solicitation: ' + e);
+    }
+  }
+
+  // #endregion
+
+  // #region statuses
+
+  public async getStatuses() {
+    try {
+      const response = await this.axios!.get('/api/status/get_statuses');
+      this.setStatuses(response.data);
+    } catch (e) {
+      console.log('get statuses: ' + e);
+    }
+  }
+  // #endregion
+
   private async axios_instance(url: string) {
     var instance = axios.create({
       withCredentials: true,

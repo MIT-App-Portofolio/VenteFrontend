@@ -12,6 +12,7 @@ const MAPPING = {
   // See SF Symbols in the SF Symbols app on Mac.
   'house.fill': 'home',
   'xmark': 'x',
+  'person.2.fill': 'users',
   'calendar': 'calendar',
   'camera': 'camera',
   'person': 'user',

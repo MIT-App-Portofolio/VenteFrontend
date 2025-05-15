@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { View, TouchableOpacity, FlatList, ScrollView, StyleSheet, ActivityIndicator, Image, Platform } from "react-native";
+import React, { useState, useEffect, useRef } from "react";
+import { View, TouchableOpacity, FlatList, ScrollView, StyleSheet, ActivityIndicator, Image, Platform, TextInput, Keyboard } from "react-native";
 import { Exit, useApi } from "@/api";
 import { MarginItem } from '@/components/MarginItem';
 import { ErrorText, ThemedText } from '@/components/ThemedText';
@@ -16,6 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import SegmentedControl from '@react-native-segmented-control/segmented-control';
 import Toast from 'react-native-toast-message';
 import FastImage from 'react-native-fast-image';
+import { CenterAligned } from "@/components/CenterAligned";
 
 type CreateExitStep = 'name' | 'date' | 'location' | 'review';
 
@@ -24,7 +25,6 @@ export default function Calendar() {
   const [loading, setLoading] = useState(false);
   const [selectedExit, setSelectedExit] = useState<number | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [inviteUsername, setInviteUsername] = useState('');
   const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
   const [exitName, setExitName] = useState('');
   const [showInviteForm, setShowInviteForm] = useState(false);
@@ -44,6 +44,14 @@ export default function Calendar() {
 
   const [selectedInvitedExit, setSelectedInvitedExit] = useState<number | null>(null);
   const [isInvitationModalVisible, setIsInvitationModalVisible] = useState(false);
+
+  // Add search state variables
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
+  const searchTimeout = useRef<NodeJS.Timeout>();
+  const searchInputRef = useRef<TextInput>(null);
 
   // Fetch profile pictures for all members and pending invites
   useEffect(() => {
@@ -127,14 +135,13 @@ export default function Calendar() {
     setLoading(false);
   };
 
-  const inviteUser = async () => {
+  const inviteUser = async (username: string) => {
     if (!selectedExit) return;
 
     setLoading(true);
-    const [success, errorMessage] = await api.inviteUser(selectedExit, inviteUsername);
+    const [success, errorMessage] = await api.inviteUser(selectedExit, username);
     if (success) {
       setShowInviteForm(false);
-      setInviteUsername('');
     } else {
       Toast.show({
         type: 'error',
@@ -184,6 +191,31 @@ export default function Calendar() {
     }
     setIsInvitationModalVisible(false);
     setDecliningInvites(prev => ({ ...prev, [exitId]: false }));
+  };
+
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    if (searchTimeout.current) {
+      clearTimeout(searchTimeout.current);
+    }
+
+    if (query.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+
+    searchTimeout.current = setTimeout(async () => {
+      setIsSearching(true);
+      const results = await api.searchUsersFriendPriority(query);
+      setSearchResults(results);
+      setIsSearching(false);
+    }, 300);
+  };
+
+  const handleCancel = () => {
+    setShowInviteForm(false);
+    setSearchQuery('');
+    setSearchResults([]);
   };
 
   const renderExitCard = ({ item }: { item: Exit }) => {
@@ -451,6 +483,78 @@ export default function Calendar() {
     return <FullScreenLoading />;
   }
 
+  if (showInviteForm) {
+    return (
+      <SafeAreaView style={{ flex: 1 }}>
+        <Toast />
+        <View style={styles.searchContainer}>
+          <View style={styles.searchBarContainer}>
+            <TextInput
+              ref={searchInputRef}
+              style={styles.searchInput}
+              placeholder="Buscar usuarios..."
+              placeholderTextColor="gray"
+              value={searchQuery}
+              onChangeText={handleSearch}
+              autoFocus={true}
+            />
+            {isSearching && (
+              <ActivityIndicator style={styles.searchLoading} color="white" />
+            )}
+          </View>
+          <TouchableOpacity
+            style={styles.cancelButton}
+            onPress={handleCancel}
+          >
+            <ThemedText style={styles.cancelButtonText}>Cancelar</ThemedText>
+          </TouchableOpacity>
+        </View>
+
+        <FlatList
+          data={searchResults}
+          renderItem={({ item }) => {
+            const exit = exits?.find(e => e.id === selectedExit);
+            const isAlreadyInExit = exit?.members?.includes(item.username) || exit?.awaitingInvite?.includes(item.username);
+
+            return (
+              <View style={styles.card}>
+                <View style={styles.cardContent}>
+                  <FastImage
+                    source={{ uri: item.pfpUrl }}
+                    style={styles.profilePicture}
+                  />
+                  <View style={styles.cardText}>
+                    <ThemedText style={styles.username}>@{item.username}</ThemedText>
+                  </View>
+                  {isAlreadyInExit ? (
+                    <ThemedText style={{ color: 'gray', marginRight: 10 }}>Ya en la escapada</ThemedText>
+                  ) : (
+                    <TouchableOpacity
+                      style={styles.actionButton}
+                      onPress={() => inviteUser(item.username)}
+                    >
+                      <Feather name="user-plus" size={20} color="white" />
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+            );
+          }}
+          keyExtractor={item => item.username}
+          style={{ flex: 1 }}
+          contentContainerStyle={{ padding: 20 }}
+          ListEmptyComponent={
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 20 }}>
+              <ThemedText>
+                {searchQuery.length < 2 ? "Escribe al menos 2 caracteres" : "No se encontraron usuarios"}
+              </ThemedText>
+            </View>
+          }
+        />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={{ flex: 1, margin: 20, justifyContent: 'space-between', paddingBottom: Platform.OS === 'android' ? 0 : 100 }} edges={['top', 'left', 'right']}>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ justifyContent: 'space-between' }} horizontal={false}>
@@ -499,22 +603,6 @@ export default function Calendar() {
             const exit = exits.find(e => e.id === selectedExit);
             const location = api.locations?.find(loc => loc.id === exit?.locationId);
             const displayMembers = exit?.leader == userProfile?.userName ? exit?.members! : [...(exit?.members?.filter(member => member !== userProfile?.userName) || []), exit?.leader!];
-
-            if (showInviteForm) {
-              return (
-                <View>
-                  <Toast />
-                  <StyledTextInput
-                    value={inviteUsername}
-                    setValue={setInviteUsername}
-                    placeholder="Nombre de usuario"
-                    autoCapitalize="none"
-                  />
-                  <BtnPrimary title="Invitar" onClick={inviteUser} disabled={!inviteUsername} style={{ marginTop: 10, marginBottom: 2 }} />
-                  <BtnSecondary title="Cancelar" onClick={() => setShowInviteForm(false)} />
-                </View>
-              );
-            }
 
             return (
               <View>
@@ -832,5 +920,64 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 1,
     backgroundColor: '#3A3A3A',
+  },
+  searchContainer: {
+    padding: 20,
+    paddingBottom: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  searchBarContainer: {
+    flex: 1,
+    position: 'relative',
+  },
+  searchInput: {
+    backgroundColor: '#2A2A2A',
+    padding: 15,
+    paddingRight: 40,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#3A3A3A',
+    color: 'white',
+    fontSize: 16,
+  },
+  searchLoading: {
+    position: 'absolute',
+    right: 15,
+    top: '50%',
+    transform: [{ translateY: -10 }],
+  },
+  cancelButton: {
+    marginLeft: 10,
+    padding: 10,
+  },
+  cancelButtonText: {
+    color: '#007AFF',
+    fontSize: 14,
+  },
+  card: {
+    backgroundColor: '#2A2A2A',
+    padding: 15,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#3A3A3A',
+    marginBottom: 10,
+  },
+  cardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  cardText: {
+    flex: 1,
+    marginLeft: 15,
+  },
+  username: {
+    color: 'white',
+    fontSize: 16,
+  },
+  profilePicture: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
   },
 });

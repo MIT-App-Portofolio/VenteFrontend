@@ -1408,6 +1408,16 @@ export class Api {
     }
   }
 
+  public async searchUsersFriendPriority(query: string): Promise<SearchUser[]> {
+    try {
+      const response = await this.axios!.get(`/api/user_search_friends?q=${encodeURIComponent(query)}`);
+      return response.data;
+    } catch (e) {
+      console.log('search users friend priority: ' + e);
+      return [];
+    }
+  }
+
   // #endregion
 
   // #region Following

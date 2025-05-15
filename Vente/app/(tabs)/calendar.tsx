@@ -497,6 +497,8 @@ export default function Calendar() {
               value={searchQuery}
               onChangeText={handleSearch}
               autoFocus={true}
+              returnKeyType="done"
+              onSubmitEditing={() => Keyboard.dismiss()}
             />
             {isSearching && (
               <ActivityIndicator style={styles.searchLoading} color="white" />

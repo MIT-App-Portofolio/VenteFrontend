@@ -1,15 +1,16 @@
 import { Tabs } from 'expo-router';
 import React, { useEffect } from 'react';
-import { Platform } from 'react-native';
+import { Platform, View } from 'react-native';
 
 import { HapticTab } from '@/components/HapticTab';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { useApi } from '@/api';
 import { RedirectHandler } from '@/redirect_storage';
+import { Badge } from 'react-native-elements';
 
 export default function TabLayout() {
-  const { exitAlbumAvailable, api } = useApi();
+  const { exitAlbumAvailable, api, incomingSolicitations } = useApi();
 
   // refresh every couple of seconds
   useEffect(() => {
@@ -67,7 +68,14 @@ export default function TabLayout() {
           name="social"
           options={{
             title: '',
-            tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.2.fill" color={color} />,
+            tabBarIcon: ({ color }) => (
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <IconSymbol size={28} name="person.2.fill" color={color} />
+                {incomingSolicitations && incomingSolicitations.length > 0 && (
+                  <Badge value={incomingSolicitations.length} containerStyle={{ position: 'absolute', top: -5, right: -5 }} badgeStyle={{ backgroundColor: 'red', borderWidth: 0 }} textStyle={{ color: 'white' }} status='error' />
+                )}
+              </View>
+            ),
           }}
         />
         <Tabs.Screen

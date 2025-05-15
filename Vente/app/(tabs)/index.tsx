@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView, Linking, TextInput, Animated, Image, FlatList, RefreshControl, SafeAreaView, PanResponder, Dimensions, Platform } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Linking, TextInput, Animated, Image, FlatList, RefreshControl, SafeAreaView, PanResponder, Dimensions, Platform, ActivityIndicator } from 'react-native';
 import { MarginItem } from '@/components/MarginItem';
 import { ThemedText } from '@/components/ThemedText';
 import { BtnPrimary, BtnSecondary } from '@/components/Buttons';
 import { HorizontallyAligned } from '@/components/HorizontallyAligned';
 import { CenterAligned } from '@/components/CenterAligned';
-import { ExitUserQuery, useApi } from '@/api';
+import { ExitUserQuery, useApi, SearchUser } from '@/api';
 import { Redirect, useRootNavigationState, useRouter } from 'expo-router';
 import { Feather, FontAwesome, Ionicons } from '@expo/vector-icons';
 import { StyledGenderFilter } from '@/components/GenderPicker';
@@ -20,7 +20,7 @@ export const pfpSize = 250;
 export default function Users() {
   const router = useRouter();
 
-  const { api, exits, userProfile, messageSummaries, notifications } = useApi();
+  const { api, exits, userProfile, messageSummaries, notifications, friends, outgoingSolicitations } = useApi();
 
   // State management
   const [loading, setLoading] = useState(false);
@@ -38,6 +38,7 @@ export default function Users() {
   const [ageRangeMin, setAgeRangeMin] = useState<number | null>(null);
   const [ageRangeMax, setAgeRangeMax] = useState<number | null>(null);
   const [likedUsers, setLikedUsers] = useState<Set<string>>(new Set());
+  const [followLoading, setFollowLoading] = useState<{ [key: string]: boolean }>({});
 
   const [selectedExitId, setSelectedExitId] = useState<number | null>(null);
 
@@ -70,13 +71,16 @@ export default function Users() {
       if (!newVisitors || newVisitors.length === 0) {
         setLastUserFetchEmpty(true);
       } else {
+        // Deduplicate newVisitors using Set
+        const uniqueNewVisitors = [...new Set(newVisitors)];
+
         // Fetch profile pictures for all new visitors
-        await Promise.all(newVisitors.map(visitor => api.fetchPfp(visitor)));
+        await Promise.all(uniqueNewVisitors.map(visitor => api.fetchPfp(visitor)));
 
         // Update likedUsers state with likes from new visitors
         setLikedUsers(prev => {
           const newSet = new Set(prev);
-          newVisitors.forEach(visitor => {
+          uniqueNewVisitors.forEach(visitor => {
             const user = api.getUserCached(visitor) as ExitUserQuery;
             if (user?.userLiked) {
               newSet.add(user.userName);
@@ -85,7 +89,14 @@ export default function Users() {
           return newSet;
         });
 
-        setVisitors(prev => shouldReset ? newVisitors : [...prev, ...newVisitors]);
+        setVisitors(prev => {
+          if (shouldReset) {
+            return uniqueNewVisitors;
+          }
+          // Filter out any visitors that are already in the list
+          const uniqueVisitors = uniqueNewVisitors.filter(visitor => !prev.includes(visitor));
+          return [...prev, ...uniqueVisitors];
+        });
       }
     } catch (error) {
       console.error('Error fetching visitors:', error);
@@ -217,6 +228,31 @@ export default function Users() {
       });
     }
   }, [api, likedUsers]);
+
+  const handleFollow = useCallback(async (username: string) => {
+    setFollowLoading(prev => ({ ...prev, [username]: true }));
+    const hasOutgoingRequest = outgoingSolicitations?.some(s => s.username === username);
+    if (hasOutgoingRequest) {
+      await api.unfollowUser(username);
+    } else {
+      await api.followUser(username);
+    }
+    await api.getOutgoingSolicitations();
+    setFollowLoading(prev => ({ ...prev, [username]: false }));
+  }, [api, outgoingSolicitations]);
+
+  const handleUnfriend = useCallback(async (username: string) => {
+    setFollowLoading(prev => ({ ...prev, [username]: true }));
+    await api.unfollowUser(username);
+    await api.getFriends();
+    setFollowLoading(prev => ({ ...prev, [username]: false }));
+  }, [api]);
+
+  // Fetch friends and solicitations on mount
+  useEffect(() => {
+    api.getFriends();
+    api.getOutgoingSolicitations();
+  }, []);
 
   // View event places button interpolation
   const buttonHeight = scrollY.interpolate({
@@ -645,10 +681,44 @@ export default function Users() {
                       })}
                     </View>
 
+                    {selectedProfile.userName != userProfile?.userName && (
+                      <>
+                        <BtnPrimary
+                          title='Mensaje'
+                          style={{ marginBottom: 10 }}
+                          onClick={() => {
+                            router.push(`/messages?selectedUser=${selectedProfile.userName}`);
+                            setSelectedProfile(null);
+                          }}
+                        />
 
-                    {selectedProfile.userName != userProfile?.userName &&
-                      <BtnPrimary title='Mensaje' onClick={() => { router.push(`/messages?selectedUser=${selectedProfile.userName}`); setSelectedProfile(null); }} />
-                    }
+                        {followLoading[selectedProfile.userName] ? (
+                          <ActivityIndicator color="white" size="small" />
+                        ) : (
+                          <>
+                            {friends?.some(f => f.username === selectedProfile.userName) ? (
+                              <BtnSecondary
+                                title='Dejar de seguir'
+                                onClick={() => handleUnfriend(selectedProfile.userName)}
+                                disabled={followLoading[selectedProfile.userName]}
+                              />
+                            ) : outgoingSolicitations?.some(s => s.username === selectedProfile.userName) ? (
+                              <BtnSecondary
+                                title='Solicitado'
+                                onClick={() => handleFollow(selectedProfile.userName)}
+                                disabled={followLoading[selectedProfile.userName]}
+                              />
+                            ) : (
+                              <BtnSecondary
+                                title='Seguir'
+                                onClick={() => handleFollow(selectedProfile.userName)}
+                                disabled={followLoading[selectedProfile.userName]}
+                              />
+                            )}
+                          </>
+                        )}
+                      </>
+                    )}
                   </ScrollView>
                 )
               }

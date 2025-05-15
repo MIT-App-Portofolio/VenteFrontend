@@ -320,7 +320,8 @@ export default function Social() {
             value={searchQuery}
             onChangeText={handleSearch}
             onFocus={() => setSearchFocused(true)}
-            onBlur={() => setSearchFocused(false)}
+            returnKeyType="done"
+            onSubmitEditing={() => Keyboard.dismiss()}
           />
           {isSearching && (
             <ActivityIndicator style={styles.searchLoading} color="white" />

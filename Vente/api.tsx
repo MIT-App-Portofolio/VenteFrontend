@@ -182,6 +182,7 @@ const ApiContext = createContext<{
   api: Api,
   userProfile: Profile | null,
   userPfp: string | null,
+  hasPfp: boolean,
   exits: Exit[] | null
   invitedExits: Exit[] | null
   customOffers: CustomOffer[] | null
@@ -224,7 +225,7 @@ export const ApiProvider = ({ children }: { children: ReactNode }) => {
   const [incomingSolicitations, setIncomingSolicitations] = useState<SearchUser[] | null>(null);
   const [friends, setFriends] = useState<SearchUser[] | null>(null);
   const [statuses, setStatuses] = useState<FriendStatus[] | null>(null);
-
+  const [hasPfp, setHasPfp] = useState<boolean>(false);
   useEffect(() => {
     const initializeApi = async () => {
       const instance = new Api(
@@ -243,7 +244,8 @@ export const ApiProvider = ({ children }: { children: ReactNode }) => {
         setOutgoingSolicitations,
         setIncomingSolicitations,
         setFriends,
-        setStatuses
+        setStatuses,
+        setHasPfp
       );
       var url = "";
 
@@ -295,7 +297,8 @@ export const ApiProvider = ({ children }: { children: ReactNode }) => {
       outgoingSolicitations,
       incomingSolicitations,
       friends,
-      statuses
+      statuses,
+      hasPfp
     }}>
       {children}
     </ApiContext.Provider>
@@ -332,6 +335,8 @@ export class Api {
   private setIncomingSolicitations: React.Dispatch<React.SetStateAction<SearchUser[] | null>>;
   private setFriends: React.Dispatch<React.SetStateAction<SearchUser[] | null>>;
   private setStatuses: React.Dispatch<React.SetStateAction<FriendStatus[] | null>>;
+  private setHasPfp: React.Dispatch<React.SetStateAction<boolean>>;
+
   constructor(
     setUserProfile: React.Dispatch<React.SetStateAction<Profile | null>>,
     setUserPfp: React.Dispatch<React.SetStateAction<string | null>>,
@@ -348,7 +353,8 @@ export class Api {
     setOutgoingSolicitations: React.Dispatch<React.SetStateAction<SearchUser[] | null>>,
     setIncomingSolicitations: React.Dispatch<React.SetStateAction<SearchUser[] | null>>,
     setFriends: React.Dispatch<React.SetStateAction<SearchUser[] | null>>,
-    setStatuses: React.Dispatch<React.SetStateAction<FriendStatus[] | null>>
+    setStatuses: React.Dispatch<React.SetStateAction<FriendStatus[] | null>>,
+    setHasPfp: React.Dispatch<React.SetStateAction<boolean>>
   ) {
     this.locations = null;
     this.axios = null;
@@ -371,6 +377,7 @@ export class Api {
     this.setIncomingSolicitations = setIncomingSolicitations;
     this.setFriends = setFriends;
     this.setStatuses = setStatuses;
+    this.setHasPfp = setHasPfp;
   }
 
   public async init(url: string) {
@@ -586,6 +593,15 @@ export class Api {
     return AuthResult.UnknownError;
   }
 
+  public async getHasPfp() {
+    try {
+      const response = await this.axios!.get('/api/account/has_pfp');
+      this.setHasPfp(response.data);
+    } catch (e) {
+      console.log('get has pfp: ' + e);
+    }
+  }
+
   public async fetchUserPfp() {
     try {
       const response = await this.axios!.get('/api/access_pfp?userName=' + this.username);
@@ -690,6 +706,7 @@ export class Api {
         },
       });
       await this.fetchUserPfp();
+      await this.getHasPfp();
       return true;
     } catch (e) {
       console.log('update pfp: ' + e);

@@ -20,7 +20,7 @@ export const pfpSize = 250;
 export default function Users() {
   const router = useRouter();
 
-  const { api, exits, userProfile, messageSummaries, notifications, friends, outgoingSolicitations, customOffers } = useApi();
+  const { api, exits, userProfile, messageSummaries, notifications, friends, outgoingSolicitations, customOffers, hasPfp } = useApi();
 
   // State management
   const [loading, setLoading] = useState(false);
@@ -326,7 +326,18 @@ export default function Users() {
     return (
       <TouchableOpacity style={styles.card} onPress={() => handleProfileClick(visitor!)}>
         <View style={{ position: 'relative' }}>
-          <FastImage source={{ uri: pfpUrl }} style={styles.profilePicture} />
+          <Image
+            source={{ uri: pfpUrl }}
+            style={styles.profilePicture}
+            blurRadius={!hasPfp ? 20 : 0}
+          />
+          {!hasPfp && (
+            <View style={styles.blurMessageContainer}>
+              <ThemedText style={styles.blurMessage}>
+                Sube tu foto de perfil para ver la de los demás
+              </ThemedText>
+            </View>
+          )}
           {visitor.note && (
             <View style={{
               position: 'absolute',
@@ -593,7 +604,18 @@ export default function Users() {
                 ) : (
                   <ScrollView style={styles.modalContent}>
                     <View style={{ position: 'relative' }}>
-                      <FastImage source={{ uri: api.getPfpFromCache(selectedProfile.userName) }} style={styles.modalProfilePicture} />
+                      <Image
+                        source={{ uri: api.getPfpFromCache(selectedProfile.userName) }}
+                        style={styles.modalProfilePicture}
+                        blurRadius={!hasPfp ? 20 : 0}
+                      />
+                      {!hasPfp && (
+                        <View style={[styles.blurMessageContainer, { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }]}>
+                          <ThemedText style={styles.blurMessage}>
+                            Sube tu foto de perfil para ver la de los demás
+                          </ThemedText>
+                        </View>
+                      )}
                       {selectedProfile.note && (
                         <View style={{
                           position: 'absolute',
@@ -684,7 +706,7 @@ export default function Users() {
                       {selectedProfile.with?.map((friend) => {
                         return (
                           <View key={"friend_" + friend.displayName} style={styles.invitedUserCard}>
-                            <FastImage source={{ uri: friend.pfpUrl }} style={styles.invitedUserProfilePicture} />
+                            <Image source={{ uri: friend.pfpUrl }} style={styles.invitedUserProfilePicture} />
                             <ThemedText>{friend.displayName}</ThemedText>
                           </View>
                         );
@@ -886,5 +908,22 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#3A3A3A',
+  },
+  blurMessageContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 10,
+  },
+  blurMessage: {
+    textAlign: 'center',
+    padding: 20,
+    color: 'white',
+    fontSize: 16,
   },
 });

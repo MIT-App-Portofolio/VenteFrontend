@@ -166,6 +166,7 @@ function Inner() {
           setIsAffiliate(affiliateStatus);
           await Promise.all([
             api.getExits(),
+            api.getHasPfp(),
             api.getInvitationExits(),
             api.exitAlbumAvailable(),
             api.getMessageSummaries(),

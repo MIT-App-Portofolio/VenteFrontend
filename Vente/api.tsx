@@ -81,8 +81,8 @@ export type EventPlace = {
   name: string,
   description?: string,
   imageUrls: string[],
-  priceRangeBegin: number,
-  priceRangeEnd: number,
+  priceRangeBegin?: number,
+  priceRangeEnd?: number,
   ageRequirement?: number,
   googleMapsLink?: string,
   events: EventPlaceEvent[]

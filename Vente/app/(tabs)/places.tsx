@@ -61,7 +61,9 @@ export default function Places() {
           </View>
         )}
       </View>
-      <ThemedText>{item.priceRangeBegin}€ - {item.priceRangeEnd}€</ThemedText>
+      {item.priceRangeBegin && item.priceRangeEnd &&
+        <ThemedText>{item.priceRangeBegin}€ - {item.priceRangeEnd}€</ThemedText>
+      }
     </TouchableOpacity>
   );
 
@@ -162,7 +164,9 @@ export default function Places() {
                   )}
                 </View>
 
-                <ThemedText style={{ marginTop: 5 }}>{selectedEventPlace.priceRangeBegin}€ - {selectedEventPlace.priceRangeEnd}€</ThemedText>
+                {selectedEventPlace.priceRangeBegin && selectedEventPlace.priceRangeEnd &&
+                  <ThemedText style={{ marginTop: 5 }}>{selectedEventPlace.priceRangeBegin}€ - {selectedEventPlace.priceRangeEnd}€</ThemedText>
+                }
 
                 {selectedEventPlace.description && selectedEventPlace.description.length > 0 &&
                   <ViewMoreThemedText style={{ marginTop: 5 }} maxLines={3}>

@@ -19,7 +19,6 @@ import Affiliate from './affiliate';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { PushNotificationTrigger } from 'expo-notifications';
 import { useRedirectStore } from '@/redirect_storage';
-import { MessageType } from '@microsoft/signalr';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({

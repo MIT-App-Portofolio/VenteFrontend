@@ -5,7 +5,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { BtnPrimary, BtnSecondary } from '@/components/Buttons';
 import { HorizontallyAligned } from '@/components/HorizontallyAligned';
 import { CenterAligned } from '@/components/CenterAligned';
-import { ExitUserQuery, useApi, SearchUser } from '@/api';
+import { ExitUserQuery, useApi, SearchUser, CurrentNews } from '@/api';
 import { Redirect, useRootNavigationState, useRouter } from 'expo-router';
 import { Feather, FontAwesome, Ionicons } from '@expo/vector-icons';
 import { StyledGenderFilter } from '@/components/GenderPicker';
@@ -14,6 +14,7 @@ import FastImage from 'react-native-fast-image';
 import { dateListDisplay, dateShortDisplay } from '@/dateDisplay';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { Badge } from 'react-native-elements/dist/badge/Badge';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const pfpSize = 250;
 
@@ -44,6 +45,10 @@ export default function Users() {
 
   const [exitPickerOpen, setExitPickerOpen] = useState(false);
 
+  const [currentNews, setCurrentNews] = useState<CurrentNews | null>(null);
+  const [isNewsModalVisible, setIsNewsModalVisible] = useState(false);
+  const [dismissedNewsIds, setDismissedNewsIds] = useState<Set<string>>(new Set());
+
   const scrollY = useRef(new Animated.Value(0)).current;
 
   const isFetching = useRef(false);
@@ -59,6 +64,64 @@ export default function Users() {
       setSelectedExitId(exits[0].id);
     }
   }, [exits]);
+
+  useEffect(() => {
+    const f = async () => {
+      if (selectedExitId == null) return;
+
+      // fetch news, check if a news with uniqueId has already been dismissed and if not, show it
+      const news = await api.getCurrentNews(selectedExitId);
+      if (news && !dismissedNewsIds.has(news.uniqueId)) {
+        // Double check storage to ensure we have the latest dismissed IDs
+        try {
+          const stored = await AsyncStorage.getItem('dismissedNewsIds');
+          if (stored) {
+            const storedIds = new Set(JSON.parse(stored));
+            if (!storedIds.has(news.uniqueId)) {
+              setCurrentNews(news);
+              setIsNewsModalVisible(true);
+            }
+          } else {
+            setCurrentNews(news);
+            setIsNewsModalVisible(true);
+          }
+        } catch (e) {
+          console.log('Error checking stored dismissed news:', e);
+          // If there's an error reading storage, show the news anyway
+          setCurrentNews(news);
+          setIsNewsModalVisible(true);
+        }
+      }
+    }
+    f();
+  }, [selectedExitId, dismissedNewsIds]);
+
+  // Load dismissed news IDs from storage on mount
+  useEffect(() => {
+    const loadDismissedNews = async () => {
+      try {
+        const stored = await AsyncStorage.getItem('dismissedNewsIds');
+        if (stored) {
+          setDismissedNewsIds(new Set(JSON.parse(stored)));
+        }
+      } catch (e) {
+        console.log('Error loading dismissed news:', e);
+      }
+    };
+    loadDismissedNews();
+  }, []);
+
+  // Save dismissed news IDs to storage when they change
+  useEffect(() => {
+    const saveDismissedNews = async () => {
+      try {
+        await AsyncStorage.setItem('dismissedNewsIds', JSON.stringify([...dismissedNewsIds]));
+      } catch (e) {
+        console.log('Error saving dismissed news:', e);
+      }
+    };
+    saveDismissedNews();
+  }, [dismissedNewsIds]);
 
   // Fetch visitors with proper error handling and loading states
   const fetchVisitors = useCallback(async (pageNum: number, shouldReset: boolean = false) => {
@@ -423,6 +486,28 @@ export default function Users() {
     );
   };
 
+  const handleDismissNews = async () => {
+    if (currentNews) {
+      const newDismissedIds = new Set([...dismissedNewsIds, currentNews.uniqueId]);
+      setDismissedNewsIds(newDismissedIds);
+      // Save to storage immediately
+      try {
+        await AsyncStorage.setItem('dismissedNewsIds', JSON.stringify([...newDismissedIds]));
+      } catch (e) {
+        console.log('Error saving dismissed news:', e);
+      }
+      setIsNewsModalVisible(false);
+      setCurrentNews(null);
+    }
+  };
+
+  const handleNewsAction = () => {
+    if (currentNews?.path) {
+      router.push(currentNews.path);
+    }
+    handleDismissNews();
+  };
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <View style={{ flex: 1, alignItems: 'center', marginTop: Platform.OS === 'android' ? 30 : 0 }}>
@@ -757,6 +842,31 @@ export default function Users() {
             </StyledModal>
           )
         }
+
+        {/* News Popup */}
+        {isNewsModalVisible && (
+          <View style={styles.newsPopupContainer}>
+            <View style={styles.newsPopupContent}>
+              <TouchableOpacity
+                style={styles.newsCloseButton}
+                onPress={handleDismissNews}
+              >
+                <Feather name="x" size={20} color="white" />
+              </TouchableOpacity>
+              <ThemedText type="title" style={styles.newsTitle}>{currentNews?.name}</ThemedText>
+              <ThemedText style={styles.newsDescription}>{currentNews?.description}</ThemedText>
+              {currentNews?.path && (
+                <TouchableOpacity
+                  style={styles.newsActionButton}
+                  onPress={handleNewsAction}
+                >
+                  <ThemedText style={styles.newsActionText}>Ver más</ThemedText>
+                  <Feather name="arrow-right" size={16} color="white" />
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        )}
       </View>
     </SafeAreaView >
   );
@@ -925,5 +1035,55 @@ export const styles = StyleSheet.create({
     padding: 20,
     color: 'white',
     fontSize: 16,
+  },
+  newsPopupContainer: {
+    position: 'absolute',
+    top: Platform.OS === 'android' ? 60 : 50,
+    left: 20,
+    right: 20,
+    zIndex: 1000,
+  },
+  newsPopupContent: {
+    backgroundColor: '#1A1A1A',
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  newsCloseButton: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    zIndex: 1,
+    padding: 4,
+  },
+  newsTitle: {
+    fontSize: 18,
+    marginBottom: 8,
+    paddingRight: 24, // Space for close button
+  },
+  newsDescription: {
+    fontSize: 14,
+    color: '#CCCCCC',
+    marginBottom: 12,
+  },
+  newsActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    marginTop: 4,
+  },
+  newsActionText: {
+    color: 'white',
+    marginRight: 4,
+    fontSize: 14,
   },
 });

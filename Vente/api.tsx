@@ -143,6 +143,13 @@ export type FriendStatus = {
   locationId: string,
 }
 
+export type CurrentNews = {
+  name: string,
+  description: string,
+  uniqueId: string,
+  path?: string,
+}
+
 export type MessageType = "Incoming" | "Outgoing";
 export type MessageContentType = "Text" | "Voice";
 
@@ -1524,6 +1531,16 @@ export class Api {
     }
   }
   // #endregion
+
+  public async getCurrentNews(selectedExitId: number): Promise<CurrentNews | null> {
+    try {
+      const response = await this.axios!.get('/api/news/get_current?exitId=' + selectedExitId);
+      return response.data;
+    } catch (e) {
+      console.log('get current news: ' + e);
+      return null;
+    }
+  }
 
   private async axios_instance(url: string) {
     var instance = axios.create({

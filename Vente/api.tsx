@@ -752,6 +752,7 @@ export class Api {
       return [false, this.translateRegisterError(e)];
     }
 
+    await this.getHasPfp();
     if (await this.getUserInfo() != AuthResult.Authenticated) {
       return [false, "Ha sucedido un error desconocido"];
     }
@@ -775,6 +776,7 @@ export class Api {
       return [false, "Error al contactar con servidores de Vente."];
     }
 
+    await this.getHasPfp();
     if (await this.getUserInfo() != AuthResult.Authenticated) {
       return [false, "Ha sucedido un error desconocido"];
     }
@@ -810,6 +812,7 @@ export class Api {
       return [false, this.translateRegisterError(e)];
     }
 
+    await this.getHasPfp();
     if (await this.getUserInfo() != AuthResult.Authenticated) {
       return [false, "Ha sucedido un error desconocido"];
     }
@@ -833,6 +836,7 @@ export class Api {
       return [false, "Error al contactar con servidores de Vente."];
     }
 
+    await this.getHasPfp();
     if (await this.getUserInfo() != AuthResult.Authenticated) {
       return [false, "Ha sucedido un error desconocido"];
     }
@@ -860,6 +864,7 @@ export class Api {
       return [false, this.translateRegisterError(e)];
     }
 
+    await this.getHasPfp();
     if (await this.getUserInfo() != AuthResult.Authenticated) {
       return [false, "Ha sucedido un error desconocido"];
     }
@@ -887,6 +892,7 @@ export class Api {
       return [false, "Error al contactar con servidores de Vente."];
     }
 
+    await this.getHasPfp();
     if (await this.getUserInfo() != AuthResult.Authenticated) {
       return [false, "Ha sucedido un error desconocido"];
     }

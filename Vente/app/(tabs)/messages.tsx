@@ -14,6 +14,29 @@ import { StyledModal } from "@/components/StyledModal";
 import { Linking } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
+// Add these helper functions before the Messages component
+const getDateSeparator = (date: Date) => {
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  if (date.toDateString() === today.toDateString()) {
+    return "Hoy";
+  } else if (date.toDateString() === yesterday.toDateString()) {
+    return "Ayer";
+  } else {
+    return date.toLocaleDateString('es-ES', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  }
+};
+
+const isSameDay = (date1: Date, date2: Date) => {
+  return date1.toDateString() === date2.toDateString();
+};
+
 export default function Messages() {
   const { selectedUser } = useLocalSearchParams<{ selectedUser?: string }>();
   const { api, messageSummaries, allMessages, userProfile } = useApi();
@@ -99,7 +122,6 @@ export default function Messages() {
 
   const renderMessage = ({ item, index }: { item: Message, index: number }) => {
     const isOutgoing = item.type === "Outgoing";
-    // show read status if this is the last message
     const isLastMessage = isOutgoing && allMessages?.[selectedUser!]?.[0]?.id === item.id;
     const timeStr = timeShortDisplay(new Date(item.timestamp));
     const textContent = item.textContent || "";
@@ -110,8 +132,18 @@ export default function Messages() {
     const isSameSender = prevMessage && prevMessage.type === item.type;
     const messageSpacing = isSameSender ? -1 : 8;
 
+    // Check if we need to show a date separator
+    const showDateSeparator = !prevMessage || !isSameDay(new Date(item.timestamp), new Date(prevMessage.timestamp));
+
     return (
       <View style={{ flexDirection: 'column', justifyContent: isOutgoing ? 'flex-end' : 'flex-start', gap: 0, marginTop: messageSpacing }}>
+        {showDateSeparator && (
+          <View style={styles.dateSeparator}>
+            <ThemedText style={styles.dateSeparatorText}>
+              {getDateSeparator(new Date(item.timestamp))}
+            </ThemedText>
+          </View>
+        )}
         <View style={[
           styles.messageContainer,
           isOutgoing ? styles.outgoingMessage : styles.incomingMessage,
@@ -619,5 +651,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+  },
+  dateSeparator: {
+    alignItems: 'center',
+    marginVertical: 16,
+  },
+  dateSeparatorText: {
+    fontSize: 12,
+    color: '#666',
+    backgroundColor: '#1A1A1A',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
 });

@@ -45,6 +45,8 @@ export default function Places() {
     f()
   }, [selectedExitId]);
 
+  console.log(eventPlaces.map(e => e.events));
+
 
   const renderEventPlace = ({ item }: { item: EventPlace }) => (
     <TouchableOpacity key={item.name} style={styles.card} onPress={() => {
@@ -210,7 +212,19 @@ export default function Places() {
                             </View>
 
                             <View style={{ flex: 2, flexDirection: 'column', height: 120 }}>
-                              <ThemedText type="subtitle" numberOfLines={1} ellipsizeMode="tail">{event.name}</ThemedText>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                {event.purchaseLink && (
+                                  <View style={{
+                                    backgroundColor: '#4CAF50',
+                                    paddingHorizontal: 6,
+                                    paddingVertical: 2,
+                                    borderRadius: 4
+                                  }}>
+                                    <ThemedText style={{ fontSize: 12 }}>Entradas</ThemedText>
+                                  </View>
+                                )}
+                                <ThemedText type="subtitle" numberOfLines={1} ellipsizeMode="tail">{event.name}</ThemedText>
+                              </View>
                               <ThemedText style={{ marginTop: 5, flexShrink: 1 }} numberOfLines={3} ellipsizeMode="tail">{event.description}</ThemedText>
                               <View style={{ flex: 1 }} />
                               <ThemedText style={{ marginTop: 5 }}>

@@ -164,7 +164,26 @@ export type Message = {
   timestamp: Date,
   // Client side only
   waitingForAck?: boolean,
-}
+};
+
+export type GroupMessage = {
+  id: number | string,
+  senderUsername: string,
+  messageType: MessageContentType,
+  textContent?: string,
+  readBy: string[],
+  timestamp: Date,
+  waitingForAck?: boolean,
+};
+
+export type GroupMessageSummary = {
+  groupName: string,
+  exitId: number,
+  senderUsername: string,
+  messageType: MessageContentType,
+  textContent?: string,
+  timestamp: Date,
+};
 
 export type Notification = {
   type: string;
@@ -204,6 +223,8 @@ const ApiContext = createContext<{
   incomingSolicitations: SearchUser[] | null
   friends: SearchUser[] | null
   statuses: FriendStatus[] | null
+  groupMessageSummaries: GroupMessageSummary[] | null
+  groupMessages: { [key: string]: GroupMessage[] } | null
 } | null>(null);
 
 export const useApi = () => {
@@ -233,6 +254,8 @@ export const ApiProvider = ({ children }: { children: ReactNode }) => {
   const [friends, setFriends] = useState<SearchUser[] | null>(null);
   const [statuses, setStatuses] = useState<FriendStatus[] | null>(null);
   const [hasPfp, setHasPfp] = useState<boolean>(false);
+  const [groupMessageSummaries, setGroupMessageSummaries] = useState<GroupMessageSummary[] | null>(null);
+  const [groupMessages, setGroupMessages] = useState<{ [key: string]: GroupMessage[] } | null>(null);
   useEffect(() => {
     const initializeApi = async () => {
       const instance = new Api(
@@ -252,7 +275,9 @@ export const ApiProvider = ({ children }: { children: ReactNode }) => {
         setIncomingSolicitations,
         setFriends,
         setStatuses,
-        setHasPfp
+        setHasPfp,
+        setGroupMessageSummaries,
+        setGroupMessages
       );
       var url = "";
 
@@ -305,7 +330,9 @@ export const ApiProvider = ({ children }: { children: ReactNode }) => {
       incomingSolicitations,
       friends,
       statuses,
-      hasPfp
+      hasPfp,
+      groupMessageSummaries,
+      groupMessages
     }}>
       {children}
     </ApiContext.Provider>
@@ -325,6 +352,7 @@ export class Api {
   private connectingToMessaging: boolean = false;
 
   public openedDm: string | null;
+  public openedGroup: number | null;
 
   private setUserProfile: React.Dispatch<React.SetStateAction<Profile | null>>;
   private setUserPfp: React.Dispatch<React.SetStateAction<string | null>>;
@@ -343,6 +371,8 @@ export class Api {
   private setFriends: React.Dispatch<React.SetStateAction<SearchUser[] | null>>;
   private setStatuses: React.Dispatch<React.SetStateAction<FriendStatus[] | null>>;
   private setHasPfp: React.Dispatch<React.SetStateAction<boolean>>;
+  private setGroupMessageSummaries: React.Dispatch<React.SetStateAction<GroupMessageSummary[] | null>>;
+  private setGroupMessages: React.Dispatch<React.SetStateAction<{ [key: number]: GroupMessage[] } | null>>;
 
   constructor(
     setUserProfile: React.Dispatch<React.SetStateAction<Profile | null>>,
@@ -361,12 +391,15 @@ export class Api {
     setIncomingSolicitations: React.Dispatch<React.SetStateAction<SearchUser[] | null>>,
     setFriends: React.Dispatch<React.SetStateAction<SearchUser[] | null>>,
     setStatuses: React.Dispatch<React.SetStateAction<FriendStatus[] | null>>,
-    setHasPfp: React.Dispatch<React.SetStateAction<boolean>>
+    setHasPfp: React.Dispatch<React.SetStateAction<boolean>>,
+    setGroupMessageSummaries: React.Dispatch<React.SetStateAction<GroupMessageSummary[] | null>>,
+    setGroupMessages: React.Dispatch<React.SetStateAction<{ [key: number]: GroupMessage[] } | null>>
   ) {
     this.locations = null;
     this.axios = null;
     this.messageConnection = null;
     this.openedDm = null;
+    this.openedGroup = null;
     this.username = null;
     this.setUserProfile = setUserProfile;
     this.setUserPfp = setUserPfp;
@@ -385,6 +418,8 @@ export class Api {
     this.setFriends = setFriends;
     this.setStatuses = setStatuses;
     this.setHasPfp = setHasPfp;
+    this.setGroupMessageSummaries = setGroupMessageSummaries;
+    this.setGroupMessages = setGroupMessages;
   }
 
   public async init(url: string) {
@@ -476,6 +511,66 @@ export class Api {
           [withUser]: messages[withUser].map(m =>
             m.id === tempId ? { ...m, id, waitingForAck: false } : m
           )
+        };
+      });
+    });
+
+    this.messageConnection.on("ReceiveGroupMessage", (exitId: number, message: GroupMessage) => {
+      this.setGroupMessages(messages => ({
+        ...messages,
+        [exitId]: [message, ...(messages?.[exitId] || [])]
+      }));
+
+      if (this.openedGroup === exitId) {
+        console.log("Marking group message as read");
+        this.messageConnection?.invoke("MarkGroupRead", exitId);
+      } else {
+        console.log("Sending notification for group message", message);
+
+        let body = message.textContent;
+        if (message.messageType === "Voice") {
+          body = "Mensaje de voz";
+        } else if (message.textContent === null) {
+          body = "Mensaje desconocido";
+        }
+
+        Notifications.scheduleNotificationAsync({
+          content: {
+            title: message.senderUsername + " te ha enviado un mensaje",
+            body: body,
+            data: {
+              notification_type: "group_message",
+              from_user: message.senderUsername,
+              link: "/messages?selectedExitId=" + exitId
+            }
+          },
+          trigger: null
+        });
+      }
+
+      this.getGroupMessageSummaries();
+    });
+
+    this.messageConnection.on("GroupMessageRead", (exitId: number, reader: string) => {
+      console.log("GroupMessageRead", exitId, reader);
+
+      this.setGroupMessages(messages => {
+        if (!messages) return null;
+        return {
+          ...messages,
+          [exitId]: messages[exitId]?.map(m => ({ ...m, readBy: [...m.readBy, reader] })) || []
+        };
+      });
+
+      this.getGroupMessageSummaries();
+    });
+
+    this.messageConnection.on("GroupMessageAck", (exitId: number, tempId: string, id: string) => {
+      this.setGroupMessages(messages => {
+        if (!messages) return null;
+        return {
+          ...messages,
+          [exitId]: messages[exitId]?.map(m => m.id === tempId ? { ...m, id, waitingForAck: false } : m) || []
         };
       });
     });
@@ -1381,6 +1476,86 @@ export class Api {
 
   //#endregion
 
+
+  // #region Group Messages
+
+  public setOpenedGroup(exitId: number | null) {
+    this.openedGroup = exitId;
+  }
+
+  public async getGroupMessageSummaries() {
+    try {
+      const response = await this.axios!.get('/api/group_messages/get_current');
+      this.setGroupMessageSummaries(response.data);
+    } catch (e) {
+      console.log('get group message summaries: ' + e);
+    }
+  }
+
+  public async getGroupMessages(exitId: number, lastMessageId: number | null | undefined) {
+    try {
+      var query = '/api/group_messages/from_exit?exitId=' + exitId;
+      if (lastMessageId) query += '&lastMessageId=' + lastMessageId;
+      const response = await this.axios!.get(query);
+      this.setGroupMessages(groupMessages => ({
+        ...groupMessages,
+        [exitId]: [...(groupMessages?.[exitId] || []), ...response.data],
+      }));
+
+    } catch (e) {
+      console.log('get group messages: ' + e);
+    }
+  }
+
+  public async sendGroupMessage(exitId: number, message: string) {
+    try {
+      const tempId = uuidv4();
+      this.setGroupMessages(groupMessages => ({
+        ...groupMessages,
+        [exitId]: [{
+          id: tempId,
+          senderUsername: this.username!,
+          messageType: "Text",
+          textContent: message,
+          readBy: [],
+          timestamp: new Date()
+        }, ...(groupMessages?.[exitId] || [])]
+      }));
+
+      await this.messageConnection!.invoke('SendGroupDm', exitId, message, tempId);
+    } catch (e) {
+      console.log('send group message: ' + e);
+    }
+  }
+
+  public async markGroupMessageRead(exitId: number) {
+    try {
+      while (!this.messageConnection || this.messageConnection.state !== signalR.HubConnectionState.Connected) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+
+      await this.messageConnection.invoke('MarkGroupRead', exitId);
+      this.setGroupMessages(groupMessages => {
+        const newGroupMessages = { ...groupMessages };
+        if (newGroupMessages[exitId]) {
+          newGroupMessages[exitId] = newGroupMessages[exitId].map(message => ({
+            ...message,
+            readBy: message.readBy.includes(this.username!)
+              ? message.readBy
+              : [...(message.readBy || []), this.username!]
+          }));
+        }
+        return newGroupMessages;
+      });
+
+    } catch (e) {
+      console.log('mark group read: ' + e);
+    }
+  }
+
+
+  // #endregion
+
   // #region Likes 
 
   public async likeProfile(username: string, exitId: number) {
@@ -1534,7 +1709,7 @@ export class Api {
 
   public async getCurrentNews(selectedExitId: number): Promise<CurrentNews | null> {
     try {
-      const response = await this.axios!.get('/api/news/get_current?exitId=' + selectedExitId);
+      const response = await this.axios!.get('/api/news/get_current?exitId=' + selectedExitId + '&testing=true');
       return response.data;
     } catch (e) {
       console.log('get current news: ' + e);

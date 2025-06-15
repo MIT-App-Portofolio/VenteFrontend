@@ -2,7 +2,7 @@ import { View, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndica
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useApi } from "../../api";
 import { useEffect, useRef, useState } from "react";
-import { Message, Profile } from "../../api";
+import { Message, Profile, Exit, GroupMessage, MessageType, GroupMessageSummary, MessageContentType } from "../../api";
 import { timeShortDisplay } from "../../dateDisplay";
 import { ThemedText } from "@/components/ThemedText";
 import { BtnPrimary, BtnSecondary } from "@/components/Buttons";
@@ -38,8 +38,8 @@ const isSameDay = (date1: Date, date2: Date) => {
 };
 
 export default function Messages() {
-  const { selectedUser } = useLocalSearchParams<{ selectedUser?: string }>();
-  const { api, messageSummaries, allMessages, userProfile } = useApi();
+  const { selectedUser, selectedExitId } = useLocalSearchParams<{ selectedUser?: string, selectedExitId?: string }>();
+  const { api, messageSummaries, allMessages, userProfile, groupMessages, groupMessageSummaries, exits } = useApi();
   const router = useRouter();
 
   const [newMessage, setNewMessage] = useState("");
@@ -49,6 +49,9 @@ export default function Messages() {
   const [userFlagVisible, setUserFlagVisible] = useState(false);
   const [userFlagLoading, setUserFlagLoading] = useState(false);
   const [userFlagMessage, setUserFlagMessage] = useState<string | null>(null);
+  const [selectedExit, setSelectedExit] = useState<Exit | null>(null);
+
+  console.log(selectedExitId, selectedExit);
 
   const loadingMore = useRef(false);
 
@@ -59,6 +62,7 @@ export default function Messages() {
   useEffect(() => {
     setLoading(true);
     api.getMessageSummaries();
+    api.getGroupMessageSummaries();
     setLoading(false);
   }, []);
 
@@ -70,10 +74,24 @@ export default function Messages() {
       }
       api.markRead(selectedUser);
       api.getMessageSummaries();
+    } else if (selectedExitId) {
+      const exitId = parseInt(selectedExitId);
+      api.setOpenedGroup(exitId);
+      if (!groupMessages?.[exitId]) {
+        api.getGroupMessages(exitId, null);
+      }
+      api.markGroupMessageRead(exitId);
+      api.getGroupMessageSummaries();
+      // Set the selected exit for group info
+      const exit = exits?.find(e => e.id === exitId);
+      if (exit) {
+        setSelectedExit(exit);
+      }
     } else {
       api.setOpenedDm(null);
+      api.setOpenedGroup(null);
     }
-  }, [selectedUser, allMessages]);
+  }, [selectedUser, selectedExitId]);
 
   useEffect(() => {
     // Fetch profile info and pfp for each user in messageSummaries (by username)
@@ -84,6 +102,23 @@ export default function Messages() {
       }
     }
   }, [messageSummaries]);
+
+  // Add new useEffect for group message readBy users
+  useEffect(() => {
+    if (selectedExitId && groupMessages?.[parseInt(selectedExitId)]) {
+      const messages = groupMessages[parseInt(selectedExitId)];
+      const allReaders = new Set<string>();
+      messages.forEach(message => {
+        if (message.readBy) {
+          message.readBy.forEach(reader => allReaders.add(reader));
+        }
+      });
+      allReaders.forEach(reader => {
+        api.getUser(reader);
+        api.fetchPfp(reader);
+      });
+    }
+  }, [selectedExitId, groupMessages]);
 
   const handleProfileClick = (username: string) => {
     const profile = api.getUserCached(username) as Profile;
@@ -103,33 +138,60 @@ export default function Messages() {
     loadingMore.current = true;
     if (selectedUser) {
       const lastMessage = allMessages?.[selectedUser]?.[allMessages?.[selectedUser]?.length - 1];
-      // only send if last message is not waiting for ack
       if (lastMessage && !lastMessage.waitingForAck) {
         await api.getUserMessages(selectedUser, lastMessage.id as number);
+      }
+    } else if (selectedExitId) {
+      const exitId = parseInt(selectedExitId);
+      const lastMessage = groupMessages?.[exitId]?.[groupMessages?.[exitId]?.length - 1];
+      if (lastMessage && !lastMessage.waitingForAck) {
+        await api.getGroupMessages(exitId, lastMessage.id as number);
       }
     }
     loadingMore.current = false;
   }
 
   const handleSendMessage = async () => {
-    if (!selectedUser || !newMessage.trim()) return;
+    if (!newMessage.trim()) return;
 
+    const messageToSend = newMessage.trim();
     setNewMessage("");
 
-    await api.sendMessage(selectedUser, newMessage.trim());
-    await api.getMessageSummaries();
+    if (selectedUser) {
+      await api.sendMessage(selectedUser, messageToSend);
+      // Don't fetch messages again after sending, as the real-time connection will handle updates
+      await api.getMessageSummaries();
+    } else if (selectedExitId) {
+      const exitId = parseInt(selectedExitId);
+      await api.sendGroupMessage(exitId, messageToSend);
+      // Don't fetch messages again after sending, as the real-time connection will handle updates
+      await api.getGroupMessageSummaries();
+    }
   };
 
-  const renderMessage = ({ item, index }: { item: Message, index: number }) => {
-    const isOutgoing = item.type === "Outgoing";
-    const isLastMessage = isOutgoing && allMessages?.[selectedUser!]?.[0]?.id === item.id;
+  const renderMessage = ({ item, index }: { item: Message | GroupMessage, index: number }) => {
+    const isGroupMessage = 'senderUsername' in item;
+    const isOutgoing = isGroupMessage
+      ? (item as GroupMessage).senderUsername === userProfile?.userName
+      : (item as Message).type === "Outgoing";
+    const isLastMessage = (
+      isGroupMessage
+        ? groupMessages?.[parseInt(selectedExitId!)]?.[0]?.id === item.id
+        : isOutgoing && allMessages?.[selectedUser!]?.[0]?.id === item.id
+    );
     const timeStr = timeShortDisplay(new Date(item.timestamp));
     const textContent = item.textContent || "";
     const oneLine = (textContent.length + timeStr.length + 2) <= MAX_ONELINE_CHARS;
 
     // Check if previous message was from the same sender
-    const prevMessage = allMessages?.[selectedUser!]?.[index + 1];
-    const isSameSender = prevMessage && prevMessage.type === item.type;
+    const prevMessage = isGroupMessage
+      ? groupMessages?.[parseInt(selectedExitId!)]?.[index + 1]
+      : allMessages?.[selectedUser!]?.[index + 1];
+    const isSameSender = prevMessage && (
+      isGroupMessage
+        ? (prevMessage as GroupMessage).senderUsername === (item as GroupMessage).senderUsername
+        : (prevMessage as Message).type === (item as Message).type
+    );
     const messageSpacing = isSameSender ? -1 : 8;
 
     // Check if we need to show a date separator
@@ -149,6 +211,9 @@ export default function Messages() {
           isOutgoing ? styles.outgoingMessage : styles.incomingMessage,
           { alignSelf: isOutgoing ? 'flex-end' : 'flex-start' }
         ]}>
+          {!isOutgoing && isGroupMessage && (
+            <ThemedText style={styles.senderName}>{item.senderUsername}</ThemedText>
+          )}
           {oneLine ? (
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <ThemedText style={styles.messageText}>{textContent}</ThemedText>
@@ -161,7 +226,25 @@ export default function Messages() {
             </>
           )}
         </View>
-        {isLastMessage && item.read && <ThemedText style={styles.readStatus}>Visto</ThemedText>}
+        {isLastMessage && (
+          <>
+            {isGroupMessage ? (
+              <View style={[styles.readByContainer, { alignSelf: isOutgoing ? 'flex-end' : 'flex-start' }]}>
+                {Array.from(new Set((item as GroupMessage).readBy))
+                  .filter(reader => reader !== userProfile?.userName)
+                  .map((reader: string, i: number) => (
+                    <FastImage
+                      key={reader}
+                      source={{ uri: api.getPfpFromCache(reader) }}
+                      style={[styles.readByPfp, { marginLeft: i > 0 ? -8 : 0 }]}
+                    />
+                  ))}
+              </View>
+            ) : (
+              (item as Message).read && <ThemedText style={styles.readStatus}>Visto</ThemedText>
+            )}
+          </>
+        )}
       </View>
     );
   };
@@ -194,7 +277,7 @@ export default function Messages() {
     >
       <SafeAreaView style={{ flex: 1, backgroundColor: 'black', marginBottom: 10 }} edges={['top', 'left', 'right']}>
         <View style={{ flex: 1 }}>
-          {selectedUser ? (
+          {selectedUser || selectedExitId ? (
             <>
               <View style={styles.header}>
                 <TouchableOpacity onPress={() => {
@@ -202,25 +285,47 @@ export default function Messages() {
                 }}>
                   <ThemedText style={styles.backButton}>←</ThemedText>
                 </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.profileHeader}
-                  onPress={() => handleProfileClick(selectedUser)}
-                >
-                  <FastImage source={{ uri: api.getPfpFromCache(selectedUser) }} style={styles.chatProfilePicture} />
-                  <View style={styles.profileHeaderText}>
-                    <ThemedText type="defaultSemiBold">{api.getUserCached(selectedUser)?.name || `@${selectedUser}`}</ThemedText>
-                    {api.getUserCached(selectedUser)?.verified && (
-                      <View style={{ backgroundColor: '#1DA1F2', borderRadius: 10, padding: 2, marginLeft: 4 }}>
-                        <Ionicons name="checkmark" size={14} color="white" />
-                      </View>
-                    )}
-                  </View>
-                  <Feather name="chevron-right" size={24} color="white" />
-                </TouchableOpacity>
+                {selectedUser ? (
+                  <TouchableOpacity
+                    style={styles.profileHeader}
+                    onPress={() => handleProfileClick(selectedUser)}
+                  >
+                    <FastImage source={{ uri: api.getPfpFromCache(selectedUser) }} style={styles.chatProfilePicture} />
+                    <View style={styles.profileHeaderText}>
+                      <ThemedText type="defaultSemiBold">{api.getUserCached(selectedUser)?.name || `@${selectedUser}`}</ThemedText>
+                      {api.getUserCached(selectedUser)?.verified && (
+                        <View style={{ backgroundColor: '#1DA1F2', borderRadius: 10, padding: 2, marginLeft: 4 }}>
+                          <Ionicons name="checkmark" size={14} color="white" />
+                        </View>
+                      )}
+                    </View>
+                    <Feather name="chevron-right" size={24} color="white" />
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.profileHeader}
+                    onPress={() => {
+                      if (selectedExit) {
+                        setSelectedProfile({
+                          userName: selectedExit.name,
+                          gender: 0,
+                          verified: false,
+                          description: `Miembros: ${selectedExit.members?.join(', ') || ''}`
+                        });
+                        setIsProfileModalVisible(true);
+                      }
+                    }}
+                  >
+                    <View style={styles.profileHeaderText}>
+                      <ThemedText type="defaultSemiBold">{selectedExit?.name || 'Grupo'}</ThemedText>
+                    </View>
+                    <Feather name="chevron-right" size={24} color="white" />
+                  </TouchableOpacity>
+                )}
               </View>
 
               <FlatList
-                data={allMessages?.[selectedUser] || []}
+                data={selectedUser ? allMessages?.[selectedUser] : groupMessages?.[parseInt(selectedExitId!)]}
                 onEndReached={endReached}
                 renderItem={renderMessage}
                 keyExtractor={(item) => item.id.toString()}
@@ -256,10 +361,69 @@ export default function Messages() {
                 </ThemedText>
                 <View style={{ width: 24 }} /> {/* Spacer to balance the header */}
               </View>
-              {messageSummaries && messageSummaries.length > 0 ? (
+              {(messageSummaries && messageSummaries.length > 0) || (exits && exits.length > 0) ? (
                 <FlatList
-                  data={messageSummaries}
+                  data={[
+                    ...(messageSummaries || []),
+                    ...(groupMessageSummaries || []).map((summary: GroupMessageSummary) => ({
+                      id: summary.exitId,
+                      user: summary.groupName,
+                      read: false,
+                      type: "Incoming" as MessageType,
+                      messageType: summary.messageType,
+                      textContent: summary.textContent,
+                      timestamp: summary.timestamp,
+                      isGroup: true,
+                      exitId: summary.exitId
+                    })),
+                    // Add active groups that don't have messages yet
+                    ...(exits || [])
+                      .filter(exit =>
+                        exit.members &&
+                        exit.members.length > 0 &&
+                        !groupMessageSummaries?.some(summary => summary.exitId === exit.id)
+                      )
+                      .map(exit => ({
+                        id: `group_${exit.id}`,
+                        user: exit.name,
+                        read: false,
+                        type: "Incoming" as MessageType,
+                        messageType: "Text" as MessageContentType,
+                        textContent: "No hay mensajes aún",
+                        timestamp: new Date(exit.dates[0]), // Use the first date as timestamp for sorting
+                        isGroup: true,
+                        exitId: exit.id
+                      }))
+                  ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())}
                   renderItem={({ item }) => {
+                    const isGroup = 'isGroup' in item;
+                    if (isGroup) {
+                      return (
+                        <TouchableOpacity
+                          style={styles.messageItem}
+                          onPress={() => {
+                            router.push(`/messages?selectedExitId=${item.exitId}`);
+                          }}
+                        >
+                          <View style={styles.profileContainer}>
+                            <View style={styles.messageInfo}>
+                              <View style={styles.nameContainer}>
+                                <ThemedText type="subtitle">{item.user}</ThemedText>
+                              </View>
+                              <ThemedText style={styles.messagePreview}>
+                                {item.textContent && item.textContent.length > MAX_ONELINE_CHARS
+                                  ? item.textContent.substring(0, MAX_ONELINE_CHARS) + '...'
+                                  : item.textContent}
+                              </ThemedText>
+                            </View>
+                            <ThemedText style={styles.messageTime}>
+                              {timeShortDisplay(item.timestamp)}
+                            </ThemedText>
+                          </View>
+                        </TouchableOpacity>
+                      );
+                    }
+
                     const profile = api.getUserCached(item.user) as Profile;
                     const pfpUrl = api.getPfpFromCache(item.user);
                     const displayName = profile?.name || `@${item.user}`;
@@ -293,7 +457,7 @@ export default function Messages() {
                       </TouchableOpacity>
                     );
                   }}
-                  keyExtractor={(item) => item.user}
+                  keyExtractor={(item) => item.id.toString()}
                 />
               ) : (
                 <View style={styles.emptyContainer}>
@@ -663,5 +827,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
+  },
+  senderName: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 2,
+  },
+  readByContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  readByPfp: {
+    width: 18,
+    height: 18,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'black',
   },
 });

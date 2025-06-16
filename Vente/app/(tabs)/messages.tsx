@@ -51,8 +51,6 @@ export default function Messages() {
   const [userFlagMessage, setUserFlagMessage] = useState<string | null>(null);
   const [selectedExit, setSelectedExit] = useState<Exit | null>(null);
 
-  console.log(selectedExitId, selectedExit);
-
   const loadingMore = useRef(false);
 
   const MAX_ONELINE_CHARS = 28; // heuristic: adjust as needed

@@ -89,7 +89,7 @@ export default function Messages() {
       api.setOpenedDm(null);
       api.setOpenedGroup(null);
     }
-  }, [selectedUser, selectedExitId]);
+  }, [selectedUser, selectedExitId, allMessages, groupMessages]);
 
   useEffect(() => {
     // Fetch profile info and pfp for each user in messageSummaries (by username)

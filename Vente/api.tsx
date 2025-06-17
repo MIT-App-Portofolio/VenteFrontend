@@ -1408,6 +1408,7 @@ export class Api {
 
   public resetMessages() {
     this.setAllMessages(null);
+    this.setGroupMessages(null);
   }
 
   public async getMessageSummaries() {

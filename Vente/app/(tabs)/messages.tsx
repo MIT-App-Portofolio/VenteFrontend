@@ -65,31 +65,41 @@ export default function Messages() {
   }, []);
 
   useEffect(() => {
-    if (selectedUser) {
-      api.setOpenedDm(selectedUser);
-      if (!allMessages?.[selectedUser]) {
-        api.getUserMessages(selectedUser, null);
-      }
-      api.markRead(selectedUser);
-      api.getMessageSummaries();
-    } else if (selectedExitId) {
-      const exitId = parseInt(selectedExitId);
-      api.setOpenedGroup(exitId);
-      if (!groupMessages?.[exitId]) {
-        api.getGroupMessages(exitId, null);
-      }
-      api.markGroupMessageRead(exitId);
-      api.getGroupMessageSummaries();
-      // Set the selected exit for group info
+    api.setOpenedDm(selectedUser || null);
+  }, [selectedUser]);
+
+  useEffect(() => {
+    const exitId = selectedExitId ? parseInt(selectedExitId) : null;
+    api.setOpenedGroup(exitId);
+    if (exitId) {
       const exit = exits?.find(e => e.id === exitId);
       if (exit) {
         setSelectedExit(exit);
       }
-    } else {
-      api.setOpenedDm(null);
-      api.setOpenedGroup(null);
     }
-  }, [selectedUser, selectedExitId, allMessages, groupMessages]);
+  }, [selectedExitId]);
+
+  useEffect(() => {
+    if (selectedUser) {
+      if (!allMessages?.[selectedUser]) {
+        api.getUserMessages(selectedUser, null);
+      }
+
+      api.markRead(selectedUser);
+      api.getMessageSummaries();
+    }
+  }, [selectedUser, allMessages]);
+
+  useEffect(() => {
+    if (selectedExitId) {
+      if (!groupMessages?.[parseInt(selectedExitId)]) {
+        api.getGroupMessages(parseInt(selectedExitId), null);
+      }
+
+      api.markGroupMessageRead(parseInt(selectedExitId));
+      api.getGroupMessageSummaries();
+    }
+  }, [selectedExitId, groupMessages]);
 
   useEffect(() => {
     // Fetch profile info and pfp for each user in messageSummaries (by username)

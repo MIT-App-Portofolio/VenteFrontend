@@ -1537,16 +1537,26 @@ export class Api {
 
       await this.messageConnection.invoke('MarkGroupRead', exitId);
       this.setGroupMessages(groupMessages => {
-        const newGroupMessages = { ...groupMessages };
-        if (newGroupMessages[exitId]) {
-          newGroupMessages[exitId] = newGroupMessages[exitId].map(message => ({
-            ...message,
-            readBy: message.readBy.includes(this.username!)
-              ? message.readBy
-              : [...(message.readBy || []), this.username!]
-          }));
+        if (!groupMessages?.[exitId]) return groupMessages;
+
+        let changed = false;
+        const updatedMessages = groupMessages[exitId].map(m => {
+          if (m.readBy.includes(this.username!)) {
+            return m; // No change for this message
+          }
+          changed = true;
+          return { ...m, readBy: [...m.readBy, this.username!] };
+        });
+
+        // Avoid state update (and thus re-render) if nothing actually changed
+        if (!changed) {
+          return groupMessages;
         }
-        return newGroupMessages;
+
+        return {
+          ...groupMessages,
+          [exitId]: updatedMessages
+        };
       });
 
     } catch (e) {

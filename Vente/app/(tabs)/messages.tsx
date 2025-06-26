@@ -51,6 +51,9 @@ export default function Messages() {
   const [userFlagMessage, setUserFlagMessage] = useState<string | null>(null);
   const [selectedExit, setSelectedExit] = useState<Exit | null>(null);
 
+  // Modal state management - single modal with different views
+  const [showGroupInfo, setShowGroupInfo] = useState(false);
+
   const loadingMore = useRef(false);
 
   const MAX_ONELINE_CHARS = 28; // heuristic: adjust as needed
@@ -77,7 +80,7 @@ export default function Messages() {
         setSelectedExit(exit);
       }
     }
-  }, [selectedExitId]);
+  }, [selectedExitId, exits]);
 
   useEffect(() => {
     if (selectedUser) {
@@ -133,6 +136,15 @@ export default function Messages() {
     if (profile) {
       setSelectedProfile(profile);
       setIsProfileModalVisible(true);
+    }
+  };
+
+  const handleGroupMemberClick = (username: string) => {
+    const profile = api.getUserCached(username) as Profile;
+    if (profile) {
+      setShowGroupInfo(false);
+      setIsProfileModalVisible(true);
+      setSelectedProfile(profile);
     }
   };
 
@@ -313,15 +325,7 @@ export default function Messages() {
                   <TouchableOpacity
                     style={styles.profileHeader}
                     onPress={() => {
-                      if (selectedExit) {
-                        setSelectedProfile({
-                          userName: selectedExit.name,
-                          gender: 0,
-                          verified: false,
-                          description: `Miembros: ${selectedExit.members?.join(', ') || ''}`
-                        });
-                        setIsProfileModalVisible(true);
-                      }
+                      setShowGroupInfo(true)
                     }}
                   >
                     <View style={styles.profileHeaderText}>
@@ -475,18 +479,85 @@ export default function Messages() {
             </>
           )}
 
-          {/* Profile Modal - moved outside conditional rendering */}
-          {selectedProfile && (
-            <StyledModal
-              isModalVisible={isProfileModalVisible}
-              setIsModalVisible={setIsProfileModalVisible}
-              includeButton={!userFlagVisible}
-              topRightElement={(userFlagVisible || selectedProfile.userName == userProfile?.userName) ? undefined : {
+          {/* Single Modal with Conditional Content */}
+          <StyledModal
+            isModalVisible={isProfileModalVisible || showGroupInfo}
+            setIsModalVisible={(visible) => {
+              setIsProfileModalVisible(visible);
+              setShowGroupInfo(false);
+              if (!visible) {
+                setSelectedProfile(null);
+                setUserFlagVisible(false);
+              }
+            }}
+            includeButton={!userFlagVisible}
+            topRightElement={
+              selectedProfile && !userFlagVisible && !showGroupInfo && selectedProfile.userName !== userProfile?.userName ? {
                 icon: "flag",
                 onPress: flagPress,
-              }}
-            >
-              {userFlagVisible ? (
+              } : undefined
+            }
+          >
+            {showGroupInfo && selectedExit ? (
+              <ScrollView style={styles.modalContent}>
+                <ThemedText type="title" style={{ marginBottom: 20 }}>
+                  {selectedExit.name}
+                </ThemedText>
+
+                <ThemedText type="subtitle" style={{ marginBottom: 15 }}>
+                  Miembros ({(selectedExit.members?.length || 0) + 1})
+                </ThemedText>
+
+                {/* Leader */}
+                <TouchableOpacity
+                  style={styles.memberCard}
+                  onPress={() => handleGroupMemberClick(selectedExit.leader)}
+                >
+                  <FastImage
+                    source={{ uri: api.getPfpFromCache(selectedExit.leader) }}
+                    style={styles.memberProfilePicture}
+                  />
+                  <View style={styles.memberInfo}>
+                    <View style={styles.memberNameContainer}>
+                      <ThemedText type="subtitle">@{selectedExit.leader}</ThemedText>
+                      <View style={styles.leaderBadge}>
+                        <ThemedText style={styles.leaderBadgeText}>Líder</ThemedText>
+                      </View>
+                    </View>
+                    {api.getUserCached(selectedExit.leader)?.name && (
+                      <ThemedText style={styles.memberRealName}>
+                        {api.getUserCached(selectedExit.leader)?.name}
+                      </ThemedText>
+                    )}
+                  </View>
+                  <Feather name="chevron-right" size={20} color="white" />
+                </TouchableOpacity>
+
+                {/* Members */}
+                {selectedExit.members?.map((member: string) => (
+                  <TouchableOpacity
+                    key={member}
+                    style={styles.memberCard}
+                    onPress={() => handleGroupMemberClick(member)}
+                  >
+                    <FastImage
+                      source={{ uri: api.getPfpFromCache(member) }}
+                      style={styles.memberProfilePicture}
+                    />
+                    <View style={styles.memberInfo}>
+                      <ThemedText type="subtitle">@{member}</ThemedText>
+                      {api.getUserCached(member)?.name && (
+                        <ThemedText style={styles.memberRealName}>
+                          {api.getUserCached(member)?.name}
+                        </ThemedText>
+                      )}
+                    </View>
+                    <Feather name="chevron-right" size={20} color="white" />
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            ) : selectedProfile ? (
+              userFlagVisible ? (
                 <View style={{ flex: 1, flexDirection: 'column', gap: 10 }}>
                   {userFlagMessage ? (
                     <ThemedText>{userFlagMessage}</ThemedText>
@@ -590,12 +661,12 @@ export default function Messages() {
                     </View>
                   )}
                 </ScrollView>
-              )}
-            </StyledModal>
-          )}
+              )
+            ) : null}
+          </StyledModal>
         </View>
-      </SafeAreaView>
-    </KeyboardAvoidingView>
+      </SafeAreaView >
+    </KeyboardAvoidingView >
   );
 }
 
@@ -852,5 +923,45 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: 'black',
+  },
+  memberCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2A2A2A',
+    padding: 15,
+    borderRadius: 12,
+    marginVertical: 4,
+    borderWidth: 1,
+    borderColor: '#3A3A3A',
+  },
+  memberProfilePicture: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 15,
+  },
+  memberInfo: {
+    flex: 1,
+  },
+  memberNameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  memberRealName: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 2,
+  },
+  leaderBadge: {
+    backgroundColor: '#FFD700',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+  },
+  leaderBadgeText: {
+    fontSize: 12,
+    color: 'black',
+    fontWeight: '600',
   },
 });

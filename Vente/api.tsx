@@ -60,6 +60,13 @@ export type ExitUserQuery = {
   likes: number,
   userLiked: boolean,
   verified: boolean,
+  attendingEvents: ExitUserQueryEvent[]
+};
+
+export type ExitUserQueryEvent = {
+  id: number,
+  name: string;
+  imageUrl: string,
 };
 
 export type ExitUserFriendQuery = {
@@ -89,6 +96,9 @@ export type EventPlace = {
 }
 
 export type EventPlaceEvent = {
+  id: number,
+  attendants: number,
+  userAttends: boolean,
   name: string,
   description: string,
   image?: string,
@@ -1208,6 +1218,52 @@ export class Api {
     } catch (e) {
       console.log('query event places: ' + e);
       return null;
+    }
+  }
+
+  public async attendEvent(exitId: number, eventPlaceEventId: number) {
+    try {
+      await this.axios?.post("/api/exit/mark_event_attending?exitId=" + exitId + "&eventId=" + eventPlaceEventId);
+    } catch (e) {
+      console.log('attend event: ' + e);
+      return false;
+    }
+    return true;
+  }
+
+  public async unattendEvent(exitId: number, eventPlaceEventId: number) {
+    try {
+      await this.axios?.post("/api/exit/unmark_event_attending?exitId=" + exitId + "&eventId=" + eventPlaceEventId);
+    } catch (e) {
+      console.log('unattend event: ' + e);
+      return false;
+    }
+    return true;
+  }
+
+  public async getEventAttendees(exitId: number, eventPlaceEventId: number): Promise<string[] | null> {
+    try {
+      const response = await this.axios!.get("/api/exit/get_event_feed?exitId=" + exitId + "&eventId=" + eventPlaceEventId);
+      const profiles: ExitUserQuery[] = response.data;
+
+      profiles.forEach(profile => {
+        this.usersQueryDb[profile.userName] = profile;
+      });
+
+      return profiles.map(profile => profile.userName);
+    } catch (e) {
+      console.log('get event attendees: ' + e);
+      return null;
+    }
+  }
+
+  public async getShowEventAttendanceMessage(exitId: number): Promise<boolean> {
+    try {
+      const response = await this.axios!.get("/api/exit/show_event_attendance_message?exitId=" + exitId);
+      return response.data;
+    } catch (e) {
+      console.log('get show event attendance message: ' + e);
+      return false;
     }
   }
 

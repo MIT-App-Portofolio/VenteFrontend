@@ -24,6 +24,10 @@ export default function Places() {
   const [loading, setLoading] = useState(false);
 
   const [eventPlaces, setEventPlaces] = useState<EventPlace[]>([]);
+  // Local state to track user's event attendance
+  const [userEventAttendance, setUserEventAttendance] = useState<{ [eventId: number]: boolean }>({});
+  // Local state to track attendee counts
+  const [eventAttendeeCounts, setEventAttendeeCounts] = useState<{ [eventId: number]: number }>({});
 
   const [selectedEventPlace, setSelectedEventPlace] = useState<EventPlace | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<EventPlaceEvent | null>(null);
@@ -39,14 +43,76 @@ export default function Places() {
       const places = await api.queryEventPlaces(parseInt(selectedExitId));
       if (places) {
         setEventPlaces(places);
+
+        // Initialize local attendance state and counts from server data
+        const attendanceState: { [eventId: number]: boolean } = {};
+        const countsState: { [eventId: number]: number } = {};
+
+        places.forEach(place => {
+          place.events.forEach(event => {
+            attendanceState[event.id] = event.userAttends;
+            countsState[event.id] = event.attendants;
+          });
+        });
+
+        setUserEventAttendance(attendanceState);
+        setEventAttendeeCounts(countsState);
       }
       setLoading(false);
     };
     f()
   }, [selectedExitId]);
 
-  console.log(eventPlaces.map(e => e.events));
+  // Get the current attendance status (with local override)
+  const getUserAttends = (eventId: number) => {
+    return userEventAttendance[eventId] ?? false;
+  };
 
+  // Get the current attendee count (with local override)
+  const getAttendeeCount = (eventId: number) => {
+    return eventAttendeeCounts[eventId] ?? 0;
+  };
+
+  const handleToggleAttendance = async (event: EventPlaceEvent) => {
+    const currentlyAttending = getUserAttends(event.id);
+    const currentCount = getAttendeeCount(event.id);
+
+    // Optimistically update UI
+    setUserEventAttendance(prev => ({
+      ...prev,
+      [event.id]: !currentlyAttending
+    }));
+
+    setEventAttendeeCounts(prev => ({
+      ...prev,
+      [event.id]: currentlyAttending ? currentCount - 1 : currentCount + 1
+    }));
+
+    // Make API call
+    const success = currentlyAttending
+      ? await api.unattendEvent(parseInt(selectedExitId), event.id)
+      : await api.attendEvent(parseInt(selectedExitId), event.id);
+
+    // If API call failed, revert the optimistic update
+    if (!success) {
+      setUserEventAttendance(prev => ({
+        ...prev,
+        [event.id]: currentlyAttending
+      }));
+
+      setEventAttendeeCounts(prev => ({
+        ...prev,
+        [event.id]: currentCount
+      }));
+    }
+  };
+
+  const handleViewAttendees = async (event: EventPlaceEvent) => {
+    // Close all modals before navigating
+    setIsEventPlaceModalVisible(false);
+    setIsEventModalVisible(false);
+    router.push(`/event?exitId=${selectedExitId}&eventId=${event.id}`);
+  };
 
   const renderEventPlace = ({ item }: { item: EventPlace }) => (
     <TouchableOpacity key={item.name} style={styles.card} onPress={() => {
@@ -122,6 +188,27 @@ export default function Places() {
                     <BtnPrimary title="Comprar entradas" onClick={() => { Linking.openURL(selectedEvent.purchaseLink!) }} />
                   </View>
                 )}
+
+                <View style={{ marginTop: 10 }}>
+                  <BtnPrimary
+                    title={getUserAttends(selectedEvent.id) ? "No voy" : "Voy"}
+                    onClick={() => handleToggleAttendance(selectedEvent)}
+                    style={{
+                      backgroundColor: getUserAttends(selectedEvent.id) ? '#ff6b6b' : '#4CAF50'
+                    }}
+                  />
+                </View>
+
+                <View style={{ marginTop: 10 }}>
+                  <TouchableOpacity
+                    style={styles.attendeesButton}
+                    onPress={() => handleViewAttendees(selectedEvent)}
+                  >
+                    <ThemedText style={{ textAlign: 'center', color: '#4CAF50' }}>
+                      {getAttendeeCount(selectedEvent.id)} usuarios van, ¿ver quiénes?
+                    </ThemedText>
+                  </TouchableOpacity>
+                </View>
 
                 {selectedEvent.offers.length > 0 &&
                   <View style={styles.offersContainer}>
@@ -227,9 +314,14 @@ export default function Places() {
                               </View>
                               <ThemedText style={{ marginTop: 5, flexShrink: 1 }} numberOfLines={3} ellipsizeMode="tail">{event.description}</ThemedText>
                               <View style={{ flex: 1 }} />
-                              <ThemedText style={{ marginTop: 5 }}>
-                                {event.offers.length} {event.offers.length == 1 ? "oferta" : "ofertas"}
-                              </ThemedText>
+                              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 5 }}>
+                                <ThemedText>
+                                  {event.offers.length} {event.offers.length == 1 ? "oferta" : "ofertas"}
+                                </ThemedText>
+                                <ThemedText style={{ fontSize: 12, color: '#888' }}>
+                                  {getAttendeeCount(event.id)} asistiendo
+                                </ThemedText>
+                              </View>
                             </View>
                           </TouchableOpacity>
                         </View>
@@ -292,6 +384,13 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: 5,
     marginTop: 10,
+  },
+  attendeesButton: {
+    padding: 10,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: '#4CAF50',
+    backgroundColor: 'transparent',
   },
   card: usersPageStyles.card,
   profilePicture: usersPageStyles.profilePicture,

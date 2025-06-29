@@ -5,7 +5,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { BtnPrimary, BtnSecondary } from '@/components/Buttons';
 import { HorizontallyAligned } from '@/components/HorizontallyAligned';
 import { CenterAligned } from '@/components/CenterAligned';
-import { ExitUserQuery, useApi, SearchUser, CurrentNews } from '@/api';
+import { ExitUserQuery, useApi, SearchUser, CurrentNews, ExitUserQueryEvent } from '@/api';
 import { Redirect, useRootNavigationState, useRouter } from 'expo-router';
 import { Feather, FontAwesome, Ionicons } from '@expo/vector-icons';
 import { StyledGenderFilter } from '@/components/GenderPicker';
@@ -41,6 +41,8 @@ export default function Users() {
   const [likedUsers, setLikedUsers] = useState<Set<string>>(new Set());
   const [followLoading, setFollowLoading] = useState<{ [key: string]: boolean }>({});
 
+  const [showEventAttendanceMessage, setShowEventAttendanceMessage] = useState(false);
+
   const [selectedExitId, setSelectedExitId] = useState<number | null>(null);
 
   const [exitPickerOpen, setExitPickerOpen] = useState(false);
@@ -48,6 +50,7 @@ export default function Users() {
   const [currentNews, setCurrentNews] = useState<CurrentNews | null>(null);
   const [isNewsModalVisible, setIsNewsModalVisible] = useState(false);
   const [dismissedNewsIds, setDismissedNewsIds] = useState<Set<string>>(new Set());
+  const [dismissedEventMessage, setDismissedEventMessage] = useState(false);
 
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -96,6 +99,18 @@ export default function Users() {
     f();
   }, [selectedExitId, dismissedNewsIds]);
 
+  useEffect(() => {
+    const f = async () => {
+      if (selectedExitId) {
+        const showEventAttendanceMessage = await api.getShowEventAttendanceMessage(selectedExitId);
+        setShowEventAttendanceMessage(showEventAttendanceMessage);
+      } else {
+        setShowEventAttendanceMessage(false);
+      }
+    }
+    f();
+  }, [selectedExitId]);
+
   // Load dismissed news IDs from storage on mount
   useEffect(() => {
     const loadDismissedNews = async () => {
@@ -109,6 +124,21 @@ export default function Users() {
       }
     };
     loadDismissedNews();
+  }, []);
+
+  // Load dismissed event message from storage on mount
+  useEffect(() => {
+    const loadDismissedEventMessage = async () => {
+      try {
+        const stored = await AsyncStorage.getItem('dismissedEventMessage');
+        if (stored === 'true') {
+          setDismissedEventMessage(true);
+        }
+      } catch (e) {
+        console.log('Error loading dismissed event message:', e);
+      }
+    };
+    loadDismissedEventMessage();
   }, []);
 
   // Save dismissed news IDs to storage when they change
@@ -449,6 +479,22 @@ export default function Users() {
             <ThemedText>{visitor.dates.length == 1 ? dateShortDisplay(visitor.dates[0]) : visitor.dates.length + " fechas"}</ThemedText>
           </View>
 
+          {visitor.attendingEvents && visitor.attendingEvents.length > 0 &&
+            <View style={{
+              flexDirection: 'row',
+              gap: 2,
+              alignItems: 'center',
+              maxWidth: pfpSize * 0.9,
+            }}>
+              <Ionicons name="location-sharp" size={16} color="white" />
+              <ThemedText ellipsizeMode='tail' numberOfLines={1}>
+                {visitor.attendingEvents.length === 1
+                  ? `Va a ${visitor.attendingEvents[0].name}`
+                  : `Va a ${visitor.attendingEvents[0].name} y ${visitor.attendingEvents.length - 1} más`}
+              </ThemedText>
+            </View>
+          }
+
           <View style={{
             flexDirection: 'row',
             gap: 5,
@@ -508,6 +554,20 @@ export default function Users() {
     handleDismissNews();
   };
 
+  const handleDismissEventMessage = async () => {
+    setDismissedEventMessage(true);
+    try {
+      await AsyncStorage.setItem('dismissedEventMessage', 'true');
+    } catch (e) {
+      console.log('Error saving dismissed event message:', e);
+    }
+  };
+
+  const handleEventMessageAction = () => {
+    router.push("/places?selectedExitId=" + selectedExitId);
+    handleDismissEventMessage();
+  };
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <View style={{ flex: 1, alignItems: 'center', marginTop: Platform.OS === 'android' ? 30 : 0 }}>
@@ -557,6 +617,70 @@ export default function Users() {
             {renderBadges()}
           </View>
         </View>
+
+        {showEventAttendanceMessage && !dismissedEventMessage && (
+          <View style={{
+            backgroundColor: '#1A1A1A',
+            marginTop: 10,
+            marginHorizontal: 10,
+            padding: 16,
+            borderRadius: 12,
+            borderLeftWidth: 4,
+            borderLeftColor: '#007AFF',
+            borderWidth: 1,
+            borderColor: '#333',
+          }}>
+            <TouchableOpacity
+              style={{
+                position: 'absolute',
+                top: 12,
+                right: 12,
+                zIndex: 1,
+                padding: 4,
+              }}
+              onPress={handleDismissEventMessage}
+            >
+              <Feather name="x" size={18} color="#CCCCCC" />
+            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4, paddingRight: 24 }}>
+              <Ionicons name="calendar" size={18} color="#007AFF" />
+              <ThemedText style={{
+                marginLeft: 8,
+                fontSize: 16,
+                fontWeight: '600',
+                color: '#007AFF'
+              }}>
+                ¡Eventos disponibles!
+              </ThemedText>
+            </View>
+            <ThemedText style={{
+              fontSize: 14,
+              color: '#CCCCCC',
+              lineHeight: 18,
+              marginBottom: 12
+            }}>
+              Elige a qué evento quieres ir para encontrar personas con intereses similares
+            </ThemedText>
+            <TouchableOpacity
+              style={{
+                backgroundColor: '#007AFF',
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+                borderRadius: 8,
+                alignSelf: 'flex-start',
+              }}
+              onPress={handleEventMessageAction}
+            >
+              <ThemedText style={{
+                color: 'white',
+                fontSize: 14,
+                fontWeight: '600'
+              }}>
+                Ver eventos ahora
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
+        )}
 
         <Animated.View style={{
           backgroundColor: 'black',
@@ -797,6 +921,28 @@ export default function Users() {
                         );
                       })}
                     </View>
+
+                    {selectedProfile.attendingEvents && selectedProfile.attendingEvents.length > 0 && (
+                      <View style={{ marginTop: 20 }}>
+                        <ThemedText>Va a:</ThemedText>
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 10 }}>
+                          {selectedProfile.attendingEvents.map((event: ExitUserQueryEvent) => (
+                            <TouchableOpacity key={event.id} style={styles.eventCard} onPress={() => {
+                              setIsUserModalVisible(false);
+                              setIsFilterModalVisible(false);
+                              setIsNewsModalVisible(false);
+                              setUserFlagVisible(false);
+                              router.push(`/event?exitId=${selectedExitId}&eventId=${event.id}`)
+                            }}>
+                              <Image source={{ uri: event.imageUrl }} style={styles.eventImage} />
+                              <View style={styles.eventTextContainer}>
+                                <ThemedText style={styles.eventText} numberOfLines={2}>{event.name}</ThemedText>
+                              </View>
+                            </TouchableOpacity>
+                          ))}
+                        </ScrollView>
+                      </View>
+                    )}
 
                     {selectedProfile.userName != userProfile?.userName && (
                       <>
@@ -1085,5 +1231,28 @@ export const styles = StyleSheet.create({
     color: 'white',
     marginRight: 4,
     fontSize: 14,
+  },
+  eventCard: {
+    width: 120,
+    height: 150,
+    borderRadius: 10,
+    marginRight: 10,
+    backgroundColor: '#1C1C1E',
+    overflow: 'hidden',
+  },
+  eventImage: {
+    width: '100%',
+    height: 100,
+  },
+  eventTextContainer: {
+    padding: 8,
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  eventText: {
+    color: 'white',
+    fontSize: 12,
+    textAlign: 'center',
   },
 });

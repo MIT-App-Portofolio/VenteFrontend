@@ -53,6 +53,12 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
+          name="event"
+          options={{
+            href: null
+          }}
+        />
+        <Tabs.Screen
           name="messages"
           options={{
             href: null

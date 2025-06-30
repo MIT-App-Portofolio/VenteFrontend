@@ -50,6 +50,7 @@ export default function Profile() {
   const [customNote, setCustomNote] = useState(userProfile?.note);
 
   useEffect(() => {
+    api.getAlbums();
     const interval = setInterval(() => {
       api.getAlbums();
     }, 10000);

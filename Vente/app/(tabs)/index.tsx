@@ -447,6 +447,16 @@ export default function Users() {
               </ThemedText>
             </View>
           )}
+          {visitor.attendingEvents && visitor.attendingEvents.length > 0 && (
+            <TouchableOpacity style={styles.eventIndicator} onPress={() => {
+              router.push(`/event?exitId=${selectedExitId}&eventId=${visitor.attendingEvents[0].id}`);
+            }}>
+              <Image
+                source={{ uri: visitor.attendingEvents[0].imageUrl }}
+                style={styles.eventIndicatorImage}
+              />
+            </TouchableOpacity>
+          )}
           <TouchableOpacity
             style={[styles.likeButton, { position: 'absolute', bottom: 10, right: 10 }]}
             onPress={async (e) => {
@@ -1254,5 +1264,20 @@ export const styles = StyleSheet.create({
     color: 'white',
     fontSize: 12,
     textAlign: 'center',
+  },
+  eventIndicator: {
+    position: 'absolute',
+    top: -10,
+    left: -10,
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+  eventIndicatorImage: {
+    width: '100%',
+    height: '100%',
   },
 });

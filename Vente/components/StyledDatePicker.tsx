@@ -199,6 +199,7 @@ export function StyledMultipleDatesPicker({
                 range_middle_label: { color: 'black' },
               }}
               mode="multiple"
+              timeZone="UTC"
               multiRangeMode
               max={20}
               dates={tempDates ?? []}

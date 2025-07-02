@@ -449,7 +449,7 @@ export default function Users() {
           )}
           {visitor.attendingEvents && visitor.attendingEvents.length > 0 && (
             <TouchableOpacity style={styles.eventIndicator} onPress={() => {
-              router.push(`/event?exitId=${selectedExitId}&eventId=${visitor.attendingEvents[0].id}`);
+              router.push(`/places?selectedExitId=${selectedExitId}&eventId=${visitor.attendingEvents[0].id}`);
             }}>
               <Image
                 source={{ uri: visitor.attendingEvents[0].imageUrl }}
@@ -942,7 +942,7 @@ export default function Users() {
                               setIsFilterModalVisible(false);
                               setIsNewsModalVisible(false);
                               setUserFlagVisible(false);
-                              router.push(`/event?exitId=${selectedExitId}&eventId=${event.id}`)
+                              router.push(`/places?selectedExitId=${selectedExitId}&eventId=${event.id}`)
                             }}>
                               <Image source={{ uri: event.imageUrl }} style={styles.eventImage} />
                               <View style={styles.eventTextContainer}>

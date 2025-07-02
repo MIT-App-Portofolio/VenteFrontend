@@ -1,6 +1,6 @@
 import { EventPlace, EventPlaceEvent, useApi } from "@/api";
-import { useEffect, useState } from "react";
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useState, useCallback } from "react";
+import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { Animated, Dimensions, TouchableOpacity, View, Image, ScrollView, StyleSheet, Linking, Platform } from "react-native";
 import { HorizontallyAligned } from "@/components/HorizontallyAligned";
 import { ThemedText, ViewMoreThemedText } from "@/components/ThemedText";
@@ -17,7 +17,7 @@ import { EventPlaceTypeBadge } from "@/components/EventPlaceTypeBadge";
 export default function Places() {
   const { api } = useApi();
 
-  const { selectedExitId } = useLocalSearchParams<{ selectedExitId: string }>();
+  const { selectedExitId, eventId } = useLocalSearchParams<{ selectedExitId: string, eventId?: string }>();
 
   const router = useRouter();
 
@@ -36,6 +36,26 @@ export default function Places() {
   const [isEventModalVisible, setIsEventModalVisible] = useState(false);
 
   const screenWidth = Dimensions.get('window').width;
+
+  // Focus effect to handle navigation events and eventId parameter
+  useFocusEffect(
+    useCallback(() => {
+      // If eventId is provided and we have places loaded, open the modal
+      if (eventId && eventPlaces.length > 0) {
+        const eventIdNum = parseInt(eventId);
+        for (const place of eventPlaces) {
+          const foundEvent = place.events.find(event => event.id === eventIdNum);
+          if (foundEvent) {
+            setSelectedEventPlace(place);
+            setSelectedEvent(foundEvent);
+            setIsEventPlaceModalVisible(true);
+            setIsEventModalVisible(true);
+            break;
+          }
+        }
+      }
+    }, [selectedExitId, eventId, eventPlaces])
+  );
 
   useEffect(() => {
     const f = async () => {
@@ -57,11 +77,26 @@ export default function Places() {
 
         setUserEventAttendance(attendanceState);
         setEventAttendeeCounts(countsState);
+
+        // If eventId is provided, find and open the event modal
+        if (eventId) {
+          const eventIdNum = parseInt(eventId);
+          for (const place of places) {
+            const foundEvent = place.events.find(event => event.id === eventIdNum);
+            if (foundEvent) {
+              setSelectedEventPlace(place);
+              setSelectedEvent(foundEvent);
+              setIsEventPlaceModalVisible(true);
+              setIsEventModalVisible(true);
+              break;
+            }
+          }
+        }
       }
       setLoading(false);
     };
     f()
-  }, [selectedExitId]);
+  }, [selectedExitId, eventId]);
 
   // Get the current attendance status (with local override)
   const getUserAttends = (eventId: number) => {
